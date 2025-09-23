@@ -1,28 +1,35 @@
 package goldenrose01.enchlib.registry
 
+// In Yarn 1.21 gli incantesimi si trovano nel package net.minecraft.enchantment,
+// mentre il registry è in net.minecraft.registry e gli identificatori in net.minecraft.util.
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
 /**
- * Registro locale di tutti gli incantesimi vanilla. Popolato all'avvio e
- * interrogabile in modo efficiente.
+ * Contiene una cache locale di tutti gli incantesimi vanilla. Permette di
+ * recuperare rapidamente gli incantesimi senza interrogare ogni volta il
+ * registry globale. È anche la base per eventuali incantesimi custom futuri.
  */
 object EnchantmentRegistry {
-    private val enchantments: MutableMap<Identifier, Enchantment> = mutableMapOf()
+    // Mappa che associa l’identificatore (stringa) all’istanza di Enchantment.
+    // Usare stringhe rende il codice più portabile tra diverse versioni/mappings.
+    private val enchantments: MutableMap<String, Enchantment> = mutableMapOf()
 
-    /** Popola il registro con tutti gli incantesimi del gioco. */
+    /** Popola il registro locale con tutti gli incantesimi vanilla. */
     fun initialize() {
         enchantments.clear()
-        for (enchant in Registries.ENCHANTMENT) {
-            val id = Registries.ENCHANTMENT.getId(enchant)
-            enchantments[id] = enchant
+        // Registries.ENCHANTMENT implementa Iterable<Enchantment>. Facendo il cast
+        // evitiamo l’ambiguità su iterator() causata da estensioni Kotlin.
+        for (enchant in Registries.ENCHANTMENT as Iterable<Enchantment>) {
+            val key: Identifier = Registries.ENCHANTMENT.getId(enchant)
+            enchantments[key.toString()] = enchant
         }
     }
 
-    /** Ritorna un incantesimo a partire dal suo Identifier. */
-    fun get(id: Identifier): Enchantment? = enchantments[id]
+    /** Restituisce l’incantesimo associato all’ID (es. "minecraft:sharpness"), o null. */
+    fun get(id: String): Enchantment? = enchantments[id]
 
-    /** Ritorna una vista di sola lettura di tutti gli incantesimi. */
-    fun all(): Map<Identifier, Enchantment> = enchantments.toMap()
+    /** Restituisce una copia immutabile di tutti gli incantesimi registrati. */
+    fun all(): Map<String, Enchantment> = enchantments.toMap()
 }
