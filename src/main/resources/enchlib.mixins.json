@@ -1,7 +1,8 @@
 {
 	"required": true,
+    "minVersion": "0.8",
 	"package": "goldenrose01.enchlib.mixin",
-	"compatibilityLevel": "JAVA_21",
+	"compatibilityLevel": "JAVA_22",
 	"mixins": [
 		"ExampleMixin"
 	],

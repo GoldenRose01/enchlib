@@ -2,11 +2,9 @@
 	"schemaVersion": 1,
 	"id": "enchlib",
 	"version": "${version}",
-	"name": "enchlib",
-	"description": "This is an example description! Tell everyone what your mod is about!",
-	"authors": [
-		"Me!"
-	],
+	"name": "EnchLib",
+	"description": "Libreria di base per enchantments personalizzati",
+	"authors": ["GoldenRose01"],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
@@ -44,7 +42,7 @@
 	"depends": {
 		"fabricloader": ">=0.17.2",
 		"minecraft": "~1.21.8",
-		"java": ">=21",
+		"java": ">=22",
 		"fabric-api": "*",
 		"fabric-language-kotlin": "*"
 	},
