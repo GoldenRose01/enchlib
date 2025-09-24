@@ -113,7 +113,8 @@ object EnchLibCommands {
             return 0
         }
 
-        val maxLevel = ConfigManager.getMaxLevel(id)
+        // Max dinamico dal registry del server, con eventuale override da config
+        val maxLevel = ConfigManager.getMaxLevel(id, source.server!!)
         if (level > maxLevel) {
             source.err("Il livello specificato ($level) supera il limite massimo ($maxLevel) per l'incantesimo $id")
             return 0

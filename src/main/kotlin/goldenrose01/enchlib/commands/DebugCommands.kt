@@ -59,19 +59,19 @@ object DebugCommands {
 
     private fun showStats(source: ServerCommandSource): Int {
         val availableEnchants = ConfigManager.availableEnchantments.size
-        val registrySize = EnchantmentRegistry.all().size
         val maxLevels = ConfigManager.enchantmentLevelMax.size
         val compatibilities = ConfigManager.enchantmentCompatibility.size
         val categories = ConfigManager.enchantmentCategories.size
         val rarities = ConfigManager.enchantmentRarity.size
+        val uncompat = ConfigManager.enchantmentUncompatibility.size
 
         source.sendFeedback({ Text.literal("=== EnchLib Statistics ===") }, false)
         source.sendFeedback({ Text.literal("Incantesimi disponibili: $availableEnchants") }, false)
-        source.sendFeedback({ Text.literal("Incantesimi nel registry: $registrySize") }, false)
-        source.sendFeedback({ Text.literal("Livelli massimi configurati: $maxLevels") }, false)
+        source.sendFeedback({ Text.literal("Livelli massimi configurati (override): $maxLevels") }, false)
         source.sendFeedback({ Text.literal("Compatibilità configurate: $compatibilities") }, false)
         source.sendFeedback({ Text.literal("Categorie configurate: $categories") }, false)
         source.sendFeedback({ Text.literal("Rarità configurate: $rarities") }, false)
+        source.sendFeedback({ Text.literal("Incompatibilità configurate: $uncompat") }, false)
         source.sendFeedback({ Text.literal("Debug mode: ${if (EnchLogger.debugMode) "ON" else "OFF"}") }, false)
         return 1
     }
@@ -116,7 +116,7 @@ object DebugCommands {
             source.sendFeedback({ Text.literal("  ${it.id} -> ${it.sources.joinToString(",")}") }, false)
         }
 
-        source.sendFeedback({ Text.literal("Livelli massimi (primi 5):") }, false)
+        source.sendFeedback({ Text.literal("Livelli massimi (override):") }, false)
         ConfigManager.enchantmentLevelMax.entries.take(5).forEach { (id, level) ->
             source.sendFeedback({ Text.literal("  $id -> $level") }, false)
         }
@@ -124,6 +124,21 @@ object DebugCommands {
         source.sendFeedback({ Text.literal("Rarità (primi 5):") }, false)
         ConfigManager.enchantmentRarity.entries.take(5).forEach { (id, rarity) ->
             source.sendFeedback({ Text.literal("  $id -> $rarity") }, false)
+        }
+
+        source.sendFeedback({ Text.literal("Compatibilità:") }, false)
+        ConfigManager.enchantmentCompatibility.entries.take(5).forEach { (id, groups) ->
+            source.sendFeedback({ Text.literal("  $id -> ${groups.joinToString(",")}") }, false)
+        }
+
+        source.sendFeedback({ Text.literal("Categorie:") }, false)
+        ConfigManager.enchantmentCategories.entries.take(5).forEach { (id, groups) ->
+            source.sendFeedback({ Text.literal("  $id -> ${groups.joinToString(",")}") }, false)
+        }
+
+        source.sendFeedback({ Text.literal("Incompatibilità:") }, false)
+        ConfigManager.enchantmentUncompatibility.entries.take(5).forEach { (id, groups) ->
+            source.sendFeedback({ Text.literal("  $id -> ${groups.joinToString(",")}") }, false)
         }
 
         EnchLogger.debug("=== FULL CONFIG DUMP ===")

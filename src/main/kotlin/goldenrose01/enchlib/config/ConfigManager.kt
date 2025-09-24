@@ -1,10 +1,13 @@
 package goldenrose01.enchlib.config
 
+import net.fabricmc.loader.api.FabricLoader
 import goldenrose01.enchlib.utils.EnchLogger
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.ConcurrentHashMap
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.nio.file.Files
-import java.nio.charset.StandardCharsets
 
 /**
  * ConfigManager è responsabile del caricamento, della validazione e della
@@ -15,353 +18,306 @@ import java.nio.charset.StandardCharsets
  * Se un file di configurazione manca o contiene voci non valide, vengono
  * applicati valori di default e viene loggato un avviso tramite [EnchLogger].
  */
+
 object ConfigManager {
     /**
      * Posizione della cartella di configurazione. Tutti i file `.config` devono
      * trovarsi in questa cartella. Di default è `config/enchlib`.
      */
-    private val configDir: Path = Paths.get("config", "enchlib")
 
-    // Data class per ogni categoria di config
-    data class AviableEnchantment(val id: String, val sources: List<String>)
-    data class EnchMultiplier(val level: Int, val primary: Double, val secondary: Double)
-    data class EnchLevelMax(val id: String, val maxLevel: Int)
-    data class EnchCompatibility(val id: String, val toolGroups: List<String>)
-    data class MobCategory(val mobId: String, val categories: List<String>)
-    data class EnchCategory(val id: String, val categories: List<String>)
-    data class EnchUncompatibility(val enchantment: String, val incompatibleWith: List<String>)
-    data class EnchRarity(val id: String, val rarity: String)
-    data class Rarity(val rarity: String, val dropChance: Double, val weight: Int, val specialMethods: List<String>)
+    private const val FILE_AVAILABLE = "AviableEnch.config"
+    private const val FILE_DISABLED = "DisabledEnch.config"
+    private const val FILE_LVL_MAX  = "EnchLVLmax.config"
+    private const val FILE_RARITY   = "EnchRarity.config"
+    private const val FILE_COMPAT   = "EnchCompatibility.config"
+    private const val FILE_CATEGORIES = "EnchCategories.config"
+    private const val FILE_UNCOMPAT   = "EnchUncompatibility.config"
 
-    // Mappe popolate dopo loadAll()
-    var availableEnchantments: List<AviableEnchantment> = emptyList()
-        private set
-    var enchantmentMultipliers: Map<String, List<EnchMultiplier>> = emptyMap()
-        private set
-    var enchantmentLevelMax: Map<String, Int> = emptyMap()
-        private set
-    var enchantmentCompatibility: Map<String, List<String>> = emptyMap()
-        private set
-    var mobCategories: Map<String, List<String>> = emptyMap()
-        private set
-    var enchantmentCategories: Map<String, List<String>> = emptyMap()
-        private set
-    var enchantmentUncompatibility: Map<String, List<String>> = emptyMap()
-        private set
-    var enchantmentRarity: Map<String, String> = emptyMap()
-        private set
-    var rarities: Map<String, Rarity> = emptyMap()
-        private set
+    // Stato in memoria caricato dai .config
+    private val availableSources: MutableMap<String, List<String>> = ConcurrentHashMap()
+    private val disabledSet: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private val maxLevelMap: MutableMap<String, Int> = ConcurrentHashMap()
+    private val rarityMap: MutableMap<String, String> = ConcurrentHashMap()
+    private val compatibilityMap: MutableMap<String, List<String>> = ConcurrentHashMap()
+    private val categoriesMap: MutableMap<String, List<String>> = ConcurrentHashMap()
+    private val uncompatibilityMap: MutableMap<String, List<String>> = ConcurrentHashMap()
 
-    /**
-     * Carica tutti i file di configurazione da disco. Va chiamato durante
-     * l’inizializzazione della mod.
-     */
+    data class AvailableEnchant(val id: String, val sources: List<String>)
+
+    fun configDir(): Path = FabricLoader.getInstance().configDir.resolve("enchlib")
+
     fun loadAll() {
-        availableEnchantments = loadAvailableEnchantments()
-        enchantmentMultipliers = loadEnchMultipliers()
-        enchantmentLevelMax = loadEnchLevelMax()
-        enchantmentCompatibility = loadEnchCompatibility()
-        mobCategories = loadMobCategories()
-        enchantmentCategories = loadEnchCategories()
-        enchantmentUncompatibility = loadEnchUncompatibility()
-        enchantmentRarity = loadEnchRarity()
-        rarities = loadRarities()
+        ensureCoreFiles()
+        loadAvailable()
+        loadDisabled()
+        loadMaxLevels()
+        loadRarity()
+        loadCompatibility()
+        loadCategories()
+        loadUncompatibility()
+        EnchLogger.info("Config EnchLib caricati")
     }
 
-    /**
-     * Indica se l’incantesimo specificato è abilitato.
-     */
-    fun isEnchantmentEnabled(enchantId: String): Boolean {
-        return availableEnchantments.any { it.id == enchantId }
+
+    fun reloadCoreFilesIfNeeded() {
+        ensureCoreFiles()
+        loadAvailable()
+        loadDisabled()
     }
 
-    /**
-     * Restituisce il livello massimo consentito per l’incantesimo specificato.
-     * Se non è definito in `EnchLVLmax.config`, ritorna 1.
-     */
-    fun getMaxLevel(enchantId: String): Int {
-        return enchantmentLevelMax[enchantId] ?: 1
+    // Stato “compat” per DebugCommands esistente
+    val availableEnchantments: List<AvailableEnchant>
+        get() = availableSources.entries.map { AvailableEnchant(it.key, it.value) }
+
+    val enchantmentLevelMax: Map<String, Int>
+        get() = maxLevelMap.toMap()
+
+    val enchantmentRarity: Map<String, String>
+        get() = rarityMap.toMap()
+
+    val enchantmentCompatibility: Map<String, List<String>>
+        get() = compatibilityMap.toMap()
+
+    val enchantmentCategories: Map<String, List<String>>
+        get() = categoriesMap.toMap()
+
+    val enchantmentUncompatibility: Map<String, List<String>>
+        get() = uncompatibilityMap.toMap()
+
+    fun isEnchantmentEnabled(id: String): Boolean {
+        if (disabledSet.contains(id)) return false
+        val sources = availableSources[id] ?: return false
+        return sources.isNotEmpty() && !(sources.size == 1 && sources[0].equals("disabled", true))
     }
 
-    /**
-     * Carica AviableEnch.config. Formato: enchantmentId=sources1,sources2
-     */
-    private fun loadAvailableEnchantments(): List<AviableEnchantment> {
-        val file = configDir.resolve("AviableEnch.config")
-        val result = mutableListOf<AviableEnchantment>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing AviableEnch.config, using empty list")
-            return result
+    // Max dinamico: override da file o valore runtime dal registry server
+    fun getMaxLevel(id: String, server: net.minecraft.server.MinecraftServer): Int {
+        maxLevelMap[id]?.let { return it }
+        return resolveRuntimeMaxLevel(id, server) ?: 1
+    }
+
+    // Variante senza server (fallback)
+    fun getMaxLevel(id: String): Int {
+        maxLevelMap[id]?.let { return it }
+        val server = net.fabricmc.loader.api.FabricLoader.getInstance().gameInstance as? net.minecraft.server.MinecraftServer
+        return if (server != null) resolveRuntimeMaxLevel(id, server) ?: 1 else 1
+    }
+
+    // Helpers per bootstrap
+    fun currentDisabledIds(): Set<String> = disabledSet
+    fun existsInAvailable(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_AVAILABLE), id)
+    fun existsInLvlMax(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_LVL_MAX), id)
+    fun existsInRarity(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_RARITY), id)
+    fun existsInCompat(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_COMPAT), id)
+    fun existsInCategories(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_CATEGORIES), id)
+    fun existsInUncompat(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_UNCOMPAT), id)
+
+    fun ensureAvailable(id: String, fullLine: String) {
+        val p = configDir().resolve(FILE_AVAILABLE)
+        if (!fileContainsKey(p, id)) appendLine(p, fullLine)
+    }
+
+    fun ensureLvlMax(id: String, level: Int?) {
+        val p = configDir().resolve(FILE_LVL_MAX)
+        if (!fileContainsKey(p, id) && level != null) appendLine(p, "$id=$level")
+    }
+
+    fun ensureRarity(id: String, rarity: String) {
+        val p = configDir().resolve(FILE_RARITY)
+        if (!fileContainsKey(p, id)) appendLine(p, "$id=$rarity")
+    }
+
+    fun ensureCompat(id: String, groups: List<String>) {
+        val p = configDir().resolve(FILE_COMPAT)
+        if (!fileContainsKey(p, id)) {
+            val value = if (groups.isEmpty()) "" else groups.joinToString(",")
+            appendLine(p, "$id=$value")
         }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in AviableEnch.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val sources = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                if (id.isNotEmpty()) {
-                    result.add(AviableEnchantment(id, sources))
-                }
+    }
+
+    fun ensureCategories(id: String, groups: List<String>) {
+        val p = configDir().resolve(FILE_CATEGORIES)
+        if (!fileContainsKey(p, id)) {
+            val value = if (groups.isEmpty()) "" else groups.joinToString(",")
+            appendLine(p, "$id=$value")
+        }
+    }
+
+    fun ensureUncompat(id: String, groups: List<String>) {
+        val p = configDir().resolve(FILE_UNCOMPAT)
+        if (!fileContainsKey(p, id)) {
+            val value = if (groups.isEmpty()) "" else groups.joinToString(",")
+            appendLine(p, "$id=$value")
+        }
+    }
+
+    // ====== Runtime resolver ======
+    private fun resolveRuntimeMaxLevel(id: String, server: net.minecraft.server.MinecraftServer): Int? {
+        return try {
+            val registry = server.registryManager.get(net.minecraft.registry.RegistryKeys.ENCHANTMENT)
+            val identifier = net.minecraft.util.Identifier.tryParse(id) ?: return null
+            val ench = registry.get(identifier) ?: return null
+            try {
+                ench.getMaxLevel() // Yarn recente
+            } catch (_: Throwable) {
+                val m = ench.javaClass.methods.firstOrNull { it.name.equals("maxLevel", true) && it.parameterCount == 0 }
+                (m?.invoke(ench) as? Int) ?: 1
             }
+        } catch (_: Throwable) {
+            null
         }
-        return result
     }
 
-    /**
-     * Carica EnchMultiplierCSV.config. Formato CSV:
-     * enchantmentId, level, primaryMultiplier, secondaryMultiplier
-     */
-    private fun loadEnchMultipliers(): Map<String, List<EnchMultiplier>> {
-        val file = configDir.resolve("EnchMultiplierCSV.config")
-        val map = mutableMapOf<String, MutableList<EnchMultiplier>>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing EnchMultiplierCSV.config, using empty map")
-            return map
-        }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split(",")
-                if (parts.size != 4) {
-                    EnchLogger.warn("Invalid CSV line in EnchMultiplierCSV.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val level = parts[1].trim().toIntOrNull()
-                val primary = parts[2].trim().toDoubleOrNull()
-                val secondary = parts[3].trim().toDoubleOrNull()
-                if (id.isNotEmpty() && level != null && primary != null && secondary != null) {
-                    val list = map.getOrPut(id) { mutableListOf() }
-                    list.add(EnchMultiplier(level, primary, secondary))
-                } else {
-                    EnchLogger.warn("Invalid values in EnchMultiplierCSV.config: '$line'")
-                }
-            }
-        }
-        return map
+    // ====== I/O config ======
+    private fun appendLine(path: Path, line: String) {
+        Files.writeString(
+            path,
+            line + System.lineSeparator(),
+            StandardCharsets.UTF_8,
+            StandardOpenOption.APPEND
+        )
     }
 
-    /**
-     * Carica EnchLVLmax.config. Formato: enchantmentId=maxLevel
-     */
-    private fun loadEnchLevelMax(): Map<String, Int> {
-        val file = configDir.resolve("EnchLVLmax.config")
-        val map = mutableMapOf<String, Int>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing EnchLVLmax.config, using empty map")
-            return map
+    private fun fileContainsKey(path: Path, key: String): Boolean {
+        if (!Files.exists(path)) return false
+        Files.readAllLines(path, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val k = line.substringBefore("=").trim()
+            if (k == key) return true
         }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in EnchLVLmax.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val level = parts[1].trim().toIntOrNull()
-                if (id.isNotEmpty() && level != null) {
-                    map[id] = level
-                } else {
-                    EnchLogger.warn("Invalid values in EnchLVLmax.config: '$line'")
-                }
-            }
-        }
-        return map
+        return false
     }
 
-    /**
-     * Carica EnchCompatibility.config. Formato: enchantmentId=group1,group2
-     */
-    private fun loadEnchCompatibility(): Map<String, List<String>> {
-        val file = configDir.resolve("EnchCompatibility.config")
-        val map = mutableMapOf<String, MutableList<String>>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing EnchCompatibility.config, using empty map")
-            return map
-        }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in EnchCompatibility.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val groups = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                if (id.isNotEmpty()) {
-                    map[id] = groups.toMutableList()
-                }
-            }
-        }
-        return map
+    private fun ensureCoreFiles() {
+        val dir = configDir()
+        Files.createDirectories(dir)
+        createIfMissing(dir.resolve(FILE_AVAILABLE), headerAvailable())
+        createIfMissing(dir.resolve(FILE_DISABLED), headerGeneric("Disabled enchantments - one id per line"))
+        createIfMissing(dir.resolve(FILE_LVL_MAX), headerGeneric("Max levels (id=level), leave empty to use runtime value"))
+        createIfMissing(dir.resolve(FILE_RARITY), headerGeneric("Rarity per enchantment (id=rarity)"))
+        createIfMissing(dir.resolve(FILE_COMPAT), headerGeneric("Compatibility per enchantment (id=group1,group2)"))
+        createIfMissing(dir.resolve(FILE_CATEGORIES), headerGeneric("Categories per enchantment (id=cat1,cat2)"))
+        createIfMissing(dir.resolve(FILE_UNCOMPAT), headerGeneric("Uncompatibility pairs (id=incompat1,incompat2)"))
     }
 
-    /**
-     * Carica MobCategory.config. Formato: mobId=category1,category2
-     */
-    private fun loadMobCategories(): Map<String, List<String>> {
-        val file = configDir.resolve("MobCategory.config")
-        val map = mutableMapOf<String, MutableList<String>>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing MobCategory.config, using empty map")
-            return map
+    private fun createIfMissing(path: Path, header: String) {
+        if (!Files.exists(path)) {
+            Files.writeString(path, header, StandardCharsets.UTF_8)
         }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in MobCategory.config: '$line'")
-                    return@forEachLine
-                }
-                val mobId = parts[0].trim()
-                val categories = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                if (mobId.isNotEmpty()) {
-                    map[mobId] = categories.toMutableList()
-                }
-            }
-        }
-        return map
     }
 
-    /**
-     * Carica EnchCategory.config. Formato: enchantmentId=category1,category2
-     */
-    private fun loadEnchCategories(): Map<String, List<String>> {
-        val file = configDir.resolve("EnchCategory.config")
-        val map = mutableMapOf<String, MutableList<String>>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing EnchCategory.config, using empty map")
-            return map
-        }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in EnchCategory.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val categories = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                if (id.isNotEmpty()) {
-                    map[id] = categories.toMutableList()
-                }
-            }
-        }
-        return map
+    private fun headerAvailable(): String = buildString {
+        appendLine("# EnchLib - AviableEnch.config")
+        appendLine("# Formato: <id>=source1,source2 oppure <id>=disabled")
+        appendLine("# Default attivo: enchanting_table,chest_loot,villager_trade")
+        appendLine("# DisabledEnch.config sovrascrive con 'disabled' se l'utente lo elenca")
+        appendLine()
     }
 
-    /**
-     * Carica EnchUNcompatibility.config. Formato: enchantmentId=incompatible1,incompatible2
-     */
-    private fun loadEnchUncompatibility(): Map<String, List<String>> {
-        val file = configDir.resolve("EnchUNcompatibility.config")
-        val map = mutableMapOf<String, MutableList<String>>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing EnchUNcompatibility.config, using empty map")
-            return map
-        }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in EnchUNcompatibility.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val incompatibleWith = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-                if (id.isNotEmpty()) {
-                    map[id] = incompatibleWith.toMutableList()
-                }
-            }
-        }
-        return map
+    private fun headerGeneric(title: String): String = buildString {
+        appendLine("# EnchLib - $title")
+        appendLine()
     }
 
-    /**
-     * Carica EnchRarity.config. Formato: enchantmentId=rarity
-     */
-    private fun loadEnchRarity(): Map<String, String> {
-        val file = configDir.resolve("EnchRarity.config")
-        val map = mutableMapOf<String, String>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing EnchRarity.config, using empty map")
-            return map
+    private fun loadAvailable() {
+        availableSources.clear()
+        val p = configDir().resolve(FILE_AVAILABLE)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val parts = line.split("=", limit = 2)
+            if (parts.size != 2) return@forEach
+            val id = parts[0].trim()
+            val sources = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            availableSources[id] = sources
         }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in EnchRarity.config: '$line'")
-                    return@forEachLine
-                }
-                val id = parts[0].trim()
-                val rarity = parts[1].trim()
-                if (id.isNotEmpty() && rarity.isNotEmpty()) {
-                    map[id] = rarity
-                } else {
-                    EnchLogger.warn("Invalid values in EnchRarity.config: '$line'")
-                }
-            }
-        }
-        return map
     }
 
-    /**
-     * Carica Rarity.config. Formato:
-     * rarity=dropChance,weight,method1|method2
-     */
-    private fun loadRarities(): Map<String, Rarity> {
-        val file = configDir.resolve("Rarity.config")
-        val map = mutableMapOf<String, Rarity>()
-        if (!Files.exists(file)) {
-            EnchLogger.warn("Missing Rarity.config, using empty map")
-            return map
+    private fun loadDisabled() {
+        disabledSet.clear()
+        val p = configDir().resolve(FILE_DISABLED)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            disabledSet.add(line)
         }
-        Files.newBufferedReader(file, StandardCharsets.UTF_8).use { reader ->
-            reader.forEachLine { line ->
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-                val parts = trimmed.split("=")
-                if (parts.size != 2) {
-                    EnchLogger.warn("Invalid line in Rarity.config: '$line'")
-                    return@forEachLine
-                }
-                val rarityId = parts[0].trim()
-                val values = parts[1].split(",")
-                if (values.size < 3) {
-                    EnchLogger.warn("Invalid values in Rarity.config: '$line'")
-                    return@forEachLine
-                }
-                val dropChance = values[0].trim().toDoubleOrNull()
-                val weight = values[1].trim().toIntOrNull()
-                val specialMethods = values[2].split("|").map { it.trim() }.filter { it.isNotEmpty() }
-                if (dropChance != null && weight != null) {
-                    map[rarityId] = Rarity(rarityId, dropChance, weight, specialMethods)
-                } else {
-                    EnchLogger.warn("Invalid numeric values in Rarity.config: '$line'")
-                }
-            }
+    }
+
+    private fun loadMaxLevels() {
+        maxLevelMap.clear()
+        val p = configDir().resolve(FILE_LVL_MAX)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val parts = line.split("=", limit = 2)
+            if (parts.size != 2) return@forEach
+            val id = parts[0].trim()
+            val lvl = parts[1].trim().toIntOrNull()
+            if (lvl != null) maxLevelMap[id] = lvl
         }
-        return map
+    }
+
+    private fun loadRarity() {
+        rarityMap.clear()
+        val p = configDir().resolve(FILE_RARITY)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val parts = line.split("=", limit = 2)
+            if (parts.size != 2) return@forEach
+            val id = parts[0].trim()
+            val rarity = parts[1].trim()
+            rarityMap[id] = rarity
+        }
+    }
+
+    private fun loadCompatibility() {
+        compatibilityMap.clear()
+        val p = configDir().resolve(FILE_COMPAT)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val parts = line.split("=", limit = 2)
+            if (parts.size != 2) return@forEach
+            val id = parts[0].trim()
+            val groups = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            compatibilityMap[id] = groups
+        }
+    }
+
+    private fun loadCategories() {
+        categoriesMap.clear()
+        val p = configDir().resolve(FILE_CATEGORIES)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val parts = line.split("=", limit = 2)
+            if (parts.size != 2) return@forEach
+            val id = parts[0].trim()
+            val groups = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            categoriesMap[id] = groups
+        }
+    }
+
+    private fun loadUncompatibility() {
+        uncompatibilityMap.clear()
+        val p = configDir().resolve(FILE_UNCOMPAT)
+        if (!Files.exists(p)) return
+        Files.readAllLines(p, StandardCharsets.UTF_8).forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty() || line.startsWith("#")) return@forEach
+            val parts = line.split("=", limit = 2)
+            if (parts.size != 2) return@forEach
+            val id = parts[0].trim()
+            val groups = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            uncompatibilityMap[id] = groups
+        }
     }
 }
