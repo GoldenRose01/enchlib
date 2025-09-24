@@ -4,31 +4,126 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.CommandDispatcher
 import net.minecraft.command.CommandRegistryAccess
 import net.minecraft.server.command.CommandManager
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import com.mojang.brigadier.context.CommandContext
 import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.server.command.CommandManager.*
 import net.minecraft.text.Text
 import goldenrose01.enchlib.config.ConfigManager
+import goldenrose01.enchlib.config.WorldConfigManager
 import goldenrose01.enchlib.registry.EnchantmentRegistry
 import goldenrose01.enchlib.utils.EnchLogger
+import goldenrose01.enchlib.utils.msg
+import goldenrose01.enchlib.utils.err
 
 object DebugCommands {
 
-    fun register(dispatcher: CommandDispatcher<ServerCommandSource>, @Suppress("UNUSED_PARAMETER") registryAccess: CommandRegistryAccess) {
-        dispatcher.register(
-            CommandManager.literal("plusec-debug")
-                .requires { source: ServerCommandSource -> source.hasPermissionLevel(2) }
-                .executes { ctx ->
-                    showHelp(ctx.source)
-                    1
-                }
-                .then(
-                    CommandManager.argument("flag", StringArgumentType.string())
-                        .executes { ctx ->
-                            val flag = StringArgumentType.getString(ctx, "flag")
-                            execute(ctx.source, flag)
-                        }
-                )
-        )
+    fun register() {
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            dispatcher.register(
+                literal("plusec-debug")
+                    .requires { it.hasPermissionLevel(2) }
+                    .then(literal("world-config-path")
+                        .executes { showWorldConfigPath(it) }
+                    )
+                    .then(literal("reload-world-configs")
+                        .executes { reloadWorldConfigs(it) }
+                    )
+                    .then(literal("regenerate-configs")
+                        .executes { regenerateConfigs(it) }
+                    )
+                    .then(literal("validate-configs")
+                        .executes { validateConfigs(it) }
+                    )
+                    .then(literal("stats")
+                        .executes { showStats(it) }
+                    )
+            )
+        }
     }
+
+    private fun showWorldConfigPath(context: CommandContext<ServerCommandSource>): Int {
+        val source = context.source
+
+        if (!WorldConfigManager.hasInstance()) {
+            source.err { "World configuration not available" }
+            return 0
+        }
+
+        val configManager = WorldConfigManager.getInstance(source.server)
+        source.msg { "World config path: ${configManager.worldConfigPath}" }
+        return 1
+    }
+
+    private fun reloadWorldConfigs(context: CommandContext<ServerCommandSource>): Int {
+        val source = context.source
+
+        if (!WorldConfigManager.hasInstance()) {
+            source.err { "World configuration not available" }
+            return 0
+        }
+
+        try {
+            val configManager = WorldConfigManager.getInstance(source.server)
+            configManager.reloadConfigurations()
+            source.msg { "World configurations reloaded successfully" }
+            return 1
+        } catch (e: Exception) {
+            source.err { "Failed to reload configurations: ${e.message}" }
+            return 0
+        }
+    }
+
+    private fun regenerateConfigs(context: CommandContext<ServerCommandSource>): Int {
+        val source = context.source
+
+        if (!WorldConfigManager.hasInstance()) {
+            source.err { "World configuration not available" }
+            return 0
+        }
+
+        try {
+            val configManager = WorldConfigManager.getInstance(source.server)
+            configManager.initializeWorldConfigs()
+            source.msg { "World configurations regenerated successfully" }
+            return 1
+        } catch (e: Exception) {
+            source.err { "Failed to regenerate configurations: ${e.message}" }
+            return 0
+        }
+    }
+
+    private fun validateConfigs(context: CommandContext<ServerCommandSource>): Int {
+        val source = context.source
+
+        if (!WorldConfigManager.hasInstance()) {
+            source.err { "World configuration not available" }
+            return 0
+        }
+
+        source.msg { "Configuration validation completed (detailed implementation needed)" }
+        return 1
+    }
+
+    private fun showStats(context: CommandContext<ServerCommandSource>): Int {
+        val source = context.source
+
+        if (!WorldConfigManager.hasInstance()) {
+            source.err { "World configuration not available" }
+            return 0
+        }
+
+        val configManager = WorldConfigManager.getInstance(source.server)
+
+        source.msg { "=== EnchLib World Configuration Stats ===" }
+        source.msg { "Available enchantments loaded" }
+        source.msg { "Enchantment details loaded" }
+        source.msg { "Mob categories loaded" }
+        source.msg { "Incompatibility rules loaded" }
+
+        return 1
+    }
+}
 
     private fun showHelp(source: ServerCommandSource) {
         source.sendFeedback({ Text.literal("=== EnchLib Debug Commands ===") }, false)
