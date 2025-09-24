@@ -1,35 +1,26 @@
 package goldenrose01.enchlib.registry
 
-// In Yarn 1.21 gli incantesimi si trovano nel package net.minecraft.enchantment,
-// mentre il registry è in net.minecraft.registry e gli identificatori in net.minecraft.util.
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
 
 /**
- * Contiene una cache locale di tutti gli incantesimi vanilla. Permette di
- * recuperare rapidamente gli incantesimi senza interrogare ogni volta il
- * registry globale. È anche la base per eventuali incantesimi custom futuri.
+ * Registry locale “no-op” per 1.21.x: non interroga il registry di gioco,
+ * ma fornisce API compatibili per codice esistente (/plusec-debug, ecc.).
+ *
+ * Nota: i comandi usano RegistryEntry + Data Components e NON dipendono
+ * da questa cache per applicare o rimuovere incantesimi.
  */
 object EnchantmentRegistry {
-    // Mappa che associa l’identificatore (stringa) all’istanza di Enchantment.
-    // Usare stringhe rende il codice più portabile tra diverse versioni/mappings.
+    // Contenitore locale (vuoto per compatibilità)
     private val enchantments: MutableMap<String, Enchantment> = mutableMapOf()
 
-    /** Popola il registro locale con tutti gli incantesimi vanilla. */
+    /** Inizializzazione “no-op”: nessun accesso al registry runtime. */
     fun initialize() {
         enchantments.clear()
-        // Registries.ENCHANTMENT implementa Iterable<Enchantment>. Facendo il cast
-        // evitiamo l’ambiguità su iterator() causata da estensioni Kotlin.
-        for (enchant in Registries.ENCHANTMENT as Iterable<Enchantment>) {
-            val key: Identifier = Registries.ENCHANTMENT.getId(enchant)
-            enchantments[key.toString()] = enchant
-        }
     }
 
-    /** Restituisce l’incantesimo associato all’ID (es. "minecraft:sharpness"), o null. */
+    /** Restituisce l’incantesimo per ID (o null se non presente). */
     fun get(id: String): Enchantment? = enchantments[id]
 
-    /** Restituisce una copia immutabile di tutti gli incantesimi registrati. */
+    /** Copia immutabile degli incantesimi presenti nella cache locale. */
     fun all(): Map<String, Enchantment> = enchantments.toMap()
 }
