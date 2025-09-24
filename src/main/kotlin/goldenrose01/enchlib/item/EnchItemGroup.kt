@@ -15,10 +15,7 @@ object EnchItemGroup {
         .icon { ItemStack(Items.ENCHANTED_BOOK) }
         .displayName(Text.translatable("itemgroup.enchlib.main"))
         .entries { _, entries ->
-            entries.add(ItemStack(Items.DIAMOND_SWORD))
-            entries.add(ItemStack(Items.DIAMOND_PICKAXE))
-            entries.add(ItemStack(Items.BOW))
-            entries.add(ItemStack(Items.DIAMOND_CHESTPLATE))
+            //qui saranno impostati dinamicamente i libri degli incantesimi
         }.build()
     fun register() {
         Registry.register(Registries.ITEM_GROUP, Identifier.of("enchlib", "main"), ENCHLIB_GROUP)
