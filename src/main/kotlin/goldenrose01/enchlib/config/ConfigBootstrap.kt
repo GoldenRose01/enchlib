@@ -12,7 +12,7 @@ object ConfigBootstrap {
 
     // Chiave del registry enchantment costruita a runtime
     private val ENCH_REGISTRY_KEY: RegistryKey<Registry<Enchantment>> =
-        RegistryKey.ofRegistry(Identifier.of("minecraft", "enchantment")) // [docs: RegistryKey.ofRegistry][web:145]
+        RegistryKey.ofRegistry(Identifier.of("minecraft", "enchantment"))
 
     fun registerServerHooks() {
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
