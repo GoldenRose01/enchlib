@@ -2,7 +2,6 @@ plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
     id "org.jetbrains.kotlin.jvm" version "2.2.20"
-    id("org.jetbrains.kotlin.jvm") version "1.9.10"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
 }
 
@@ -18,11 +17,12 @@ repositories {
     maven {
         name = 'Fabric'
         url = 'https://maven.fabricmc.net/'
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
+        // Add repositories to retrieve artifacts from in here.
+        // You should only use this when depending on other mods because
+        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+        // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+        // for more information about repositories.
+    }
 }
 
 loom {

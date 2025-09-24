@@ -6,8 +6,8 @@
 	"description": "Libreria di base per enchantments personalizzati",
 	"authors": ["GoldenRose01"],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/GoldenRose01/enchlib",
+		"sources": "https://github.com/GoldenRose01/enchlib"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/enchlib/icon.png",
