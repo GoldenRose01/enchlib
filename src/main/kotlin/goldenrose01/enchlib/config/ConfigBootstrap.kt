@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.registry.Registry
 import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 import goldenrose01.enchlib.utils.EnchLogger
@@ -11,8 +12,7 @@ import goldenrose01.enchlib.utils.EnchLogger
 object ConfigBootstrap {
 
     // Chiave del registry enchantment costruita a runtime
-    private val ENCH_REGISTRY_KEY: RegistryKey<Registry<Enchantment>> =
-        RegistryKey.ofRegistry(Identifier.of("minecraft", "enchantment"))
+    private val ENCH_REGISTRY_KEY: RegistryKey<Registry<Enchantment>> = RegistryKeys.ENCHANTMENT
 
     fun registerServerHooks() {
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
