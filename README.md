@@ -33,13 +33,7 @@ EnchLib è una potente libreria per Minecraft Fabric che fornisce un sistema com
    cd enchlib
    ```
 
-2. **Esegui lo script di installazione**:
-   ```bash
-   chmod +x install_files.sh
-   ./install_files.sh
-   ```
-
-3. **Compila la mod**:
+2. **Compila la mod**:
    ```bash
    ./gradlew build
    ```
@@ -72,8 +66,7 @@ enchlib/
 │  │  └─ java/mixin/                  # Mixin Java
 │  └─ client/                         # Source set client
 ├─ build.gradle                       # Config Gradle
-├─ gradle.properties                  # Versioni dipendenze
-└─ install_files.sh                   # Script installazione
+└─ gradle.properties                  # Versioni dipendenze
 ```
 
 ## ⚙️ File di Configurazione
