@@ -23,9 +23,10 @@ object EnchLibCommands {
 
     fun register() {
         CommandRegistrationCallback.EVENT.register { dispatcher, registryAccess, environment ->
+
             val enchantmentArg = RegistryEntryReferenceArgumentType.registryEntry(
-                    registryAccess,
-            RegistryKeys.ENCHANTMENT
+                registryAccess,
+                RegistryKeys.ENCHANTMENT
             )
 
             dispatcher.register(
@@ -65,46 +66,39 @@ object EnchLibCommands {
             context, "enchantment", RegistryKeys.ENCHANTMENT
         )
 
-        val enchantmentId = enchantmentEntry.key.get().value.toString()
-        val enchantment = enchantmentEntry.value()
+        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        val enchantmentId = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
 
-        // Ottieni il WorldConfigManager
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err({ "World configuration not available" })
         }
 
         val configManager = WorldConfigManager.getInstance(source.server)
 
-        // Controlla se l'incantesimo è abilitato
         if (!configManager.isEnchantmentEnabled(enchantmentId)) {
-            source.err { "Enchantment $enchantmentId is disabled in this world" }
-            return 0
+            return source.err({ "Enchantment $enchantmentId is disabled in this world" })
         }
 
-        // Controlla il livello massimo
         val maxLevel = configManager.getMaxLevel(enchantmentId)
         if (level > maxLevel) {
-            source.err { "Level $level exceeds maximum level $maxLevel for $enchantmentId" }
-            return 0
+            return source.err({ "Level $level exceeds maximum level $maxLevel for $enchantmentId" })
         }
 
         val heldItem = player.mainHandStack
         if (heldItem.isEmpty) {
-            source.err { "You must hold an item to enchant" }
-            return 0
+            return source.err({ "You must hold an item to enchant" })
         }
 
-        // Applica l'incantesimo
-        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
-        val newEnchantments = ItemEnchantmentsComponent.Builder(currentEnchantments)
-            .add(enchantment, level)
-            .build()
+        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS,
+            ItemEnchantmentsComponent.DEFAULT)
+
+        val builder = ItemEnchantmentsComponent.Builder(currentEnchantments)
+        builder.add(enchantmentEntry, level)
+        val newEnchantments = builder.build()
 
         heldItem.set(DataComponentTypes.ENCHANTMENTS, newEnchantments)
 
-        source.msg() { "Added ${enchantmentId} level $level to your item" }
-        return 1
+        return source.msg("Added $enchantmentId level $level to your item")
     }
 
     private fun removeEnchantment(context: CommandContext<ServerCommandSource>): Int {
@@ -114,28 +108,28 @@ object EnchLibCommands {
             context, "enchantment", RegistryKeys.ENCHANTMENT
         )
 
-        val enchantmentId = enchantmentEntry.key.get().value.toString()
-        val enchantment = enchantmentEntry.value()
+        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        val enchantmentId = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
 
         val heldItem = player.mainHandStack
         if (heldItem.isEmpty) {
-            source.err { "You must hold an item" }
-            return 0
+            return source.err({ "You must hold an item" })
         }
 
-        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
+        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS,
+            ItemEnchantmentsComponent.DEFAULT)
         if (!currentEnchantments.enchantments.containsKey(enchantmentEntry)) {
-            source.err { "Item doesn't have $enchantmentId" }
-            return 0
+            return source.err({ "Item doesn't have $enchantmentId" })
         }
 
-        val newEnchantments = ItemEnchantmentsComponent.Builder(currentEnchantments)
-        newEnchantments.remove(entry -> entry == enchantmentEntry)
 
-        heldItem.set(DataComponentTypes.ENCHANTMENTS, newEnchantments.build())
+        val builder = ItemEnchantmentsComponent.Builder(currentEnchantments)
+        builder.remove { entry -> entry == enchantmentEntry }
+        val newEnchantments = builder.build()
 
-        source.msg() { "Removed $enchantmentId from your item" }
-        return 1
+        heldItem.set(DataComponentTypes.ENCHANTMENTS, newEnchantments)
+
+        return source.msg("Removed $enchantmentId from your item")
     }
 
     private fun listEnchantments(context: CommandContext<ServerCommandSource>): Int {
@@ -144,29 +138,29 @@ object EnchLibCommands {
         val heldItem = player.mainHandStack
 
         if (heldItem.isEmpty) {
-            source.err { "You must hold an item" }
-            return 0
+            return source.err({ "You must hold an item" })
         }
 
         val enchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
         if (enchantments.isEmpty) {
-            source.msg() { "This item has no enchantments" }
-            return 1
+            return source.msg("This item has no enchantments")
         }
 
         val configManager = if (WorldConfigManager.hasInstance()) {
             WorldConfigManager.getInstance(source.server)
         } else null
 
-        source.msg() { "Enchantments on this item:" }
+        source.msg("Enchantments on this item:")
 
-        enchantments.enchantments.forEach { (enchantmentEntry, level) ->
-            val id = enchantmentEntry.key.get().value.toString()
+        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
+
+        enchantments.enchantments.forEach { enchantmentEntry, level ->
+            val id = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
             val maxLevel = configManager?.getMaxLevel(id) ?: enchantmentEntry.value().maxLevel
             val details = configManager?.getEnchantmentDetails(id)
 
             val rarity = details?.rarity ?: "unknown"
-            source.msg() { "- $id: Level $level/$maxLevel (Rarity: $rarity)" }
+            source.msg("- $id: Level $level/$maxLevel (Rarity: $rarity)")
         }
 
         return 1
@@ -178,13 +172,11 @@ object EnchLibCommands {
         val heldItem = player.mainHandStack
 
         if (heldItem.isEmpty) {
-            source.err { "You must hold an item" }
-            return 0
+            return source.err("You must hold an item")
         }
 
         heldItem.remove(DataComponentTypes.ENCHANTMENTS)
-        source.msg() { "Cleared all enchantments from your item" }
-        return 1
+        return source.msg("Cleared all enchantments from your item")
     }
 
     private fun showEnchantmentInfo(context: CommandContext<ServerCommandSource>): Int {
@@ -193,26 +185,26 @@ object EnchLibCommands {
             context, "enchantment", RegistryKeys.ENCHANTMENT
         )
 
-        val enchantmentId = enchantmentEntry.key.get().value.toString()
+        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        val enchantmentId = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
 
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err("World configuration not available")
         }
 
         val configManager = WorldConfigManager.getInstance(source.server)
         val details = configManager.getEnchantmentDetails(enchantmentId)
         val isEnabled = configManager.isEnchantmentEnabled(enchantmentId)
 
-        source.msg() { "=== Enchantment Info: $enchantmentId ===" }
-        source.msg() { "Name: ${details?.name ?: "Unknown"}" }
-        source.msg() { "Enabled: $isEnabled" }
-        source.msg() { "Max Level: ${details?.max_level ?: "Unknown"}" }
-        source.msg() { "Rarity: ${details?.rarity ?: "Unknown"}" }
-        source.msg() { "Applicable to: ${details?.applicable_to?.joinToString(", ") ?: "Unknown"}" }
-        source.msg() { "Categories: ${details?.enc_category?.joinToString(", ") ?: "Unknown"}" }
-        source.msg() { "Mob Categories: ${details?.mob_category?.joinToString(", ") ?: "Unknown"}" }
-        source.msg() { "Description: ${details?.description ?: "No description available"}" }
+        source.msg("=== Enchantment Info: $enchantmentId ===")
+        source.msg("Name: ${details?.name ?: "Unknown"}")
+        source.msg("Enabled: $isEnabled")
+        source.msg("Max Level: ${details?.max_level ?: "Unknown"}")
+        source.msg("Rarity: ${details?.rarity ?: "Unknown"}")
+        source.msg("Applicable to: ${details?.applicable_to?.joinToString(", ") ?: "Unknown"}")
+        source.msg("Categories: ${details?.enc_category?.joinToString(", ") ?: "Unknown"}")
+        source.msg("Mob Categories: ${details?.mob_category?.joinToString(", ") ?: "Unknown"}")
+        source.msg("Description: ${details?.description ?: "No description available"}")
 
         return 1
     }

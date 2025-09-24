@@ -1,18 +1,10 @@
 package goldenrose01.enchlib.commands
 
-import com.mojang.brigadier.arguments.StringArgumentType
-import com.mojang.brigadier.CommandDispatcher
-import net.minecraft.command.CommandRegistryAccess
-import net.minecraft.server.command.CommandManager
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import com.mojang.brigadier.context.CommandContext
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.server.command.CommandManager.*
-import net.minecraft.text.Text
-import goldenrose01.enchlib.config.ConfigManager
 import goldenrose01.enchlib.config.WorldConfigManager
-import goldenrose01.enchlib.registry.EnchantmentRegistry
-import goldenrose01.enchlib.utils.EnchLogger
 import goldenrose01.enchlib.utils.msg
 import goldenrose01.enchlib.utils.err
 
@@ -46,31 +38,26 @@ object DebugCommands {
         val source = context.source
 
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err { "World configuration not available" }
         }
 
         val configManager = WorldConfigManager.getInstance(source.server)
-        source.msg { "World config path: ${configManager.worldConfigPath}" }
-        return 1
+        return source.msg("World config path: ${configManager.worldConfigPath}")
     }
 
     private fun reloadWorldConfigs(context: CommandContext<ServerCommandSource>): Int {
         val source = context.source
 
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err { "World configuration not available" }
         }
 
         try {
             val configManager = WorldConfigManager.getInstance(source.server)
             configManager.reloadConfigurations()
-            source.msg { "World configurations reloaded successfully" }
-            return 1
+            return source.msg("World configurations reloaded successfully")
         } catch (e: Exception) {
-            source.err { "Failed to reload configurations: ${e.message}" }
-            return 0
+            return source.err { "Failed to reload configurations: ${e.message}" }
         }
     }
 
@@ -78,18 +65,15 @@ object DebugCommands {
         val source = context.source
 
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err { "World configuration not available" }
         }
 
         try {
             val configManager = WorldConfigManager.getInstance(source.server)
             configManager.initializeWorldConfigs()
-            source.msg { "World configurations regenerated successfully" }
-            return 1
+            return source.msg("World configurations regenerated successfully")
         } catch (e: Exception) {
-            source.err { "Failed to regenerate configurations: ${e.message}" }
-            return 0
+            return source.err { "Failed to regenerate configurations: ${e.message}" }
         }
     }
 
@@ -97,34 +81,29 @@ object DebugCommands {
         val source = context.source
 
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err { "World configuration not available" }
         }
 
-        source.msg { "Configuration validation completed (detailed implementation needed)" }
-        return 1
+        return source.msg("Configuration validation completed (detailed implementation needed)")
     }
 
     private fun showStats(context: CommandContext<ServerCommandSource>): Int {
         val source = context.source
 
         if (!WorldConfigManager.hasInstance()) {
-            source.err { "World configuration not available" }
-            return 0
+            return source.err { "World configuration not available" }
         }
 
-        val configManager = WorldConfigManager.getInstance(source.server)
-
-        source.msg { "=== EnchLib World Configuration Stats ===" }
-        source.msg { "Available enchantments loaded" }
-        source.msg { "Enchantment details loaded" }
-        source.msg { "Mob categories loaded" }
-        source.msg { "Incompatibility rules loaded" }
+        source.msg("=== EnchLib World Configuration Stats ===")
+        source.msg("Available enchantments loaded")
+        source.msg("Enchantment details loaded")
+        source.msg("Mob categories loaded")
+        source.msg("Incompatibility rules loaded")
 
         return 1
     }
 }
-
+/*
     private fun showHelp(source: ServerCommandSource) {
         source.sendFeedback({ Text.literal("=== EnchLib Debug Commands ===") }, false)
         source.sendFeedback({ Text.literal("--stats           : Mostra statistiche generali") }, false)
@@ -306,3 +285,4 @@ object DebugCommands {
         return issues
     }
 }
+*/

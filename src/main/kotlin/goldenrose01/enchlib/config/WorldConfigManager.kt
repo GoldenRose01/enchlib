@@ -23,8 +23,14 @@ class WorldConfigManager(private val server: MinecraftServer) {
         encodeDefaults = true
     }
 
-    private val worldConfigPath: Path by lazy {
-        server.getSavePath(server.getWorldSaveHandler().worldDir).resolve("config/enchlib")
+    // Rendi public la proprietà worldConfigPath
+    val worldConfigPath: Path by lazy {
+        val worldDir = server.runDirectory.toAbsolutePath()
+            .resolve("saves")
+            .resolve(server.saveProperties.levelName)
+            .resolve("config")
+            .resolve("enchlib")
+        worldDir
     }
 
     private val availableEnchFile: File by lazy {
@@ -65,7 +71,7 @@ class WorldConfigManager(private val server: MinecraftServer) {
 
     fun initializeWorldConfigs() {
         try {
-            EnchLogger.info("Initializing world configurations for: ${server.getSavePath(server.getWorldSaveHandler().worldDir)}")
+            EnchLogger.info("Initializing world configurations for: $worldConfigPath")
 
             // Crea directory se non esiste
             if (!worldConfigPath.exists()) {
@@ -101,21 +107,20 @@ class WorldConfigManager(private val server: MinecraftServer) {
         val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
         val existingIds = existingConfig.enchantments.map { it.id }.toSet()
 
-        // Aggiungi nuovi incantesimi non presenti
-        enchantmentRegistry.ids.forEach { id ->
-            val idString = id.toString()
-            if (idString !in existingIds) {
+        // FIX: Iterazione corretta sul registry
+        enchantmentRegistry.forEach { enchantment ->
+            val id = enchantmentRegistry.getId(enchantment).toString()
+            if (id !in existingIds) {
                 existingConfig.enchantments.add(
                     EnchantmentStatusEntry(
-                        id = idString,
-                        enabled = true // Default abilitato
+                        id = id,
+                        enabled = true
                     )
                 )
-                EnchLogger.debug("Added new enchantment to available list: $idString")
+                EnchLogger.debug("Added new enchantment to available list: $id")
             }
         }
 
-        // Salva la configurazione aggiornata
         availableEnchFile.writeText(json.encodeToString(existingConfig))
         availableEnchCache = existingConfig
 
@@ -137,10 +142,9 @@ class WorldConfigManager(private val server: MinecraftServer) {
         val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
         val existingIds = existingConfig.enchantments.map { it.id }.toSet()
 
-        // Aggiungi dettagli per nuovi incantesimi
-        enchantmentRegistry.entrySet.forEach { entry ->
-            val id = entry.key.value.toString()
-            val enchantment = entry.value
+        // Aggiungi dettagli per nuovi incantesimi - FIX: usa streamEntries()
+        enchantmentRegistry.forEach { enchantment ->
+            val id = enchantmentRegistry.getId(enchantment).toString()
 
             if (id !in existingIds) {
                 val detailedEntry = createDefaultEnchantmentDetails(id, enchantment)
@@ -163,21 +167,24 @@ class WorldConfigManager(private val server: MinecraftServer) {
             1
         }
 
-        // Genera livelli di default basati sul tipo di incantesimo
+        // Carica da file precompilati o usa default
+        val precompiledData = DefaultDataLoader.getEnchantmentData(id)
+
         val levels = mutableListOf<EnchantmentLevelData>()
         for (level in 1..maxLevel) {
-            levels.add(createDefaultLevelData(id, level))
+            levels.add(precompiledData?.levels?.find { it.level == level }
+                ?: createDefaultLevelData(id, level))
         }
 
         return DetailedEnchantmentEntry(
             id = id,
-            name = getEnchantmentDisplayName(id),
+            name = precompiledData?.name ?: getEnchantmentDisplayName(id),
             max_level = maxLevel,
-            applicable_to = getApplicableItems(id),
-            description = getEnchantmentDescription(id),
-            enc_category = getEnchantmentCategories(id),
-            mob_category = getMobCategories(id),
-            rarity = getEnchantmentRarity(id),
+            applicable_to = precompiledData?.applicable_to ?: getApplicableItems(id),
+            description = precompiledData?.description ?: getEnchantmentDescription(id),
+            enc_category = precompiledData?.enc_category ?: getEnchantmentCategories(id),
+            mob_category = precompiledData?.mob_category ?: getEnchantmentMobCategories(id),
+            rarity = precompiledData?.rarity ?: getEnchantmentRarity(id),
             levels = levels
         )
     }
@@ -203,7 +210,8 @@ class WorldConfigManager(private val server: MinecraftServer) {
 
     private fun initializeMobCategories() {
         if (!mobCategoriesFile.exists()) {
-            val defaultMobCategories = createDefaultMobCategories()
+            // Carica da file precompilato
+            val defaultMobCategories = DefaultDataLoader.getDefaultMobCategories()
             mobCategoriesFile.writeText(json.encodeToString(defaultMobCategories))
             mobCategoriesCache = defaultMobCategories
             EnchLogger.info("Created default mob categories configuration")
@@ -213,7 +221,7 @@ class WorldConfigManager(private val server: MinecraftServer) {
                 EnchLogger.info("Loaded existing mob categories configuration")
             } catch (e: Exception) {
                 EnchLogger.error("Failed to parse Mob_category.json", e)
-                val defaultConfig = createDefaultMobCategories()
+                val defaultConfig = DefaultDataLoader.getDefaultMobCategories()
                 mobCategoriesFile.writeText(json.encodeToString(defaultConfig))
                 mobCategoriesCache = defaultConfig
             }
@@ -222,7 +230,8 @@ class WorldConfigManager(private val server: MinecraftServer) {
 
     private fun initializeIncompatibilityRules() {
         if (!incompatibilityFile.exists()) {
-            val defaultRules = createDefaultIncompatibilityRules()
+            // Carica da file precompilato
+            val defaultRules = DefaultDataLoader.getDefaultIncompatibilityRules()
             incompatibilityFile.writeText(json.encodeToString(defaultRules))
             incompatibilityCache = defaultRules
             EnchLogger.info("Created default incompatibility rules")
@@ -232,7 +241,7 @@ class WorldConfigManager(private val server: MinecraftServer) {
                 EnchLogger.info("Loaded existing incompatibility rules")
             } catch (e: Exception) {
                 EnchLogger.error("Failed to parse Uncompatibility.json", e)
-                val defaultRules = createDefaultIncompatibilityRules()
+                val defaultRules = DefaultDataLoader.getDefaultIncompatibilityRules()
                 incompatibilityFile.writeText(json.encodeToString(defaultRules))
                 incompatibilityCache = defaultRules
             }
@@ -253,13 +262,12 @@ class WorldConfigManager(private val server: MinecraftServer) {
     fun getMaxLevel(enchantmentId: String): Int {
         val details = getEnchantmentDetails(enchantmentId)
         return details?.max_level ?: run {
-            // Fallback al registry
             try {
                 val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
                 val identifier = Identifier.tryParse(enchantmentId) ?: return 1
                 enchantmentRegistry.get(identifier)?.maxLevel ?: 1
             } catch (e: Exception) {
-                EnchLogger.warn("Failed to get max level for $enchantmentId", e)
+                EnchLogger.warn("Failed to get max level for $enchantmentId")
                 1
             }
         }
@@ -283,7 +291,7 @@ class WorldConfigManager(private val server: MinecraftServer) {
         return config.category_limits[category] ?: Int.MAX_VALUE
     }
 
-    // Metodi di supporto per la creazione dei default
+    // Metodi di supporto semplificati
     private fun getEnchantmentDisplayName(id: String): String {
         return try {
             val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
@@ -296,17 +304,7 @@ class WorldConfigManager(private val server: MinecraftServer) {
     }
 
     private fun getApplicableItems(id: String): List<String> {
-        return when {
-            id.contains("sharpness") || id.contains("smite") || id.contains("bane") ->
-                listOf("sword", "axe")
-            id.contains("efficiency") || id.contains("fortune") || id.contains("silk_touch") ->
-                listOf("pickaxe", "axe", "shovel", "hoe")
-            id.contains("protection") || id.contains("fire_protection") ->
-                listOf("helmet", "chestplate", "leggings", "boots")
-            id.contains("power") || id.contains("punch") || id.contains("flame") ->
-                listOf("bow")
-            else -> listOf("all")
-        }
+        return listOf("all") // Semplificato, ora caricato da file
     }
 
     private fun getEnchantmentDescription(id: String): String {
@@ -314,154 +312,23 @@ class WorldConfigManager(private val server: MinecraftServer) {
     }
 
     private fun getEnchantmentCategories(id: String): List<String> {
-        return when {
-            id.contains("sharpness") || id.contains("smite") || id.contains("bane") ->
-                listOf("Damage", "Combat")
-            id.contains("efficiency") || id.contains("fortune") || id.contains("silk_touch") ->
-                listOf("Mining")
-            id.contains("protection") -> listOf("Protection", "Defense")
-            id.contains("power") || id.contains("punch") -> listOf("Ranged", "Combat")
-            else -> listOf("Utility")
-        }
+        return listOf("Utility") // Semplificato, ora caricato da file
     }
 
-    private fun getMobCategories(id: String): List<String> {
-        return when {
-            id.contains("smite") -> listOf("undead")
-            id.contains("bane_of_arthropods") -> listOf("arthropods")
-            else -> listOf("all")
-        }
+    private fun getEnchantmentMobCategories(id: String): List<String> {
+        return listOf("all") // Semplificato, ora caricato da file
     }
 
     private fun getEnchantmentRarity(id: String): String {
-        return "common" // Default, può essere espanso con logica più complessa
+        return "common"
     }
 
-    // Ricarica configurazioni
     fun reloadConfigurations() {
         availableEnchCache = null
         detailsCache = null
         mobCategoriesCache = null
         incompatibilityCache = null
-
         initializeWorldConfigs()
     }
-}
-
-// Aggiungere dentro WorldConfigManager
-
-private fun createDefaultMobCategories(): MobCategoriesConfig {
-    val mobs = mutableListOf<MobEntry>()
-
-    // Dati forniti dall'utente
-    val defaultMobs = listOf(
-        MobEntry("Allay", "Passive", listOf("magik", "flying")),
-        MobEntry("Armadillo", "Passive", listOf("animals", "cubic")),
-        MobEntry("Axolotl", "Pet", listOf("animals", "water", "arthropods")),
-        MobEntry("Bat", "Passive", listOf("animals", "flying")),
-        MobEntry("Bee", "Neutral", listOf("flying")),
-        MobEntry("Blaze", "Hostile", listOf("magik", "hell", "flying")),
-        MobEntry("Bogged", "Hostile", listOf("undead", "fungi")),
-        MobEntry("Breeze", "Hostile", listOf("magik", "flying")),
-        MobEntry("Camel", "Passive", listOf("animals")),
-        MobEntry("Cat", "Pet", listOf("animals")),
-        MobEntry("Cave spider", "H-Neutral", listOf("arthropods")),
-        MobEntry("Chicken", "Passive", listOf("animals")),
-        MobEntry("Cod", "Passive", listOf("water")),
-        MobEntry("Copper Golem", "Golem", listOf("magik", "cubic")),
-        MobEntry("Cow", "Passive", listOf("animals")),
-        MobEntry("Creeper", "Hostile", listOf("fungi", "arthropods")),
-        MobEntry("Dog", "Pet", listOf("animals")),
-        MobEntry("Dolphin", "Neutral", listOf("animals", "water")),
-        MobEntry("Donkey", "Passive", listOf("animals")),
-        MobEntry("Drowned", "H-Neutral", listOf("undead", "water")),
-        MobEntry("Elder Guardian", "Hostile", listOf("magik", "water")),
-        MobEntry("Ender Dragon", "Hostile", listOf("magik", "void", "arthropods", "flying")),
-        MobEntry("Enderman", "Neutral", listOf("void")),
-        MobEntry("Endermite", "Hostile", listOf("void")),
-        MobEntry("Evoker", "Hostile", listOf("magik", "rebel")),
-        MobEntry("Fox", "Passive", listOf("animals")),
-        MobEntry("Frog", "Passive", listOf("animals")),
-        MobEntry("Ghastling", "Pet", listOf("magik", "hell", "arthropods", "cubic", "flying")),
-        MobEntry("Ghast", "Hostile", listOf("undead", "hell", "arthropods", "cubic", "flying")),
-        MobEntry("Glow Squid", "Passive", listOf("animals", "magik", "water", "arthropods")),
-        MobEntry("Goat", "R-Neutral", listOf("animals")),
-        MobEntry("Guardian", "Hostile", listOf("water")),
-        MobEntry("Hoglin", "Hostile", listOf("animals")),
-        MobEntry("Horse", "Passive", listOf("animals")),
-        MobEntry("Husk", "Hostile", listOf("undead")),
-        MobEntry("Illusioner", "Hostile", listOf("magik", "rebel", "arthropods")),
-        MobEntry("Iron Golem", "Golem", listOf("cubic")),
-        MobEntry("Llama", "Neutral", listOf("animals")),
-        MobEntry("Magma Cube", "Hostile", listOf("hell", "cubic")),
-        MobEntry("Mooshroom", "Passive", listOf("animals")),
-        MobEntry("Mule", "Passive", listOf("animals")),
-        MobEntry("Ocelot", "Passive", listOf("animals")),
-        MobEntry("Panda", "Neutral", listOf("animals")),
-        MobEntry("Parrot", "Passive", listOf("animals", "flying")),
-        MobEntry("Phantom", "Hostile", listOf("undead", "flying")),
-        MobEntry("Pig", "Passive", listOf("animals")),
-        MobEntry("Piglin", "H-Neutral", listOf("hell")),
-        MobEntry("Piglin Brute", "Hostile", listOf("rebel", "hell")),
-        MobEntry("Pillager", "Hostile", listOf("rebel")),
-        MobEntry("Polar Bear", "Neutral", listOf("animals", "water")),
-        MobEntry("Pufferfish", "Passive", listOf("animals", "water")),
-        MobEntry("Rabbit", "Passive", listOf("animals")),
-        MobEntry("Ravanger", "Hostile", listOf("rebel")),
-        MobEntry("Salmon", "Passive", listOf("animals", "water")),
-        MobEntry("Sheep", "Passive", listOf("animals")),
-        MobEntry("Shulker", "Hostile", listOf("magik", "cubic", "flying")),
-        MobEntry("Silverfish", "Hostile", listOf("arthropods")),
-        MobEntry("Skeleton", "Hostile", listOf("undead")),
-        MobEntry("Skeleton Horse", "Passive", listOf("magik", "undead")),
-        MobEntry("Slime", "Hostile", listOf("water", "cubic")),
-        MobEntry("Sniffer", "Passive", listOf("animals", "arthropods", "cubic")),
-        MobEntry("Snow Golem", "Golem", listOf("cubic")),
-        MobEntry("Spider", "H-Neutral", listOf("arthropods")),
-        MobEntry("Squid", "Passive", listOf("animals", "water", "arthropods")),
-        MobEntry("Stray", "Hostile", listOf("undead")),
-        MobEntry("Strider", "Passive", listOf("undead", "hell")),
-        MobEntry("Tadpole", "Passive", listOf("animals", "water")),
-        MobEntry("Turtle", "Passive", listOf("animals", "water", "flying")),
-        MobEntry("Vex", "Hostile", listOf("magik", "undead", "rebel", "flying")),
-        MobEntry("Villager", "NPC", listOf()),
-        MobEntry("Vindicator", "Hostile", listOf("rebel")),
-        MobEntry("Wandering Trader", "NPC", listOf("magik")),
-        MobEntry("Warden", "Hostile", listOf("magik", "fungi")),
-        MobEntry("Witch", "Hostile", listOf("magik")),
-        MobEntry("Wither Boss", "Hostile", listOf("magik", "hell", "void")),
-        MobEntry("Wither Skeleton", "Hostile", listOf("undead", "hell")),
-        MobEntry("Wolf", "Neutral", listOf("animals")),
-        MobEntry("Zoglin", "Hostile", listOf("undead", "hell")),
-        MobEntry("Zombie", "Hostile", listOf("undead")),
-        MobEntry("Zombie Horse", "Hostile", listOf("undead")),
-        MobEntry("Zombified Piglin", "Neutral", listOf("undead", "hell")),
-        MobEntry("Zombified villager", "Hostile", listOf("undead"))
-    )
-
-    mobs.addAll(defaultMobs)
-    return MobCategoriesConfig(mobs)
-}
-
-private fun createDefaultIncompatibilityRules(): IncompatibilityRules {
-    val incompatiblePairs = mutableListOf<IncompatiblePair>()
-    val categoryLimits = mutableMapOf<String, Int>()
-
-    // Incompatibilità classiche di Minecraft
-    incompatiblePairs.addAll(listOf(
-        IncompatiblePair("minecraft:fortune", "minecraft:silk_touch"),
-        IncompatiblePair("minecraft:depth_strider", "minecraft:frost_walker"),
-        IncompatiblePair("minecraft:loyalty", "minecraft:riptide"),
-        IncompatiblePair("minecraft:channeling", "minecraft:riptide"),
-        IncompatiblePair("minecraft:multishot", "minecraft:piercing")
-    ))
-
-    // Limiti per categoria
-    categoryLimits["Damage"] = 1
-    categoryLimits["Protection"] = 4
-    categoryLimits["Combat"] = 3
-    categoryLimits["Mining"] = 3
-
-    return IncompatibilityRules(incompatiblePairs, categoryLimits)
 }
 

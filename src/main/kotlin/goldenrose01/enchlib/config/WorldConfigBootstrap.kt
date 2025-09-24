@@ -2,7 +2,6 @@ package goldenrose01.enchlib.config
 
 import goldenrose01.enchlib.utils.EnchLogger
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.minecraft.server.MinecraftServer
 
 object WorldConfigBootstrap {
 
