@@ -23,7 +23,6 @@ class Enchlib : ModInitializer {
 
     override fun onInitialize() {
         logger.info("EnchLib initializing...")
-        ServerLifecycleEvents.SERVER_STARTED.register(this::onServerStarted)
 
         // Registra il bootstrap per le configurazioni world-based
         WorldConfigBootstrap.register()
@@ -37,6 +36,7 @@ class Enchlib : ModInitializer {
             EnchLibCommands.register(dispatcher)
         }
 
+        // Bootstrap config per-mondo all'avvio server
         ServerLifecycleEvents.SERVER_STARTED.register(ServerLifecycleEvents.ServerStarted { server: MinecraftServer ->
             WorldConfigManager.initializeWorldConfigs(server)
         })

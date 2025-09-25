@@ -27,7 +27,7 @@ object DebugCommands {
                 .then(literal("validate").executes(::validate))
                 .then(literal("stats").executes(::stats))
                 .then(literal("echo")
-                    .then(argument("msg", StringArgumentType.greedyString())
+                    .then(argument<ServerCommandSource, String>("msg", StringArgumentType.greedyString())
                         .executes(::echo)
                     )
                 )
@@ -73,74 +73,3 @@ object DebugCommands {
         return ok(ctx, "[plusec-debug] $msg")
     }
 }
-/*
-    private fun showWorldConfigPath(context: CommandContext<ServerCommandSource>): Int {
-        val source = context.source
-
-        if (!WorldConfigManager.hasInstance()) {
-            return source.err { "World configuration not available" }
-        }
-
-        val configManager = WorldConfigManager.getInstance(source.server)
-        return source.msg({ "World config path: ${configManager.worldConfigPath}" })
-    }
-
-    private fun reloadWorldConfigs(context: CommandContext<ServerCommandSource>): Int {
-        val source = context.source
-
-        if (!WorldConfigManager.hasInstance()) {
-            return source.err { "World configuration not available" }
-        }
-
-        try {
-            val configManager = WorldConfigManager.getInstance(source.server)
-            configManager.reloadConfigurations()
-            return source.msg({ "World configurations reloaded successfully" })
-        } catch (e: Exception) {
-            return source.err { "Failed to reload configurations: ${e.message}" }
-        }
-    }
-
-    private fun regenerateConfigs(context: CommandContext<ServerCommandSource>): Int {
-        val source = context.source
-
-        if (!WorldConfigManager.hasInstance()) {
-            return source.err { "World configuration not available" }
-        }
-
-        try {
-            val configManager = WorldConfigManager.getInstance(source.server)
-            configManager.initializeWorldConfigs()
-            return source.msg({ "World configurations regenerated successfully" })
-        } catch (e: Exception) {
-            return source.err { "Failed to regenerate configurations: ${e.message}" }
-        }
-    }
-
-    private fun validateConfigs(context: CommandContext<ServerCommandSource>): Int {
-        val source = context.source
-
-        if (!WorldConfigManager.hasInstance()) {
-            return source.err { "World configuration not available" }
-        }
-
-        return source.msg({ "Configuration validation completed (detailed implementation needed)" })
-    }
-
-    private fun showStats(context: CommandContext<ServerCommandSource>): Int {
-        val source = context.source
-
-        if (!WorldConfigManager.hasInstance()) {
-            return source.err { "World configuration not available" }
-        }
-
-        source.msg({ "=== EnchLib World Configuration Stats ===" })
-        source.msg({ "Available enchantments loaded" })
-        source.msg({ "Enchantment details loaded" })
-        source.msg({ "Mob categories loaded" })
-        source.msg({ "Incompatibility rules loaded" })
-
-        return 1
-    }
-}
-*/
