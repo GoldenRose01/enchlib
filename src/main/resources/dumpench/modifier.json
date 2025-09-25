@@ -1,0 +1,83 @@
+{
+  "modifiers": {
+    "Combat_Damage": [
+      "extra_damage",               // +danno fisso per livello
+      "fire_damage",                // +danno fuoco
+      "damage_to_attacker",         // danno riflesso
+      "sweeping_damage_equal",      // sweeping = danno arma
+      "sweeping_damage_multiplier", // sweeping moltiplicato
+      "attack_points_bonus",        // +punti attacco
+      "base_damage_bonus",          // +danno base
+      "attack_speed_bonus"          // +velocità attacco
+    ],
+    "Defense_Protection": [
+      "damage_reduction",           // riduzione danni subiti
+      "fall_reduction",             // riduzione caduta
+      "extra_armor_points",         // +punti armatura
+      "negate_void_damage",         // annulla danno vuoto
+      "negate_fall_damage",         // annulla danno da caduta
+      "prevent_crop_damage",        // no danno ai campi
+      "durability_regen_interval_min", // rigenerazione durabilità (minuti)
+      "durability_regen_per_sec",   // rigenerazione durabilità (secondi)
+      "unbreaking_bonus"            // bonus resistenza
+    ],
+    "Speed_Movement": [
+      "speed_multiplier",           // moltiplicatore velocità
+      "fall_bonus",                 // danno bonus da caduta
+      "boost"                       // velocità lancio (Riptide)
+    ],
+    "Mining_Block": [
+      "mining_speed_multiplier",    // moltiplicatore mining
+      "speed_multiplier",           // velocità strumenti
+      "drop_bonus",                 // bonus drop
+      "targets"                     // numero bersagli colpiti (Piercing)
+    ],
+    "Ranged": [
+      "extra_damage",               // danno proiettili
+      "knockback",                  // spinta
+      "reload_multiplier",          // riduzione tempo ricarica
+      "fire_damage"                 // danno fuoco proiettili
+    ],
+    "Utility": [
+      "extra_seconds",              // durata respiro sott’acqua
+      "treasure_chance",            // chance tesori
+      "return_speed",               // velocità ritorno tridente
+      "durability_multiplier",      // moltiplicatore durabilità
+      "effect",                     // effetto speciale (stringa)
+      "arrow_speed_multiplier",     // velocità frecce
+      "rocket_save_chance",         // chance non consumare razzo
+      "reach_bonus",                // distanza extra
+      "instamine_shears_blocks",    // insta-mine con cesoie
+      "drop_smelting",              // drop già cucinato
+      "walk_on_powder_snow",        // cammina su neve polverosa
+      "keepinventory_for_item",     // tieni item in inventario
+      "items_last_forever",         // non despawnano
+      "repair_cost_reduction",      // riduce costo riparazioni
+      "night_vision",               // visione notturna
+      "item_glow_radius"            // raggio bagliore oggetti
+    ],
+    "Curse": [
+      "curse_of_binding",           // impossibile rimuovere
+      "curse_of_vanishing"          // sparisce alla morte
+    ],
+    "Healing": [
+      "healing_radius_blocks",      // raggio cura
+      "extra_hearts"                // cuori extra
+    ],
+    "Loot": [
+      "crop_looting_multiplier",    // loot raccolti
+      "special_projectile_save_chance", // chance proiettili
+      "luck_bonus"                  // bonus fortuna
+    ],
+    "Status_Misc": [
+      "glowing_seconds",            // glowing sul bersaglio
+      "unbreakable",                // indistruttibile
+      "instakill_targets",          // mob instakill
+      "effect"                      // effetti vari (ghiaccio, fuoco, ecc.)
+    ],
+    "XP_Progression": [
+      "xp_gain_per_sec",            // XP/sec
+      "xp_per_min"                  // XP/min
+    ]
+  }
+}

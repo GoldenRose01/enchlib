@@ -1,0 +1,1659 @@
+{
+  "enchantments": [
+    {
+      "id": "minecraft:aqua_affinity",
+      "name": "Aqua Affinity",
+      "max_level": 1,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "Increases underwater mining speed.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "common",
+      "levels": [
+        {
+          "level": 1,
+          "mining_speed_multiplier": 1.2
+        }
+      ]
+    },
+    {
+      "id": "minecraft:bane_of_arthropods",
+      "name": "Bane of Arthropods",
+      "max_level": 10,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "Increases damage against arthropods.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "arthropods"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "extra_damage": 2.5
+        },
+        {
+          "level": 2,
+          "extra_damage": 5
+        },
+        {
+          "level": 3,
+          "extra_damage": 7.5
+        },
+        {
+          "level": 4,
+          "extra_damage": 10
+        },
+        {
+          "level": 5,
+          "extra_damage": 12.5
+        },
+        {
+          "level": 6,
+          "extra_damage": 15
+        },
+        {
+          "level": 7,
+          "extra_damage": 17.5
+        },
+        {
+          "level": 8,
+          "extra_damage": 20
+        },
+        {
+          "level": 9,
+          "extra_damage": 22.5
+        },
+        {
+          "level": 10,
+          "extra_damage": 25
+        }
+      ]
+    },
+    {
+      "id": "minecraft:blast_protection",
+      "name": "Blast Protection",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "Reduces explosion damage.",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "damage_reduction": 0.08
+        },
+        {
+          "level": 2,
+          "damage_reduction": 0.16
+        },
+        {
+          "level": 3,
+          "damage_reduction": 0.24
+        },
+        {
+          "level": 4,
+          "damage_reduction": 0.32
+        },
+        {
+          "level": 5,
+          "damage_reduction": 0.4
+        }
+      ]
+    },
+    {
+      "id": "minecraft:breach",
+      "name": "Breach",
+      "max_level": 7,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "Reduces effectiveness of enemy shields.",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "shield_penalty": 0.1
+        },
+        {
+          "level": 2,
+          "shield_penalty": 0.2
+        },
+        {
+          "level": 3,
+          "shield_penalty": 0.3
+        },
+        {
+          "level": 4,
+          "shield_penalty": 0.4
+        },
+        {
+          "level": 5,
+          "shield_penalty": 0.5
+        },
+        {
+          "level": 6,
+          "shield_penalty": 0.6
+        },
+        {
+          "level": 7,
+          "shield_penalty": 0.7
+        }
+      ]
+    },
+    {
+      "id": "minecraft:channeling",
+      "name": "Channeling",
+      "max_level": 1,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "Summons lightning during thunderstorms when hitting mobs.",
+      "enc_category": [
+        "Utility",
+        "Combat"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1,
+          "effect": "lightning"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:curse_of_binding",
+      "name": "Curse of Binding",
+      "max_level": 1,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "Prevents removal of cursed armor.",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:curse_of_vanishing",
+      "name": "Curse of Vanishing",
+      "max_level": 1,
+      "applicable_to": [
+        "all_items"
+      ],
+      "description": "Item disappears upon death.",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:density",
+      "name": "Density",
+      "max_level": 5,
+      "applicable_to": [
+        "mace"
+      ],
+      "description": "Increases damage after falling.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "fall_bonus": 0.5
+        },
+        {
+          "level": 2,
+          "fall_bonus": 1
+        },
+        {
+          "level": 3,
+          "fall_bonus": 1.5
+        },
+        {
+          "level": 4,
+          "fall_bonus": 2
+        },
+        {
+          "level": 5,
+          "fall_bonus": 2.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:depth_strider",
+      "name": "Depth Strider",
+      "max_level": 5,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "Increases underwater movement speed.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "speed_multiplier": 1.2
+        },
+        {
+          "level": 2,
+          "speed_multiplier": 1.4
+        },
+        {
+          "level": 3,
+          "speed_multiplier": 1.6
+        },
+        {
+          "level": 4,
+          "speed_multiplier": 1.8
+        },
+        {
+          "level": 5,
+          "speed_multiplier": 2
+        }
+      ]
+    },
+    {
+      "id": "minecraft:efficiency",
+      "name": "Efficiency",
+      "max_level": 10,
+      "applicable_to": [
+        "tools"
+      ],
+      "description": "Increases mining speed.",
+      "enc_category": [
+        "Mining"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "common",
+      "levels": [
+        {
+          "level": 1,
+          "speed_multiplier": 1.1
+        },
+        {
+          "level": 2,
+          "speed_multiplier": 1.2
+        },
+        {
+          "level": 3,
+          "speed_multiplier": 1.3
+        },
+        {
+          "level": 4,
+          "speed_multiplier": 1.4
+        },
+        {
+          "level": 5,
+          "speed_multiplier": 1.5
+        },
+        {
+          "level": 6,
+          "speed_multiplier": 1.6
+        },
+        {
+          "level": 7,
+          "speed_multiplier": 1.7
+        },
+        {
+          "level": 8,
+          "speed_multiplier": 1.8
+        },
+        {
+          "level": 9,
+          "speed_multiplier": 1.9
+        },
+        {
+          "level": 10,
+          "speed_multiplier": 2
+        }
+      ]
+    },
+    {
+      "id": "minecraft:feather_falling",
+      "name": "Feather Falling",
+      "max_level": 5,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "Reduces fall damage.",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "fall_reduction": 0.1
+        },
+        {
+          "level": 2,
+          "fall_reduction": 0.2
+        },
+        {
+          "level": 3,
+          "fall_reduction": 0.3
+        },
+        {
+          "level": 4,
+          "fall_reduction": 0.4
+        },
+        {
+          "level": 5,
+          "fall_reduction": 0.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:fire_aspect",
+      "name": "Fire Aspect",
+      "max_level": 5,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "Sets target on fire.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "fire_damage": 1
+        },
+        {
+          "level": 2,
+          "fire_damage": 2
+        },
+        {
+          "level": 3,
+          "fire_damage": 3
+        },
+        {
+          "level": 4,
+          "fire_damage": 4
+        },
+        {
+          "level": 5,
+          "fire_damage": 5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:fire_protection",
+      "name": "Fire Protection",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "Reduces fire damage.",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "damage_reduction": 0.08
+        },
+        {
+          "level": 2,
+          "damage_reduction": 0.16
+        },
+        {
+          "level": 3,
+          "damage_reduction": 0.24
+        },
+        {
+          "level": 4,
+          "damage_reduction": 0.32
+        },
+        {
+          "level": 5,
+          "damage_reduction": 0.4
+        }
+      ]
+    },
+    {
+      "id": "minecraft:flame",
+      "name": "Flame",
+      "max_level": 1,
+      "applicable_to": [
+        "bow"
+      ],
+      "description": "Arrows set targets on fire.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "fire_damage": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:fortune",
+      "name": "Fortune",
+      "max_level": 5,
+      "applicable_to": [
+        "tools"
+      ],
+      "description": "Increases block drops.",
+      "enc_category": [
+        "Mining"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "drop_bonus": 0.5
+        },
+        {
+          "level": 2,
+          "drop_bonus": 1
+        },
+        {
+          "level": 3,
+          "drop_bonus": 1.5
+        },
+        {
+          "level": 4,
+          "drop_bonus": 2
+        },
+        {
+          "level": 5,
+          "drop_bonus": 2.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:frost_walker",
+      "name": "Frost Walker",
+      "max_level": 3,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "Freezes water underfoot.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "ice_radius": 1
+        },
+        {
+          "level": 2,
+          "ice_radius": 2
+        },
+        {
+          "level": 3,
+          "ice_radius": 3
+        }
+      ]
+    },
+    {
+      "id": "minecraft:impaling",
+      "name": "Impaling",
+      "max_level": 10,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "Increases damage to sea mobs.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "aquatic"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "extra_damage": 2
+        },
+        {
+          "level": 2,
+          "extra_damage": 4
+        },
+        {
+          "level": 3,
+          "extra_damage": 6
+        },
+        {
+          "level": 4,
+          "extra_damage": 8
+        },
+        {
+          "level": 5,
+          "extra_damage": 10
+        },
+        {
+          "level": 6,
+          "extra_damage": 12
+        },
+        {
+          "level": 7,
+          "extra_damage": 14
+        },
+        {
+          "level": 8,
+          "extra_damage": 16
+        },
+        {
+          "level": 9,
+          "extra_damage": 18
+        },
+        {
+          "level": 10,
+          "extra_damage": 20
+        }
+      ]
+    },
+    {
+      "id": "minecraft:infinity",
+      "name": "Infinity",
+      "max_level": 1,
+      "applicable_to": [
+        "bow"
+      ],
+      "description": "Arrows are not consumed.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:knockback",
+      "name": "Knockback",
+      "max_level": 5,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "Pushes mobs back.",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "knockback": 0.5
+        },
+        {
+          "level": 2,
+          "knockback": 1
+        },
+        {
+          "level": 3,
+          "knockback": 1.5
+        },
+        {
+          "level": 4,
+          "knockback": 2
+        },
+        {
+          "level": 5,
+          "knockback": 2.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:looting",
+      "name": "Looting",
+      "max_level": 7,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "Increases mob drops.",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "drop_bonus": 0.5
+        },
+        {
+          "level": 2,
+          "drop_bonus": 1
+        },
+        {
+          "level": 3,
+          "drop_bonus": 1.5
+        },
+        {
+          "level": 4,
+          "drop_bonus": 2
+        },
+        {
+          "level": 5,
+          "drop_bonus": 2.5
+        },
+        {
+          "level": 6,
+          "drop_bonus": 3
+        },
+        {
+          "level": 7,
+          "drop_bonus": 3.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:loyalty",
+      "name": "Loyalty",
+      "max_level": 5,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "Trident returns after throwing.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "return_speed": 0.5
+        },
+        {
+          "level": 2,
+          "return_speed": 1
+        },
+        {
+          "level": 3,
+          "return_speed": 1.5
+        },
+        {
+          "level": 4,
+          "return_speed": 2
+        },
+        {
+          "level": 5,
+          "return_speed": 2.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:luck_of_the_sea",
+      "name": "Luck of the Sea",
+      "max_level": 10,
+      "applicable_to": [
+        "fishing_rod"
+      ],
+      "description": "Increases chances for treasure.",
+      "enc_category": [
+        "Fishing"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "treasure_chance": 1.05
+        },
+        {
+          "level": 2,
+          "treasure_chance": 1.1
+        },
+        {
+          "level": 3,
+          "treasure_chance": 1.15
+        },
+        {
+          "level": 4,
+          "treasure_chance": 1.2
+        },
+        {
+          "level": 5,
+          "treasure_chance": 1.25
+        },
+        {
+          "level": 6,
+          "treasure_chance": 1.3
+        },
+        {
+          "level": 7,
+          "treasure_chance": 1.35
+        },
+        {
+          "level": 8,
+          "treasure_chance": 1.4
+        },
+        {
+          "level": 9,
+          "treasure_chance": 1.45
+        },
+        {
+          "level": 10,
+          "treasure_chance": 1.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:lure",
+      "name": "Lure",
+      "max_level": 5,
+      "applicable_to": [
+        "fishing_rod"
+      ],
+      "description": "Decreases wait time for fish.",
+      "enc_category": [
+        "Fishing"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "speed_multiplier": 1.1
+        },
+        {
+          "level": 2,
+          "speed_multiplier": 1.2
+        },
+        {
+          "level": 3,
+          "speed_multiplier": 1.3
+        },
+        {
+          "level": 4,
+          "speed_multiplier": 1.4
+        },
+        {
+          "level": 5,
+          "speed_multiplier": 1.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:mending",
+      "name": "Mending",
+      "max_level": 1,
+      "applicable_to": [
+        "all_items"
+      ],
+      "description": "Repairs item with experience orbs.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:multishot",
+      "name": "Multishot",
+      "max_level": 1,
+      "applicable_to": [
+        "crossbow"
+      ],
+      "description": "Shoots three arrows at once.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:piercing",
+      "name": "Piercing",
+      "max_level": 10,
+      "applicable_to": [
+        "crossbow"
+      ],
+      "description": "Arrows go through multiple targets.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "targets": 1
+        },
+        {
+          "level": 2,
+          "targets": 2
+        },
+        {
+          "level": 3,
+          "targets": 3
+        },
+        {
+          "level": 4,
+          "targets": 4
+        },
+        {
+          "level": 5,
+          "targets": 5
+        },
+        {
+          "level": 6,
+          "targets": 6
+        },
+        {
+          "level": 7,
+          "targets": 7
+        },
+        {
+          "level": 8,
+          "targets": 8
+        },
+        {
+          "level": 9,
+          "targets": 9
+        },
+        {
+          "level": 10,
+          "targets": 10
+        }
+      ]
+    },
+    {
+      "id": "minecraft:power",
+      "name": "Power",
+      "max_level": 10,
+      "applicable_to": [
+        "bow"
+      ],
+      "description": "Increases arrow damage.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "common",
+      "levels": [
+        {
+          "level": 1,
+          "extra_damage": 0.5
+        },
+        {
+          "level": 2,
+          "extra_damage": 1
+        },
+        {
+          "level": 3,
+          "extra_damage": 1.5
+        },
+        {
+          "level": 4,
+          "extra_damage": 2
+        },
+        {
+          "level": 5,
+          "extra_damage": 2.5
+        },
+        {
+          "level": 6,
+          "extra_damage": 3
+        },
+        {
+          "level": 7,
+          "extra_damage": 3.5
+        },
+        {
+          "level": 8,
+          "extra_damage": 4
+        },
+        {
+          "level": 9,
+          "extra_damage": 4.5
+        },
+        {
+          "level": 10,
+          "extra_damage": 5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:projectile_protection",
+      "name": "Projectile Protection",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "Reduces projectile damage.",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "damage_reduction": 0.08
+        },
+        {
+          "level": 2,
+          "damage_reduction": 0.16
+        },
+        {
+          "level": 3,
+          "damage_reduction": 0.24
+        },
+        {
+          "level": 4,
+          "damage_reduction": 0.32
+        },
+        {
+          "level": 5,
+          "damage_reduction": 0.4
+        }
+      ]
+    },
+    {
+      "id": "minecraft:protection",
+      "name": "Protection",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "Reduces all damage.",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "common",
+      "levels": [
+        {
+          "level": 1,
+          "damage_reduction": 0.08
+        },
+        {
+          "level": 2,
+          "damage_reduction": 0.16
+        },
+        {
+          "level": 3,
+          "damage_reduction": 0.24
+        },
+        {
+          "level": 4,
+          "damage_reduction": 0.32
+        },
+        {
+          "level": 5,
+          "damage_reduction": 0.4
+        }
+      ]
+    },
+    {
+      "id": "minecraft:punch",
+      "name": "Punch",
+      "max_level": 3,
+      "applicable_to": [
+        "bow"
+      ],
+      "description": "Increases arrow knockback.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "knockback": 0.5
+        },
+        {
+          "level": 2,
+          "knockback": 1
+        },
+        {
+          "level": 3,
+          "knockback": 1.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:quick_charge",
+      "name": "Quick Charge",
+      "max_level": 5,
+      "applicable_to": [
+        "crossbow"
+      ],
+      "description": "Reduces reload time.",
+      "enc_category": [
+        "Ranged"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "reload_multiplier": 0.9
+        },
+        {
+          "level": 2,
+          "reload_multiplier": 0.8
+        },
+        {
+          "level": 3,
+          "reload_multiplier": 0.7
+        },
+        {
+          "level": 4,
+          "reload_multiplier": 0.6
+        },
+        {
+          "level": 5,
+          "reload_multiplier": 0.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:respiration",
+      "name": "Respiration",
+      "max_level": 5,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "Extends underwater breathing.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "extra_seconds": 15
+        },
+        {
+          "level": 2,
+          "extra_seconds": 30
+        },
+        {
+          "level": 3,
+          "extra_seconds": 45
+        },
+        {
+          "level": 4,
+          "extra_seconds": 60
+        },
+        {
+          "level": 5,
+          "extra_seconds": 75
+        }
+      ]
+    },
+    {
+      "id": "minecraft:riptide",
+      "name": "Riptide",
+      "max_level": 7,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "Launches player when thrown in water/rain.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "boost": 1
+        },
+        {
+          "level": 2,
+          "boost": 2
+        },
+        {
+          "level": 3,
+          "boost": 3
+        },
+        {
+          "level": 4,
+          "boost": 4
+        },
+        {
+          "level": 5,
+          "boost": 5
+        },
+        {
+          "level": 6,
+          "boost": 6
+        },
+        {
+          "level": 7,
+          "boost": 7
+        }
+      ]
+    },
+    {
+      "id": "minecraft:sharpness",
+      "name": "Sharpness",
+      "max_level": 10,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "Increases overall melee damage.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "common",
+      "levels": [
+        {
+          "level": 1,
+          "extra_damage": 0.5
+        },
+        {
+          "level": 2,
+          "extra_damage": 1
+        },
+        {
+          "level": 3,
+          "extra_damage": 1.5
+        },
+        {
+          "level": 4,
+          "extra_damage": 2
+        },
+        {
+          "level": 5,
+          "extra_damage": 2.5
+        },
+        {
+          "level": 6,
+          "extra_damage": 3
+        },
+        {
+          "level": 7,
+          "extra_damage": 3.5
+        },
+        {
+          "level": 8,
+          "extra_damage": 4
+        },
+        {
+          "level": 9,
+          "extra_damage": 4.5
+        },
+        {
+          "level": 10,
+          "extra_damage": 5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:silk_touch",
+      "name": "Silk Touch",
+      "max_level": 1,
+      "applicable_to": [
+        "tools"
+      ],
+      "description": "Blocks drop themselves.",
+      "enc_category": [
+        "Mining"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "very_rare",
+      "levels": [
+        {
+          "level": 1
+        }
+      ]
+    },
+    {
+      "id": "minecraft:smite",
+      "name": "Smite",
+      "max_level": 10,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "Increases damage against undead.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "undead"
+      ],
+      "rarity": "uncommon",
+      "levels": [
+        {
+          "level": 1,
+          "extra_damage": 2.5
+        },
+        {
+          "level": 2,
+          "extra_damage": 5
+        },
+        {
+          "level": 3,
+          "extra_damage": 7.5
+        },
+        {
+          "level": 4,
+          "extra_damage": 10
+        },
+        {
+          "level": 5,
+          "extra_damage": 12.5
+        },
+        {
+          "level": 6,
+          "extra_damage": 15
+        },
+        {
+          "level": 7,
+          "extra_damage": 17.5
+        },
+        {
+          "level": 8,
+          "extra_damage": 20
+        },
+        {
+          "level": 9,
+          "extra_damage": 22.5
+        },
+        {
+          "level": 10,
+          "extra_damage": 25
+        }
+      ]
+    },
+    {
+      "id": "minecraft:soul_speed",
+      "name": "Soul Speed",
+      "max_level": 5,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "Increases speed on soul sand/soul soil.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "speed_multiplier": 1.2
+        },
+        {
+          "level": 2,
+          "speed_multiplier": 1.4
+        },
+        {
+          "level": 3,
+          "speed_multiplier": 1.6
+        },
+        {
+          "level": 4,
+          "speed_multiplier": 1.8
+        },
+        {
+          "level": 5,
+          "speed_multiplier": 2
+        }
+      ]
+    },
+    {
+      "id": "minecraft:sweeping_edge",
+      "name": "Sweeping Edge",
+      "max_level": 7,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "Increases sweep attack damage.",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "extra_damage": 0.5
+        },
+        {
+          "level": 2,
+          "extra_damage": 1
+        },
+        {
+          "level": 3,
+          "extra_damage": 1.5
+        },
+        {
+          "level": 4,
+          "extra_damage": 2
+        },
+        {
+          "level": 5,
+          "extra_damage": 2.5
+        },
+        {
+          "level": 6,
+          "extra_damage": 3
+        },
+        {
+          "level": 7,
+          "extra_damage": 3.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:swift_sneak",
+      "name": "Swift Sneak",
+      "max_level": 7,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "Increases sneaking speed.",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "speed_multiplier": 1.1
+        },
+        {
+          "level": 2,
+          "speed_multiplier": 1.2
+        },
+        {
+          "level": 3,
+          "speed_multiplier": 1.3
+        },
+        {
+          "level": 4,
+          "speed_multiplier": 1.4
+        },
+        {
+          "level": 5,
+          "speed_multiplier": 1.5
+        },
+        {
+          "level": 6,
+          "speed_multiplier": 1.6
+        },
+        {
+          "level": 7,
+          "speed_multiplier": 1.7
+        }
+      ]
+    },
+    {
+      "id": "minecraft:thorns",
+      "name": "Thorns",
+      "max_level": 10,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "Damages attackers when hit.",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "damage_to_attacker": 0.5
+        },
+        {
+          "level": 2,
+          "damage_to_attacker": 1
+        },
+        {
+          "level": 3,
+          "damage_to_attacker": 1.5
+        },
+        {
+          "level": 4,
+          "damage_to_attacker": 2
+        },
+        {
+          "level": 5,
+          "damage_to_attacker": 2.5
+        },
+        {
+          "level": 6,
+          "damage_to_attacker": 3
+        },
+        {
+          "level": 7,
+          "damage_to_attacker": 3.5
+        },
+        {
+          "level": 8,
+          "damage_to_attacker": 4
+        },
+        {
+          "level": 9,
+          "damage_to_attacker": 4.5
+        },
+        {
+          "level": 10,
+          "damage_to_attacker": 5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:unbreaking",
+      "name": "Unbreaking",
+      "max_level": 5,
+      "applicable_to": [
+        "all_items"
+      ],
+      "description": "Increases item durability.",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "common",
+      "levels": [
+        {
+          "level": 1,
+          "durability_multiplier": 1.1
+        },
+        {
+          "level": 2,
+          "durability_multiplier": 1.2
+        },
+        {
+          "level": 3,
+          "durability_multiplier": 1.3
+        },
+        {
+          "level": 4,
+          "durability_multiplier": 1.4
+        },
+        {
+          "level": 5,
+          "durability_multiplier": 1.5
+        }
+      ]
+    },
+    {
+      "id": "minecraft:wind_burst",
+      "name": "Wind Burst",
+      "max_level": 5,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "Pushes enemies back on hit.",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "all"
+      ],
+      "rarity": "rare",
+      "levels": [
+        {
+          "level": 1,
+          "knockback": 0.5
+        },
+        {
+          "level": 2,
+          "knockback": 1
+        },
+        {
+          "level": 3,
+          "knockback": 1.5
+        },
+        {
+          "level": 4,
+          "knockback": 2
+        },
+        {
+          "level": 5,
+          "knockback": 2.5
+        }
+      ]
+    }
+  ]
+}
