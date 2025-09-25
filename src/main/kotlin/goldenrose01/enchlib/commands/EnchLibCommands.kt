@@ -63,22 +63,120 @@ object EnchLibCommands {
 
     // ======= Helpers =======
 
-    private fun enchRegistry(server: MinecraftServer): Registry<Enchantment> =
-        server.registryManager.get(RegistryKeys.ENCHANTMENT)
-
-    private fun findEnchantment(server: MinecraftServer, idStr: String): Enchantment? {
-        val id = Identifier.tryParse(idStr) ?: return null
-        return enchRegistry(server).get(id)
-    }
-
-    private fun getId(server: MinecraftServer, ench: Enchantment): Identifier =
-        enchRegistry(server).getId(ench)
-
     private fun getEnchantments(stack: ItemStack): ItemEnchantmentsComponent =
         stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
 
     private fun setEnchantments(stack: ItemStack, comp: ItemEnchantmentsComponent) {
         stack.set(DataComponentTypes.ENCHANTMENTS, comp)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun compAsMap(comp: ItemEnchantmentsComponent): Map<Enchantment, Int> {
+        // preferisci asMap()
+        try {
+            return ItemEnchantmentsComponent::class.java
+                .getMethod("asMap")
+                .invoke(comp) as Map<Enchantment, Int>
+        } catch (_: Throwable) { /* fallthrough */ }
+
+        // fallback: campo "enchantments"
+        return try {
+            val f = comp.javaClass.getDeclaredField("enchantments")
+            f.isAccessible = true
+            f.get(comp) as Map<Enchantment, Int>
+        } catch (_: Throwable) {
+            emptyMap()
+        }
+    }
+
+    private fun idFromEntry(entry: RegistryEntry<Enchantment>): Identifier? {
+        // Tentativi robusti per ricavare l'Identifier dal RegistryEntry (mappings variano).
+        return try {
+            // entry.registryKey().getValue()
+            val rk = entry.javaClass.getMethod("registryKey").invoke(entry)
+            val v = rk.javaClass.getMethod("getValue").invoke(rk)
+            v as? Identifier
+        } catch (_: Throwable) {
+            try {
+                // entry.getKey().get().getValue()
+                val k = entry.javaClass.getMethod("getKey").invoke(entry)
+                val opt = k as? java.util.Optional<*>
+                val key = opt?.orElse(null)
+                val v = key?.javaClass?.getMethod("getValue")?.invoke(key)
+                v as? Identifier
+            } catch (_: Throwable) {
+                null
+            }
+        }
+    }
+
+    private fun identifierOf(enchantment: Enchantment): String {
+        // Best effort: prova a chiamare getTranslationKey o toString come fallback leggibile
+        return try {
+            // molte mappings hanno toString() => "minecraft:sharpness"
+            enchantment.toString()
+        } catch (_: Throwable) {
+            "unknown:unknown"
+        }
+    }
+
+    private fun builderNewFrom(current: ItemEnchantmentsComponent): ItemEnchantmentsComponent.Builder {
+        // Preferisci costruttore (ItemEnchantmentsComponent.Builder(current))
+        return try {
+            val ctor = ItemEnchantmentsComponent.Builder::class.java.getConstructor(ItemEnchantmentsComponent::class.java)
+            ctor.newInstance(current)
+        } catch (_: Throwable) {
+            // fallback default ctor + set successivi
+            try { ItemEnchantmentsComponent.Builder::class.java.getConstructor().newInstance() }
+            catch (_: Throwable) { throw IllegalStateException("No suitable Builder constructor for ItemEnchantmentsComponent") }
+        }
+    }
+
+    private fun builderSet(builder: Any, entry: RegistryEntry<Enchantment>, level: Int): Boolean {
+        // set(RegistryEntry<Enchantment>, int)
+        return try {
+            val m = builder.javaClass.getMethod("set", RegistryEntry::class.java, Int::class.javaPrimitiveType)
+            m.invoke(builder, entry, level)
+            true
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    private fun builderSet(builder: Any, ench: Enchantment, level: Int): Boolean {
+        // set(Enchantment, int)
+        return try {
+            val m = builder.javaClass.getMethod("set", Enchantment::class.java, Int::class.javaPrimitiveType)
+            m.invoke(builder, ench, level)
+            true
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
+    private fun builderRemove(builder: Any, entry: RegistryEntry<Enchantment>): Boolean {
+        return try {
+            val m = builder.javaClass.getMethod("remove", RegistryEntry::class.java)
+            m.invoke(builder, entry)
+            true
+        } catch (_: Throwable) { false }
+    }
+
+    private fun builderRemove(builder: Any, ench: Enchantment): Boolean {
+        return try {
+            val m = builder.javaClass.getMethod("remove", Enchantment::class.java)
+            m.invoke(builder, ench)
+            true
+        } catch (_: Throwable) { false }
+    }
+
+    private fun builderBuild(builder: Any): ItemEnchantmentsComponent {
+        return try {
+            val m = builder.javaClass.getMethod("build")
+            m.invoke(builder) as ItemEnchantmentsComponent
+        } catch (_: Throwable) {
+            ItemEnchantmentsComponent.DEFAULT
+        }
     }
 
     private fun compAsMap(comp: ItemEnchantmentsComponent, server: MinecraftServer): Map<Enchantment, Int> {
@@ -101,100 +199,60 @@ object EnchLibCommands {
         }
     }
 
-    private fun buildComponentFromMap(
-        map: Map<Enchantment, Int>,
-        server: MinecraftServer
-    ): ItemEnchantmentsComponent {
-        val builderCtor = try {
-            ItemEnchantmentsComponent.Builder::class.java.getConstructor()
-        } catch (_: Throwable) { null }
-
-        val builder = builderCtor?.newInstance() as? ItemEnchantmentsComponent.Builder
-            ?: ItemEnchantmentsComponent.Builder(getEnchantments(ItemStack.EMPTY)) // fallback “inutile”, ma evita NPE
-
-        // Il set(...) può richiedere RegistryEntry<Enchantment> o Enchantment a seconda delle mappings.
-        val reg = enchRegistry(server)
-        for ((e, lvl) in map) {
-            val setViaEntry = try {
-                val m = ItemEnchantmentsComponent.Builder::class.java.getMethod(
-                    "set",
-                    RegistryEntry::class.java,
-                    Int::class.javaPrimitiveType
-                )
-                val entryOpt = reg.getEntry(e)
-                val entry = entryOpt.orElse(null) ?: continue
-                m.invoke(builder, entry, lvl)
-                true
-            } catch (_: Throwable) { false }
-
-            if (!setViaEntry) {
-                try {
-                    val m2 = ItemEnchantmentsComponent.Builder::class.java.getMethod(
-                        "set",
-                        Enchantment::class.java,
-                        Int::class.javaPrimitiveType
-                    )
-                    m2.invoke(builder, e, lvl)
-                } catch (_: Throwable) {
-                    // ultima spiaggia: salta
-                }
-            }
-        }
-        return try {
-            ItemEnchantmentsComponent.Builder::class.java
-                .getMethod("build")
-                .invoke(builder) as ItemEnchantmentsComponent
-        } catch (_: Throwable) {
-            ItemEnchantmentsComponent.DEFAULT
-        }
-    }
     // ===== Comandi =====
 
     private fun addEnchantment(ctx: CommandContext<ServerCommandSource>): Int {
         val src = ctx.source
-        val server = src.server
         val player = src.player ?: return noop(ctx, "Nessun giocatore.")
         val stack = player.mainHandStack
         if (stack.isEmpty) return noop(ctx, "Item in mano vuoto.")
 
-        val enchId = StringArgumentType.getString(ctx, "enchantment_id")
-        val reqLevel = IntegerArgumentType.getInteger(ctx, "level")
-        val ench = findEnchantment(server, enchId) ?: return noop(ctx, "Incantesimo non trovato: $enchId")
+        val entry: RegistryEntry<Enchantment> =
+            RegistryEntryReferenceArgumentType.getRegistryEntry(ctx, "enchantment", RegistryKeys.ENCHANTMENT)
+        val ench = entry.value()
 
-        val maxFromJson = WorldConfigManager.getMaxLevelFor(ench, server)
+        val reqLevel = IntegerArgumentType.getInteger(ctx, "level")
+        val maxFromJson = WorldConfigManager.getMaxLevelFor(ench, src.server)
         val level = reqLevel.coerceIn(1, maxFromJson)
 
         val current = getEnchantments(stack)
-        val currentMap = compAsMap(current, server).toMutableMap()
-        currentMap[ench] = level
+        val builder = builderNewFrom(current)
 
-        val updated = buildComponentFromMap(currentMap, server)
-        setEnchantments(stack, updated)
+        if (!builderSet(builder, entry, level) && !builderSet(builder, ench, level)) {
+            return noop(ctx, "Impossibile applicare l'incantesimo (mappings non compatibili).")
+        }
 
-        return ok(ctx, "Aggiunto $enchId livello $level all'item in mano.")
+        setEnchantments(stack, builderBuild(builder))
+
+        // auto-popola JSON se non presente
+        idFromEntry(entry)?.let { id ->
+            WorldConfigManager.ensurePresentInJson(id.toString(), src.server)
+        }
+
+        return ok(ctx, "Aggiunto ${idFromEntry(entry) ?: identifierOf(ench)} livello $level all'item in mano.")
     }
 
     private fun removeEnchantment(ctx: CommandContext<ServerCommandSource>): Int {
         val src = ctx.source
-        val server = src.server
         val player = src.player ?: return noop(ctx, "Nessun giocatore.")
         val stack = player.mainHandStack
         if (stack.isEmpty) return noop(ctx, "Item in mano vuoto.")
 
-        val enchId = StringArgumentType.getString(ctx, "enchantment_id")
-        val ench = findEnchantment(server, enchId) ?: return noop(ctx, "Incantesimo non trovato: $enchId")
+        val entry: RegistryEntry<Enchantment> =
+            RegistryEntryReferenceArgumentType.getRegistryEntry(ctx, "enchantment", RegistryKeys.ENCHANTMENT)
+        val ench = entry.value()
 
-        val current = getEnchantments(stack)
-        val map = compAsMap(current, server)
-        if (!map.containsKey(ench)) return noop(ctx, "L'item non ha $enchId.")
+        val comp = getEnchantments(stack)
+        val map = compAsMap(comp)
+        if (!map.containsKey(ench)) return noop(ctx, "L'item non ha questo incantesimo.")
 
-        val newMap = map.toMutableMap()
-        newMap.remove(ench)
+        val builder = builderNewFrom(comp)
+        if (!builderRemove(builder, entry) && !builderRemove(builder, ench)) {
+            return noop(ctx, "Impossibile rimuovere l'incantesimo (mappings non compatibili).")
+        }
+        setEnchantments(stack, builderBuild(builder))
 
-        val updated = buildComponentFromMap(newMap, server)
-        setEnchantments(stack, updated)
-
-        return ok(ctx, "Rimosso $enchId dall'item in mano.")
+        return ok(ctx, "Rimosso ${idFromEntry(entry) ?: identifierOf(ench)} dall'item in mano.")
     }
 
     private fun clearEnchantmentsOnHeldItem(ctx: CommandContext<ServerCommandSource>): Int {
@@ -209,20 +267,18 @@ object EnchLibCommands {
 
     private fun listEnchantmentsOnHeldItem(ctx: CommandContext<ServerCommandSource>): Int {
         val src = ctx.source
-        val server = src.server
         val player = src.player ?: return noop(ctx, "Nessun giocatore.")
         val stack = player.mainHandStack
         if (stack.isEmpty) return noop(ctx, "Item in mano vuoto.")
 
         val comp = getEnchantments(stack)
-        val map = compAsMap(comp, server)
+        val map = compAsMap(comp)
         if (map.isEmpty()) return ok(ctx, "Nessun incantesimo sull'item in mano.")
 
         val lines = buildString {
             appendLine("Incantesimi sull'item:")
             map.forEach { (e, lvl) ->
-                val id = getId(server, e)
-                appendLine("- ${id} lvl $lvl")
+                appendLine("- ${identifierOf(e)} lvl $lvl")
             }
         }
         return ok(ctx, lines)
@@ -230,14 +286,14 @@ object EnchLibCommands {
 
     private fun infoEnchantment(ctx: CommandContext<ServerCommandSource>): Int {
         val src = ctx.source
-        val server = src.server
-        val enchId = StringArgumentType.getString(ctx, "enchantment_id")
-        val ench = findEnchantment(server, enchId) ?: return noop(ctx, "Incantesimo non trovato: $enchId")
+        val entry: RegistryEntry<Enchantment> =
+            RegistryEntryReferenceArgumentType.getRegistryEntry(ctx, "enchantment", RegistryKeys.ENCHANTMENT)
+        val ench = entry.value()
 
-        val details = WorldConfigManager.getDetailsFor(ench, server)
-        val id = getId(server, ench)
+        val idStr = idFromEntry(entry)?.toString() ?: identifierOf(ench)
+        val details = WorldConfigManager.getDetailsFor(ench, src.server)
         val text = buildString {
-            appendLine("Info: $id")
+            appendLine("Info: $idStr")
             appendLine(" - maxLevel: ${details.maxLevel}")
             appendLine(" - rarity: ${details.rarity}")
             appendLine(" - category: ${details.category}")
@@ -245,5 +301,19 @@ object EnchLibCommands {
         }
         return ok(ctx, text)
     }
-}
 
+    // ===== Variante compat: add tramite string id (senza entry) =====
+
+    private fun addEnchantmentById(ctx: CommandContext<ServerCommandSource>): Int {
+        val src = ctx.source
+        val player = src.player ?: return noop(ctx, "Nessun giocatore.")
+        val stack = player.mainHandStack
+        if (stack.isEmpty) return noop(ctx, "Item in mano vuoto.")
+
+        val idStr = StringArgumentType.getString(ctx, "enchantment_id")
+        val id = Identifier.tryParse(idStr) ?: return noop(ctx, "ID non valido: $idStr")
+        // Possiamo solo salvare nei JSON; l'applicazione effettiva richiede un RegistryEntry/Enchantment.
+        WorldConfigManager.ensurePresentInJson(id.toString(), src.server)
+        return ok(ctx, "Registrato in config l'incantesimo $idStr. Usa `/plusec add` (non addid) per applicarlo.")
+    }
+}

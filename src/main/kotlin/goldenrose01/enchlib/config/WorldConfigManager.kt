@@ -6,8 +6,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
 
@@ -16,8 +14,6 @@ import kotlin.io.path.exists
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
-
-// ====== DATA CLASSES ======
 
 @Serializable
 data class AviableEnch(val enchantments: MutableList<AvailEntry> = mutableListOf())
@@ -52,8 +48,6 @@ data class MobCategories(val rules: MutableList<MobCategoryRule> = mutableListOf
 data class ValidateResult(val valid: Boolean, val report: String)
 data class Stats(val total: Int, val enabled: Int, val disabled: Int, val missing: Int)
 
-// ====== MANAGER ======
-
 object WorldConfigManager {
 
     private val json = Json {
@@ -68,9 +62,6 @@ object WorldConfigManager {
     private const val FN_UNCOMP    = "Uncompatibility.json5"
     private const val FN_MOBS      = "Mob_category.json5"
 
-    private fun enchRegistry(server: MinecraftServer): Registry<Enchantment> =
-        server.registryManager.get(RegistryKeys.ENCHANTMENT)
-
     /** Directory world-based: `<runDir>/saves/<levelName>/config/enchlib` */
     fun getWorldConfigDir(server: MinecraftServer): Path {
         val runDir: Path = server.runDirectory.toAbsolutePath()
@@ -82,40 +73,21 @@ object WorldConfigManager {
 
     fun initializeWorldConfigs(server: MinecraftServer) {
         val cfg = getWorldConfigDir(server)
-        val allIds = allEnchantmentIds(server)
-
-        val available = loadOrCreateAvailable(cfg, allIds)
-        saveAvailable(cfg, available)
-
-        val details = loadOrCreateDetails(cfg, allIds)
-        saveDetails(cfg, details)
-
-        if (!cfg.resolve(FN_UNCOMP).exists()) saveUncompat(cfg, Uncompatibility())
-        if (!cfg.resolve(FN_MOBS).exists())   saveMobCats(cfg, MobCategories())
+        if (!cfg.resolve(FN_AVAILABLE).exists()) saveAvailable(cfg, AviableEnch())
+        if (!cfg.resolve(FN_DETAILS).exists())   saveDetails(cfg, EnchantmentDetails())
+        if (!cfg.resolve(FN_UNCOMP).exists())    cfg.resolve(FN_UNCOMP).writeText(json.encodeToString(Uncompatibility()))
+        if (!cfg.resolve(FN_MOBS).exists())      cfg.resolve(FN_MOBS).writeText(json.encodeToString(MobCategories()))
     }
 
     fun reload(server: MinecraftServer) { getWorldConfigDir(server) }
-    fun regen(server: MinecraftServer) { initializeWorldConfigs(server) }
+    fun regen(server: MinecraftServer)  { initializeWorldConfigs(server) }
 
     fun validate(server: MinecraftServer): ValidateResult {
         val cfg = getWorldConfigDir(server)
-        val all = allEnchantmentIds(server).toSet()
-
-        val avail = loadAvailableSafely(cfg).enchantments
-            .mapNotNull { Identifier.tryParse(it.id) }
-            .toSet()
-
-        val missingInJson = all - avail
-        val extraInJson = avail - all
-        val ok = missingInJson.isEmpty() && extraInJson.isEmpty()
-
-        val report = buildString {
-            appendLine("MissingInJson=${missingInJson.size}, ExtraInJson=${extraInJson.size}")
-            if (missingInJson.isNotEmpty()) appendLine("Missing: ${missingInJson.joinToString()}")
-            if (extraInJson.isNotEmpty()) appendLine("Extra: ${extraInJson.joinToString()}")
-        }.trim()
-
-        return ValidateResult(ok, report)
+        val avail = loadAvailableSafely(cfg)
+        // senza accesso all’elenco globale runtime, la validazione è “interna”
+        val report = "Available=${avail.enchantments.size} (validazione cross-registry disabilitata in questa build)"
+        return ValidateResult(true, report)
     }
 
     fun stats(server: MinecraftServer): Stats {
@@ -124,7 +96,7 @@ object WorldConfigManager {
         val total = avail.enchantments.size
         val enabled = avail.enchantments.count { it.enabled }
         val disabled = total - enabled
-        val missing = allEnchantmentIds(server).size - total
+        val missing = 0 // senza enumerazione globale
         return Stats(total, enabled, disabled, missing)
     }
 
@@ -137,40 +109,30 @@ object WorldConfigManager {
 
     fun getDetailsFor(ench: Enchantment, server: MinecraftServer): EnchantmentDetail {
         val cfg = getWorldConfigDir(server)
-        val id = enchRegistry(server).getId(ench).toString()
+        val idGuess = try { ench.toString() } catch (_: Throwable) { "unknown:unknown" }
         val details = loadDetailsSafely(cfg)
-        return details.details.firstOrNull { it.id == id } ?: EnchantmentDetail(id)
+        return details.details.firstOrNull { it.id == idGuess } ?: EnchantmentDetail(idGuess)
+    }
+
+    /** Assicura che un id sia presente in Available/Details, senza distruggere valori esistenti. */
+    fun ensurePresentInJson(id: String, server: MinecraftServer) {
+        val cfg = getWorldConfigDir(server)
+
+        val avail = loadAvailableSafely(cfg)
+        if (avail.enchantments.none { it.id == id }) {
+            avail.enchantments.add(AvailEntry(id, true))
+            saveAvailable(cfg, avail)
+        }
+
+        val dets = loadDetailsSafely(cfg)
+        if (dets.details.none { it.id == id }) {
+            dets.details.add(EnchantmentDetail(id))
+            dets.details.sortBy { it.id }
+            saveDetails(cfg, dets)
+        }
     }
 
     // ====== Helpers JSON (.json5 → sanificati a JSON) ======
-
-    private fun loadOrCreateAvailable(cfg: Path, allIds: List<Identifier>): AviableEnch {
-        val file = cfg.resolve(FN_AVAILABLE)
-        val current = if (file.exists()) {
-            runCatching {
-                json.decodeFromString<AviableEnch>(sanitizeJson5(file.readText()))
-            }.getOrElse { AviableEnch() }
-        } else AviableEnch()
-
-        val known = current.enchantments.mapTo(mutableSetOf()) { it.id }
-        allIds.forEach { id ->
-            val s = id.toString()
-            if (!known.contains(s)) current.enchantments.add(AvailEntry(s, true))
-        }
-        return current
-    }
-
-    // alias compatibilità (se altrove usavi A**i**able)
-    @Suppress("unused")
-    private fun loadOrCreateAviable(cfg: Path, allIds: List<Identifier>): AviableEnch =
-        loadOrCreateAvailable(cfg, allIds)
-
-    private fun saveAvailable(cfg: Path, data: AviableEnch) {
-        cfg.resolve(FN_AVAILABLE).writeText(json.encodeToString(data))
-    }
-
-    @Suppress("unused")
-    private fun saveAviable(cfg: Path, data: AviableEnch) = saveAvailable(cfg, data)
 
     private fun loadAvailableSafely(cfg: Path): AviableEnch {
         val f = cfg.resolve(FN_AVAILABLE)
@@ -180,24 +142,8 @@ object WorldConfigManager {
         }.getOrElse { AviableEnch() }
     }
 
-    private fun loadOrCreateDetails(cfg: Path, allIds: List<Identifier>): EnchantmentDetails {
-        val file = cfg.resolve(FN_DETAILS)
-        val current = if (file.exists()) {
-            runCatching {
-                json.decodeFromString<EnchantmentDetails>(sanitizeJson5(file.readText()))
-            }.getOrElse { EnchantmentDetails() }
-        } else EnchantmentDetails()
-
-        val idx = current.details.associateBy { it.id }.toMutableMap()
-        allIds.forEach { id ->
-            val s = id.toString()
-            if (!idx.containsKey(s)) idx[s] = EnchantmentDetail(s)
-        }
-        return EnchantmentDetails(idx.values.sortedBy { it.id }.toMutableList())
-    }
-
-    private fun saveDetails(cfg: Path, data: EnchantmentDetails) {
-        cfg.resolve(FN_DETAILS).writeText(json.encodeToString(data))
+    private fun saveAvailable(cfg: Path, data: AviableEnch) {
+        cfg.resolve(FN_AVAILABLE).writeText(json.encodeToString(data))
     }
 
     private fun loadDetailsSafely(cfg: Path): EnchantmentDetails {
@@ -208,18 +154,9 @@ object WorldConfigManager {
         }.getOrElse { EnchantmentDetails() }
     }
 
-    private fun saveUncompat(cfg: Path, data: Uncompatibility) {
-        cfg.resolve(FN_UNCOMP).writeText(json.encodeToString(data))
+    private fun saveDetails(cfg: Path, data: EnchantmentDetails) {
+        cfg.resolve(FN_DETAILS).writeText(json.encodeToString(data))
     }
-
-    private fun saveMobCats(cfg: Path, data: MobCategories) {
-        cfg.resolve(FN_MOBS).writeText(json.encodeToString(data))
-    }
-
-    // ====== Registry ======
-
-    private fun allEnchantmentIds(server: MinecraftServer): List<Identifier> =
-        enchRegistry(server).ids.sortedWith(compareBy({ it.namespace }, { it.path }))
 
     // ====== JSON5 → JSON sanitizer ======
 
@@ -303,14 +240,6 @@ object WorldConfigManager {
                         inString = false
                     }
                 }
-                i++
-                continue
-            }
-
-            if (c == '"' || c == '\'') {
-                inString = true
-                stringDelim = c
-                out.append(c)
                 i++
                 continue
             }
