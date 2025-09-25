@@ -2,172 +2,239 @@ package goldenrose01.enchlib.config
 
 import goldenrose01.enchlib.config.data.*
 import goldenrose01.enchlib.utils.EnchLogger
+
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.io.path.exists
+import kotlin.io.path.createDirectories
+import kotlin.io.path.writeText
+import kotlin.io.path.readText
+
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.Registries
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
+import net.minecraft.text.Text
+import net.minecraft.util.WorldSavePath
+
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.exists
-import kotlin.io.path.writeText
 
-class WorldConfigManager(private val server: MinecraftServer) {
+// ====== DATA CLASSES ======
+
+@Serializable
+data class AviableEnch(val enchantments: MutableList<AvailEntry> = mutableListOf())
+
+@Serializable
+data class AvailEntry(val id: String, val enabled: Boolean = true)
+
+@Serializable
+data class EnchantmentDetail(
+    val id: String,
+    val maxLevel: Int = 1,
+    val multiplier: Double = 1.0,
+    val rarity: String = "common",
+    val category: String = "generic"
+)
+
+@Serializable
+data class EnchantmentDetails(val details: MutableList<EnchantmentDetail> = mutableListOf())
+
+@Serializable
+data class UncompatRule(val enchantment: String, val incompatibleWith: List<String> = emptyList())
+
+@Serializable
+data class Uncompatibility(val rules: MutableList<UncompatRule> = mutableListOf())
+
+@Serializable
+data class MobCategoryRule(val mobId: String, val categories: List<String> = emptyList())
+
+@Serializable
+data class MobCategories(val rules: MutableList<MobCategoryRule> = mutableListOf())
+
+data class ValidateResult(val valid: Boolean, val report: String)
+
+data class Stats(val total: Int, val enabled: Int, val disabled: Int, val missing: Int)
+
+// ====== MANAGER ======
+
+object WorldConfigManager {
+
     private val json = Json {
         prettyPrint = true
-        ignoreUnknownKeys = true
         encodeDefaults = true
+        ignoreUnknownKeys = true
     }
 
-    companion object {
-        private var instance: WorldConfigManager? = null
+    private const val FOLDER = "config/enchlib"
+    private const val FN_AVAILABLE = "AviableEnch.json5"
+    private const val FN_DETAILS = "EnchantmentDetails.json5"
+    private const val FN_UNCOMP = "Uncompatibility.json5"
+    private const val FN_MOBS   = "Mob_category.json5"
 
-        fun getInstance(server: MinecraftServer): WorldConfigManager {
-            if (instance?.server != server) {
-                instance = WorldConfigManager(server)
+    /** Directory world-based: `<world>/config/enchlib` */
+    fun getWorldConfigDir(server: MinecraftServer): Path {
+        val runDir: Path = server.runDirectory.toAbsolutePath()
+        val levelName = server.saveProperties.levelName
+        val target = runDir.resolve("saves").resolve(levelName).resolve(FOLDER)
+        if (!target.exists()) target.createDirectories()
+        return target
+    }
+
+    fun initializeWorldConfigs(server: MinecraftServer) {
+        val cfg = getWorldConfigDir(server)
+        val allIds = allEnchantmentIds()
+
+        // Crea/merge AviableEnch
+        val available = loadOrCreateAviable(cfg, allIds)
+        saveAviable(cfg, available)
+
+        // Crea/merge EnchantmentDetails
+        val details = loadOrCreateDetails(cfg, allIds)
+        saveDetails(cfg, details)
+
+        // Crea se mancante Uncompatibility
+        if (!cfg.resolve(FN_UNCOMP).exists()) {
+            saveUncompat(cfg, Uncompatibility())
+        }
+
+        // Crea se mancante Mob_category
+        if (!cfg.resolve(FN_MOBS).exists()) {
+            saveMobCats(cfg, MobCategories())
+        }
+    }
+
+    fun reload(server: MinecraftServer) {
+        // In caso di cache in memoria, ricaricala. Qui è stateless, quindi no-op.
+        // Lasciato per compatibilità con /plusec-debug reload
+        getWorldConfigDir(server) // force ensure dir exists
+    }
+
+    fun regen(server: MinecraftServer) {
+        initializeWorldConfigs(server)
+    }
+
+    fun validate(server: MinecraftServer): ValidateResult {
+        val cfg = getWorldConfigDir(server)
+        val all = allEnchantmentIds().toSet()
+
+        val avail = loadAviableSafely(cfg).enchantments
+            .mapNotNull { Identifier.tryParse(it.id) }
+            .toSet()
+        val missingInJson = all.minus(avail)
+        val extraInJson = avail.minus(all)
+        val ok = missingInJson.isEmpty() && extraInJson.isEmpty()
+
+        val report = buildString {
+            appendLine("MissingInJson=${missingInJson.size}, ExtraInJson=${extraInJson.size}")
+            if (missingInJson.isNotEmpty()) appendLine("Missing: ${missingInJson.joinToString()}")
+            if (extraInJson.isNotEmpty()) appendLine("Extra: ${extraInJson.joinToString()}")
+        }.trim()
+
+        return ValidateResult(ok, report.trim())
+    }
+
+    fun stats(server: MinecraftServer): Stats {
+        val cfg = getWorldConfigDir(server)
+        val avail = loadAviableSafely(cfg)
+        val total = avail.enchantments.size
+        val enabled = avail.enchantments.count { it.enabled }
+        val disabled = total - enabled
+        val missing = allEnchantmentIds().size - total
+        return Stats(total, enabled, disabled, missing)
+    }
+
+    // ====== Accessors usati dai comandi ======
+
+    fun getMaxLevelFor(ench: Enchantment, server: MinecraftServer): Int {
+        val id = Registries.ENCHANTMENT.getId(ench) ?: return 1
+        val detail = getDetailsFor(ench, server)
+        return detail.maxLevel
+    }
+
+    fun getDetailsFor(ench: Enchantment, server: MinecraftServer): EnchantmentDetail {
+        val cfg = getWorldConfigDir(server)
+        val id = Registries.ENCHANTMENT.getId(ench)?.toString() ?: "minecraft:unknown"
+        val details = loadDetailsSafely(cfg)
+        return details.details.firstOrNull { it.id == id } ?: EnchantmentDetail(id)
+    }
+
+    // ====== Helpers JSON ======
+
+    private fun loadOrCreateAviable(cfg: Path, allIds: List<Identifier>): AviableEnch {
+        val file = cfg.resolve(FN_AVAILABLE)
+        val current = if (file.exists()) {
+            runCatching { json.decodeFromString<AviableEnch>(file.readText()) }.getOrElse { AviableEnch() }
+        } else AviableEnch()
+
+        val known = current.enchantments.mapTo(mutableSetOf()) { it.id }
+        // merge non distruttivo: aggiungi solo i mancanti (enabled default true)
+        allIds.forEach { id ->
+            val s = id.toString()
+            if (!known.contains(s)) {
+                current.enchantments.add(AvailEntry(s, true))
             }
-            return instance!!
         }
+        return current
     }
 
-    // Config folder path inside the current world save (config/enchlib/)
-    private val configFolder: Path by lazy {
-        val session = server.session.directoryName
-        Path.of("saves", session, "config", "enchlib")
+    private fun saveAviable(cfg: Path, data: AviableEnch) {
+        cfg.resolve(FN_AVAILABLE).writeText(json.encodeToString(data))
     }
 
-    private val availableEnchFile get() = configFolder.resolve("AviableEnch.json").toFile()
-    private val enchantmentDetailsFile get() = configFolder.resolve("EnchantmentDetails.json").toFile()
-    private val incompatibilityFile get() = configFolder.resolve("Uncompatibility.json").toFile()
-    private val mobCategoriesFile get() = configFolder.resolve("Mob_category.json").toFile()
+    private fun loadAviableSafely(cfg: Path): AviableEnch {
+        val f = cfg.resolve(FN_AVAILABLE)
+        if (!f.exists()) return AviableEnch()
+        return runCatching { json.decodeFromString<AviableEnch>(f.readText()) }.getOrElse { AviableEnch() }
+    }
 
-    // In-memory caches (optional)
-    private var availableEnchantments: AvailableEnchantmentsConfig? = null
-    private var enchantmentDetails: EnchantmentDetailsConfig? = null
-    private var incompatibilities: IncompatibilityRules? = null
-    private var mobCategories: MobCategoriesConfig? = null
+    private fun loadOrCreateDetails(cfg: Path, allIds: List<Identifier>): EnchantmentDetails {
+        val file = cfg.resolve(FN_DETAILS)
+        val current = if (file.exists()) {
+            runCatching { json.decodeFromString<EnchantmentDetails>(file.readText()) }.getOrElse { EnchantmentDetails() }
+        } else EnchantmentDetails()
 
-    fun initializeWorldConfigs() {
-        try {
-            if (!configFolder.exists()) {
-                Files.createDirectories(configFolder)
-                EnchLogger.info("Created config folder at $configFolder")
+        val idx = current.details.associateBy { it.id }.toMutableMap()
+        allIds.forEach { id ->
+            val s = id.toString()
+            if (!idx.containsKey(s)) {
+                idx[s] = EnchantmentDetail(s)
             }
-
-            loadOrCreateAvailableEnchantments()
-            loadOrCreateEnchantmentDetails()
-            loadOrCreateMobCategories()
-            loadOrCreateIncompatibility()
-
-            EnchLogger.info("World configurations initialized successfully in $configFolder")
-        } catch (ex: Exception) {
-            EnchLogger.error("Failed to initialize world configs", ex)
         }
+        return EnchantmentDetails(idx.values.sortedBy { it.id }.toMutableList())
     }
 
-    private fun loadOrCreateAvailableEnchantments() {
-        // Read existing or create new with all registry enchantments active true
-        val existing = if (availableEnchFile.exists()) {
-            json.decodeFromString<AvailableEnchantmentsConfig>(availableEnchFile.readText())
-        } else {
-            AvailableEnchantmentsConfig(emptyList())
-        }
-
-        val reg = server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val regIds = reg.entrySet.map { it.key.value.toString() }.toSet()
-        val existingIds = existing.enchantments.map { it.id }.toSet()
-
-        // Aggiungi eventuali incantesimi nuovi al file senza cancellare la configurazione utente
-        val newEntries = regIds
-            .filter { it !in existingIds }
-            .map { EnchantmentStatusEntry(it, enabled = true) }
-
-        val merged = existing.enchantments + newEntries
-
-        availableEnchantments = AvailableEnchantmentsConfig(merged)
-        availableEnchFile.writeText(json.encodeToString(availableEnchantments!!))
+    private fun saveDetails(cfg: Path, data: EnchantmentDetails) {
+        cfg.resolve(FN_DETAILS).writeText(json.encodeToString(data))
     }
 
-    private fun loadOrCreateEnchantmentDetails() {
-        val existing = if (enchantmentDetailsFile.exists()) {
-            json.decodeFromString<EnchantmentDetailsConfig>(enchantmentDetailsFile.readText())
-        } else {
-            EnchantmentDetailsConfig(emptyList())
-        }
-
-        val reg = server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val regIds = reg.entrySet.map { it.key.value.toString() }.toSet()
-        val existingIds = existing.enchantments.map { it.id }.toSet()
-
-        val newDetails = reg.entrySet.filter { it.key.value.toString() !in existingIds }
-            .map {
-                createEnchantmentDetailsFromRegistryEntry(it.key.value.toString(), it.value)
-            }
-
-        val merged = existing.enchantments + newDetails
-
-        enchantmentDetails = EnchantmentDetailsConfig(merged)
-        enchantmentDetailsFile.writeText(json.encodeToString(enchantmentDetails!!))
+    private fun loadDetailsSafely(cfg: Path): EnchantmentDetails {
+        val f = cfg.resolve(FN_DETAILS)
+        if (!f.exists()) return EnchantmentDetails()
+        return runCatching { json.decodeFromString<EnchantmentDetails>(f.readText()) }.getOrElse { EnchantmentDetails() }
     }
 
-    // Crea un dettaglio minimale da un enchantment di registry (puoi estendere per info più ricche)
-    private fun createEnchantmentDetailsFromRegistryEntry(id: String, enchantment: Enchantment): DetailedEnchantmentEntry {
-        val maxLevel = enchantment.maxLevel
-        val levels = (1..maxLevel).map { level ->
-            EnchantmentLevelData(level = level) // senza moltiplicatori per default, puoi estendere
-        }
-        return DetailedEnchantmentEntry(
-            id = id,
-            name = getTranslationKeyName(enchantment.translationKey),
-            max_level = maxLevel,
-            applicable_to = emptyList(), // da estendere con dati custom in futuro
-            description = "",
-            enc_category = emptyList(),
-            mob_category = emptyList(),
-            rarity = "common",
-            levels = levels
-        )
+    private fun saveUncompat(cfg: Path, data: Uncompatibility) {
+        cfg.resolve(FN_UNCOMP).writeText(json.encodeToString(data))
     }
 
-    private fun getTranslationKeyName(translationKey: String): String {
-        // Usa una traduzione raw o fallback
-        return translationKey.substringAfterLast('.').replace('_', ' ').replaceFirstChar { it.uppercase() }
+    private fun saveMobCats(cfg: Path, data: MobCategories) {
+        cfg.resolve(FN_MOBS).writeText(json.encodeToString(data))
     }
 
-    private fun loadOrCreateMobCategories() {
-        if (mobCategoriesFile.exists()) {
-            mobCategories = json.decodeFromString<MobCategoriesConfig>(mobCategoriesFile.readText())
-        } else {
-            // crea vuoto o usa il dump di default in resources/dumpench/Mob_category.json (leggi e scrivi)
-            mobCategories = MobCategoriesConfig(emptyList())
-            mobCategoriesFile.writeText(json.encodeToString(mobCategories!!))
-        }
-    }
+    // ====== Registry helpers ======
 
-    private fun loadOrCreateIncompatibility() {
-        if (incompatibilityFile.exists()) {
-            incompatibilities = json.decodeFromString<IncompatibilityRules>(incompatibilityFile.readText())
-        } else {
-            incompatibilities = IncompatibilityRules(emptyList(), emptyMap())
-            incompatibilityFile.writeText(json.encodeToString(incompatibilities!!))
-        }
-    }
-
-    // API di lettura configurazione runtime (esempio)
-    fun isEnchantmentEnabled(id: String): Boolean {
-        return availableEnchantments?.enchantments?.find { it.id == id }?.enabled ?: true
-    }
-
-    fun getMaxLevel(id: String): Int {
-        return enchantmentDetails?.enchantments?.find { it.id == id }?.max_level ?: 1
-    }
-
-    // Utility getter per dati
-    fun getEnchantmentDetail(id: String): DetailedEnchantmentEntry? {
-        return enchantmentDetails?.enchantments?.find { it.id == id }
+    /** Lista ordinata e stabile di tutti gli Identifier degli enchant (vanilla + mod). */
+    private fun allEnchantmentIds(): List<Identifier> {
+        val reg = Registries.ENCHANTMENT
+        // entrySet(): Set<Map.Entry<RegistryKey<Enchantment>, Enchantment>>
+        return reg.entrySet()
+            .map { it.key.value() }
+            .sortedWith(compareBy({ it.namespace }, { it.path }))
     }
 }
