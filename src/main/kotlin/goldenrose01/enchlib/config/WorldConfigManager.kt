@@ -2,19 +2,19 @@ package goldenrose01.enchlib.config
 
 import goldenrose01.enchlib.config.data.*
 import goldenrose01.enchlib.utils.EnchLogger
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.registry.Registry
-import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.server.MinecraftServer
-import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.writeText
 
 class WorldConfigManager(private val server: MinecraftServer) {
     private val json = Json {
@@ -22,35 +22,6 @@ class WorldConfigManager(private val server: MinecraftServer) {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
-
-    // Rendi public la proprietà worldConfigPath
-    val worldConfigPath: Path by lazy {
-        val worldDir = server.runDirectory.toAbsolutePath()
-            .resolve("saves")
-            .resolve(server.saveProperties.levelName)
-            .resolve("config")
-            .resolve("enchlib")
-        worldDir
-    }
-
-    private val availableEnchFile: File by lazy {
-        worldConfigPath.resolve("AviableEnch.json").toFile()
-    }
-    private val detailsFile: File by lazy {
-        worldConfigPath.resolve("EnchantmentDetails.json").toFile()
-    }
-    private val mobCategoriesFile: File by lazy {
-        worldConfigPath.resolve("Mob_category.json").toFile()
-    }
-    private val incompatibilityFile: File by lazy {
-        worldConfigPath.resolve("Uncompatibility.json").toFile()
-    }
-
-    // Cache per le configurazioni
-    private var availableEnchCache: AvailableEnchantmentsConfig? = null
-    private var detailsCache: EnchantmentDetailsConfig? = null
-    private var mobCategoriesCache: MobCategoriesConfig? = null
-    private var incompatibilityCache: IncompatibilityRules? = null
 
     companion object {
         private var instance: WorldConfigManager? = null
@@ -61,274 +32,142 @@ class WorldConfigManager(private val server: MinecraftServer) {
             }
             return instance!!
         }
-
-        fun hasInstance(): Boolean = instance != null
-
-        fun clearInstance() {
-            instance = null
-        }
     }
+
+    // Config folder path inside the current world save (config/enchlib/)
+    private val configFolder: Path by lazy {
+        val session = server.session.directoryName
+        Path.of("saves", session, "config", "enchlib")
+    }
+
+    private val availableEnchFile get() = configFolder.resolve("AviableEnch.json").toFile()
+    private val enchantmentDetailsFile get() = configFolder.resolve("EnchantmentDetails.json").toFile()
+    private val incompatibilityFile get() = configFolder.resolve("Uncompatibility.json").toFile()
+    private val mobCategoriesFile get() = configFolder.resolve("Mob_category.json").toFile()
+
+    // In-memory caches (optional)
+    private var availableEnchantments: AvailableEnchantmentsConfig? = null
+    private var enchantmentDetails: EnchantmentDetailsConfig? = null
+    private var incompatibilities: IncompatibilityRules? = null
+    private var mobCategories: MobCategoriesConfig? = null
 
     fun initializeWorldConfigs() {
         try {
-            EnchLogger.info("Initializing world configurations for: $worldConfigPath")
-
-            // Crea directory se non esiste
-            if (!worldConfigPath.exists()) {
-                worldConfigPath.createDirectories()
-                EnchLogger.info("Created config directory: $worldConfigPath")
+            if (!configFolder.exists()) {
+                Files.createDirectories(configFolder)
+                EnchLogger.info("Created config folder at $configFolder")
             }
 
-            // Inizializza tutti i file di configurazione
-            initializeAvailableEnchantments()
-            initializeEnchantmentDetails()
-            initializeMobCategories()
-            initializeIncompatibilityRules()
+            loadOrCreateAvailableEnchantments()
+            loadOrCreateEnchantmentDetails()
+            loadOrCreateMobCategories()
+            loadOrCreateIncompatibility()
 
-            EnchLogger.info("World configurations initialized successfully")
-
-        } catch (e: Exception) {
-            EnchLogger.error("Failed to initialize world configurations", e)
+            EnchLogger.info("World configurations initialized successfully in $configFolder")
+        } catch (ex: Exception) {
+            EnchLogger.error("Failed to initialize world configs", ex)
         }
     }
 
-    private fun initializeAvailableEnchantments() {
-        val existingConfig = if (availableEnchFile.exists()) {
-            try {
-                json.decodeFromString<AvailableEnchantmentsConfig>(availableEnchFile.readText())
-            } catch (e: Exception) {
-                EnchLogger.error("Failed to parse existing AviableEnch.json, creating new one", e)
-                AvailableEnchantmentsConfig()
-            }
+    private fun loadOrCreateAvailableEnchantments() {
+        // Read existing or create new with all registry enchantments active true
+        val existing = if (availableEnchFile.exists()) {
+            json.decodeFromString<AvailableEnchantmentsConfig>(availableEnchFile.readText())
         } else {
-            AvailableEnchantmentsConfig()
+            AvailableEnchantmentsConfig(emptyList())
         }
 
-        val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val existingIds = existingConfig.enchantments.map { it.id }.toSet()
+        val reg = server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        val regIds = reg.entrySet.map { it.key.value.toString() }.toSet()
+        val existingIds = existing.enchantments.map { it.id }.toSet()
 
-        // FIX: Iterazione corretta sul registry
-        enchantmentRegistry.forEach { enchantment ->
-            val id = enchantmentRegistry.getId(enchantment).toString()
-            if (id !in existingIds) {
-                existingConfig.enchantments.add(
-                    EnchantmentStatusEntry(
-                        id = id,
-                        enabled = true
-                    )
-                )
-                EnchLogger.debug("Added new enchantment to available list: $id")
-            }
-        }
+        // Aggiungi eventuali incantesimi nuovi al file senza cancellare la configurazione utente
+        val newEntries = regIds
+            .filter { it !in existingIds }
+            .map { EnchantmentStatusEntry(it, enabled = true) }
 
-        availableEnchFile.writeText(json.encodeToString(existingConfig))
-        availableEnchCache = existingConfig
+        val merged = existing.enchantments + newEntries
 
-        EnchLogger.info("Available enchantments config updated with ${existingConfig.enchantments.size} enchantments")
+        availableEnchantments = AvailableEnchantmentsConfig(merged)
+        availableEnchFile.writeText(json.encodeToString(availableEnchantments!!))
     }
 
-    private fun initializeEnchantmentDetails() {
-        val existingConfig = if (detailsFile.exists()) {
-            try {
-                json.decodeFromString<EnchantmentDetailsConfig>(detailsFile.readText())
-            } catch (e: Exception) {
-                EnchLogger.error("Failed to parse existing EnchantmentDetails.json, creating new one", e)
-                EnchantmentDetailsConfig()
-            }
+    private fun loadOrCreateEnchantmentDetails() {
+        val existing = if (enchantmentDetailsFile.exists()) {
+            json.decodeFromString<EnchantmentDetailsConfig>(enchantmentDetailsFile.readText())
         } else {
-            EnchantmentDetailsConfig()
+            EnchantmentDetailsConfig(emptyList())
         }
 
-        val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val existingIds = existingConfig.enchantments.map { it.id }.toSet()
+        val reg = server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        val regIds = reg.entrySet.map { it.key.value.toString() }.toSet()
+        val existingIds = existing.enchantments.map { it.id }.toSet()
 
-        // Aggiungi dettagli per nuovi incantesimi - FIX: usa streamEntries()
-        enchantmentRegistry.forEach { enchantment ->
-            val id = enchantmentRegistry.getId(enchantment).toString()
-
-            if (id !in existingIds) {
-                val detailedEntry = createDefaultEnchantmentDetails(id, enchantment)
-                existingConfig.enchantments.add(detailedEntry)
-                EnchLogger.debug("Added detailed entry for enchantment: $id")
+        val newDetails = reg.entrySet.filter { it.key.value.toString() !in existingIds }
+            .map {
+                createEnchantmentDetailsFromRegistryEntry(it.key.value.toString(), it.value)
             }
-        }
 
-        detailsFile.writeText(json.encodeToString(existingConfig))
-        detailsCache = existingConfig
+        val merged = existing.enchantments + newDetails
 
-        EnchLogger.info("Enchantment details config updated with ${existingConfig.enchantments.size} enchantments")
+        enchantmentDetails = EnchantmentDetailsConfig(merged)
+        enchantmentDetailsFile.writeText(json.encodeToString(enchantmentDetails!!))
     }
 
-    private fun createDefaultEnchantmentDetails(id: String, enchantment: Enchantment): DetailedEnchantmentEntry {
-        val maxLevel = try {
-            enchantment.maxLevel
-        } catch (e: Exception) {
-            EnchLogger.warn("Failed to get max level for $id, using default 1")
-            1
+    // Crea un dettaglio minimale da un enchantment di registry (puoi estendere per info più ricche)
+    private fun createEnchantmentDetailsFromRegistryEntry(id: String, enchantment: Enchantment): DetailedEnchantmentEntry {
+        val maxLevel = enchantment.maxLevel
+        val levels = (1..maxLevel).map { level ->
+            EnchantmentLevelData(level = level) // senza moltiplicatori per default, puoi estendere
         }
-
-        // Carica da file precompilati o usa default
-        val precompiledData = DefaultDataLoader.getEnchantmentData(id)
-
-        val levels = mutableListOf<EnchantmentLevelData>()
-        for (level in 1..maxLevel) {
-            levels.add(precompiledData?.levels?.find { it.level == level }
-                ?: createDefaultLevelData(id, level))
-        }
-
         return DetailedEnchantmentEntry(
             id = id,
-            name = precompiledData?.name ?: getEnchantmentDisplayName(id),
+            name = getTranslationKeyName(enchantment.translationKey),
             max_level = maxLevel,
-            applicable_to = precompiledData?.applicable_to ?: getApplicableItems(id),
-            description = precompiledData?.description ?: getEnchantmentDescription(id),
-            enc_category = precompiledData?.enc_category ?: getEnchantmentCategories(id),
-            mob_category = precompiledData?.mob_category ?: getEnchantmentMobCategories(id),
-            rarity = precompiledData?.rarity ?: getEnchantmentRarity(id),
+            applicable_to = emptyList(), // da estendere con dati custom in futuro
+            description = "",
+            enc_category = emptyList(),
+            mob_category = emptyList(),
+            rarity = "common",
             levels = levels
         )
     }
 
-    private fun createDefaultLevelData(enchantmentId: String, level: Int): EnchantmentLevelData {
-        // Logica per creare dati di default basati sul tipo di incantesimo
-        return when {
-            enchantmentId.contains("sharpness") -> EnchantmentLevelData(
-                level = level,
-                extra_damage = 0.5 * level
-            )
-            enchantmentId.contains("efficiency") -> EnchantmentLevelData(
-                level = level,
-                speed_multiplier = 1.0 + (0.3 * level)
-            )
-            enchantmentId.contains("smite") || enchantmentId.contains("bane") -> EnchantmentLevelData(
-                level = level,
-                extra_damage_vs_category = 2.5 * level
-            )
-            else -> EnchantmentLevelData(level = level)
-        }
+    private fun getTranslationKeyName(translationKey: String): String {
+        // Usa una traduzione raw o fallback
+        return translationKey.substringAfterLast('.').replace('_', ' ').replaceFirstChar { it.uppercase() }
     }
 
-    private fun initializeMobCategories() {
-        if (!mobCategoriesFile.exists()) {
-            // Carica da file precompilato
-            val defaultMobCategories = DefaultDataLoader.getDefaultMobCategories()
-            mobCategoriesFile.writeText(json.encodeToString(defaultMobCategories))
-            mobCategoriesCache = defaultMobCategories
-            EnchLogger.info("Created default mob categories configuration")
+    private fun loadOrCreateMobCategories() {
+        if (mobCategoriesFile.exists()) {
+            mobCategories = json.decodeFromString<MobCategoriesConfig>(mobCategoriesFile.readText())
         } else {
-            try {
-                mobCategoriesCache = json.decodeFromString<MobCategoriesConfig>(mobCategoriesFile.readText())
-                EnchLogger.info("Loaded existing mob categories configuration")
-            } catch (e: Exception) {
-                EnchLogger.error("Failed to parse Mob_category.json", e)
-                val defaultConfig = DefaultDataLoader.getDefaultMobCategories()
-                mobCategoriesFile.writeText(json.encodeToString(defaultConfig))
-                mobCategoriesCache = defaultConfig
-            }
+            // crea vuoto o usa il dump di default in resources/dumpench/Mob_category.json (leggi e scrivi)
+            mobCategories = MobCategoriesConfig(emptyList())
+            mobCategoriesFile.writeText(json.encodeToString(mobCategories!!))
         }
     }
 
-    private fun initializeIncompatibilityRules() {
-        if (!incompatibilityFile.exists()) {
-            // Carica da file precompilato
-            val defaultRules = DefaultDataLoader.getDefaultIncompatibilityRules()
-            incompatibilityFile.writeText(json.encodeToString(defaultRules))
-            incompatibilityCache = defaultRules
-            EnchLogger.info("Created default incompatibility rules")
+    private fun loadOrCreateIncompatibility() {
+        if (incompatibilityFile.exists()) {
+            incompatibilities = json.decodeFromString<IncompatibilityRules>(incompatibilityFile.readText())
         } else {
-            try {
-                incompatibilityCache = json.decodeFromString<IncompatibilityRules>(incompatibilityFile.readText())
-                EnchLogger.info("Loaded existing incompatibility rules")
-            } catch (e: Exception) {
-                EnchLogger.error("Failed to parse Uncompatibility.json", e)
-                val defaultRules = DefaultDataLoader.getDefaultIncompatibilityRules()
-                incompatibilityFile.writeText(json.encodeToString(defaultRules))
-                incompatibilityCache = defaultRules
-            }
+            incompatibilities = IncompatibilityRules(emptyList(), emptyMap())
+            incompatibilityFile.writeText(json.encodeToString(incompatibilities!!))
         }
     }
 
-    // API pubbliche per accesso alle configurazioni
-    fun isEnchantmentEnabled(enchantmentId: String): Boolean {
-        val config = availableEnchCache ?: return true
-        return config.enchantments.find { it.id == enchantmentId }?.enabled ?: true
+    // API di lettura configurazione runtime (esempio)
+    fun isEnchantmentEnabled(id: String): Boolean {
+        return availableEnchantments?.enchantments?.find { it.id == id }?.enabled ?: true
     }
 
-    fun getEnchantmentDetails(enchantmentId: String): DetailedEnchantmentEntry? {
-        val config = detailsCache ?: return null
-        return config.enchantments.find { it.id == enchantmentId }
+    fun getMaxLevel(id: String): Int {
+        return enchantmentDetails?.enchantments?.find { it.id == id }?.max_level ?: 1
     }
 
-    fun getMaxLevel(enchantmentId: String): Int {
-        val details = getEnchantmentDetails(enchantmentId)
-        return details?.max_level ?: run {
-            try {
-                val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
-                val identifier = Identifier.tryParse(enchantmentId) ?: return 1
-                enchantmentRegistry.get(identifier)?.maxLevel ?: 1
-            } catch (e: Exception) {
-                EnchLogger.warn("Failed to get max level for $enchantmentId")
-                1
-            }
-        }
-    }
-
-    fun getMobCategories(mobName: String): List<String> {
-        val config = mobCategoriesCache ?: return emptyList()
-        return config.mobs.find { it.name.equals(mobName, ignoreCase = true) }?.categories ?: emptyList()
-    }
-
-    fun areEnchantmentsIncompatible(ench1: String, ench2: String): Boolean {
-        val config = incompatibilityCache ?: return false
-        return config.incompatible_pairs.any {
-            (it.enchantment1 == ench1 && it.enchantment2 == ench2) ||
-                    (it.enchantment1 == ench2 && it.enchantment2 == ench1)
-        }
-    }
-
-    fun getCategoryLimit(category: String): Int {
-        val config = incompatibilityCache ?: return Int.MAX_VALUE
-        return config.category_limits[category] ?: Int.MAX_VALUE
-    }
-
-    // Metodi di supporto semplificati
-    private fun getEnchantmentDisplayName(id: String): String {
-        return try {
-            val enchantmentRegistry = server.registryManager.get(RegistryKeys.ENCHANTMENT)
-            val identifier = Identifier.tryParse(id) ?: return id.substringAfter(':').replaceFirstChar { it.uppercase() }
-            val enchantment = enchantmentRegistry.get(identifier)
-            Text.translatable(enchantment?.translationKey ?: id).string
-        } catch (e: Exception) {
-            id.substringAfter(':').replaceFirstChar { it.uppercase() }
-        }
-    }
-
-    private fun getApplicableItems(id: String): List<String> {
-        return listOf("all") // Semplificato, ora caricato da file
-    }
-
-    private fun getEnchantmentDescription(id: String): String {
-        return "Auto-generated description for $id"
-    }
-
-    private fun getEnchantmentCategories(id: String): List<String> {
-        return listOf("Utility") // Semplificato, ora caricato da file
-    }
-
-    private fun getEnchantmentMobCategories(id: String): List<String> {
-        return listOf("all") // Semplificato, ora caricato da file
-    }
-
-    private fun getEnchantmentRarity(id: String): String {
-        return "common"
-    }
-
-    fun reloadConfigurations() {
-        availableEnchCache = null
-        detailsCache = null
-        mobCategoriesCache = null
-        incompatibilityCache = null
-        initializeWorldConfigs()
+    // Utility getter per dati
+    fun getEnchantmentDetail(id: String): DetailedEnchantmentEntry? {
+        return enchantmentDetails?.enchantments?.find { it.id == id }
     }
 }
-

@@ -9,6 +9,7 @@ import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.ItemEnchantmentsComponent
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.server.command.CommandManager.*
 import net.minecraft.server.command.ServerCommandSource
 import goldenrose01.enchlib.config.WorldConfigManager
@@ -66,32 +67,29 @@ object EnchLibCommands {
             context, "enchantment", RegistryKeys.ENCHANTMENT
         )
 
-        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val enchantmentId = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
-
         if (!WorldConfigManager.hasInstance()) {
-            return source.err({ "World configuration not available" })
+            return source.err("World configuration not available")
         }
 
         val configManager = WorldConfigManager.getInstance(source.server)
+        val enchantmentId = configManager.getEnchantmentId(enchantmentEntry)
 
         if (!configManager.isEnchantmentEnabled(enchantmentId)) {
-            return source.err({ "Enchantment $enchantmentId is disabled in this world" })
+            return source.err("Enchantment $enchantmentId is disabled in this world")
         }
 
         val maxLevel = configManager.getMaxLevel(enchantmentId)
         if (level > maxLevel) {
-            return source.err({ "Level $level exceeds maximum level $maxLevel for $enchantmentId" })
+            return source.err("Level $level exceeds maximum level $maxLevel for $enchantmentId")
         }
 
         val heldItem = player.mainHandStack
         if (heldItem.isEmpty) {
-            return source.err({ "You must hold an item to enchant" })
+            return source.err("You must hold an item to enchant")
         }
 
-        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS,
-            ItemEnchantmentsComponent.DEFAULT)
-
+        // Applica l'incantesimo
+        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
         val builder = ItemEnchantmentsComponent.Builder(currentEnchantments)
         builder.add(enchantmentEntry, level)
         val newEnchantments = builder.build()
@@ -108,21 +106,24 @@ object EnchLibCommands {
             context, "enchantment", RegistryKeys.ENCHANTMENT
         )
 
-        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val enchantmentId = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
+        if (!WorldConfigManager.hasInstance()) {
+            return source.err("World configuration not available")
+        }
+
+        val configManager = WorldConfigManager.getInstance(source.server)
+        val enchantmentId = configManager.getEnchantmentId(enchantmentEntry)
 
         val heldItem = player.mainHandStack
         if (heldItem.isEmpty) {
-            return source.err({ "You must hold an item" })
+            return source.err("You must hold an item")
         }
 
-        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS,
-            ItemEnchantmentsComponent.DEFAULT)
+        val currentEnchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
         if (!currentEnchantments.enchantments.containsKey(enchantmentEntry)) {
-            return source.err({ "Item doesn't have $enchantmentId" })
+            return source.err("Item doesn't have $enchantmentId")
         }
 
-
+        // Rimozione dell'incantesimo
         val builder = ItemEnchantmentsComponent.Builder(currentEnchantments)
         builder.remove { entry -> entry == enchantmentEntry }
         val newEnchantments = builder.build()
@@ -138,7 +139,7 @@ object EnchLibCommands {
         val heldItem = player.mainHandStack
 
         if (heldItem.isEmpty) {
-            return source.err({ "You must hold an item" })
+            return source.err("You must hold an item")
         }
 
         val enchantments = heldItem.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
@@ -152,10 +153,9 @@ object EnchLibCommands {
 
         source.msg("Enchantments on this item:")
 
-        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
-
-        enchantments.enchantments.forEach { enchantmentEntry, level ->
-            val id = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
+        // Iterazione corretta sulle enchantments
+        enchantments.enchantments.forEach { (enchantmentEntry: RegistryEntry<Enchantment>, level: Int) ->
+            val id = configManager?.getEnchantmentId(enchantmentEntry) ?: "unknown"
             val maxLevel = configManager?.getMaxLevel(id) ?: enchantmentEntry.value().maxLevel
             val details = configManager?.getEnchantmentDetails(id)
 
@@ -185,14 +185,12 @@ object EnchLibCommands {
             context, "enchantment", RegistryKeys.ENCHANTMENT
         )
 
-        val enchantmentRegistry = source.server.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val enchantmentId = enchantmentRegistry.getId(enchantmentEntry.value()).toString()
-
         if (!WorldConfigManager.hasInstance()) {
             return source.err("World configuration not available")
         }
 
         val configManager = WorldConfigManager.getInstance(source.server)
+        val enchantmentId = configManager.getEnchantmentId(enchantmentEntry)
         val details = configManager.getEnchantmentDetails(enchantmentId)
         val isEnabled = configManager.isEnchantmentEnabled(enchantmentId)
 

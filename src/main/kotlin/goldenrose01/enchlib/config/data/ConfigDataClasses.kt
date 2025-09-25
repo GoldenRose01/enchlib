@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AvailableEnchantmentsConfig(
-    val enchantments: MutableList<EnchantmentStatusEntry> = mutableListOf()
+    val enchantments: List<EnchantmentStatusEntry>
 )
 
 @Serializable
@@ -15,7 +15,7 @@ data class EnchantmentStatusEntry(
 
 @Serializable
 data class EnchantmentDetailsConfig(
-    val enchantments: MutableList<DetailedEnchantmentEntry> = mutableListOf()
+    val enchantments: List<DetailedEnchantmentEntry>
 )
 
 @Serializable
@@ -36,15 +36,24 @@ data class EnchantmentLevelData(
     val level: Int,
     val extra_damage: Double? = null,
     val speed_multiplier: Double? = null,
-    val extra_damage_vs_category: Double? = null,
-    // Aggiungi altri parametri specifici qui
-    val durability_bonus: Int? = null,
-    val efficiency_multiplier: Double? = null
+    val extra_damage_vs_category: Double? = null
+)
+
+@Serializable
+data class IncompatibilityRules(
+    val incompatible_pairs: List<IncompatiblePair>,
+    val category_limits: Map<String, Int>
+)
+
+@Serializable
+data class IncompatiblePair(
+    val enchantment1: String,
+    val enchantment2: String
 )
 
 @Serializable
 data class MobCategoriesConfig(
-    val mobs: MutableList<MobEntry> = mutableListOf()
+    val mobs: List<MobEntry>
 )
 
 @Serializable
@@ -52,16 +61,4 @@ data class MobEntry(
     val name: String,
     val type: String,
     val categories: List<String>
-)
-
-@Serializable
-data class IncompatibilityRules(
-    val incompatible_pairs: MutableList<IncompatiblePair> = mutableListOf(),
-    val category_limits: MutableMap<String, Int> = mutableMapOf()
-)
-
-@Serializable
-data class IncompatiblePair(
-    val enchantment1: String,
-    val enchantment2: String
 )
