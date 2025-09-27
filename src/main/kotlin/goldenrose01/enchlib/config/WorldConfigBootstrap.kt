@@ -11,7 +11,7 @@ object WorldConfigBootstrap {
             try {
                 EnchLogger.info("Starting world configuration bootstrap...")
 
-                WorldConfigManager.initializeWorldConfigs(server)
+                WorldConfigManager.reloadConfigs(server)
 
                 EnchLogger.info("World configuration bootstrap completed successfully")
 

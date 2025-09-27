@@ -1,9 +1,9 @@
-package goldenrose01.enchlib.util
+package goldenrose01.enchlib.utils
 
 /**
  * Semplice sanitizer per file JSON5:
  * - Rimuove commenti // e /* */
- * - Rimuove trailing commas
+ * - Rimuove trailing commas prima di } o ]
  */
 object Json5 {
     private val lineCommentRegex = Regex("""(?m)//.*$""")
