@@ -3,73 +3,77 @@ package goldenrose01.enchlib.commands
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.StringArgumentType
 import com.mojang.brigadier.builder.RequiredArgumentBuilder.argument
 
+import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.server.command.CommandManager.literal
+import net.minecraft.text.Text
 
+
+import goldenrose01.enchlib.Enchlib
 import goldenrose01.enchlib.config.WorldConfigManager
 import goldenrose01.enchlib.utils.msg
 import goldenrose01.enchlib.utils.err
 import goldenrose01.enchlib.utils.noop
 import goldenrose01.enchlib.utils.ok
+import net.minecraft.util.WorldSavePath
 
+/**
+ * /plusec-debug
+ *  - reload     : ricarica i JSON dal disco senza riavvio
+ *  - validate   : cross-check tra registry runtime e JSON
+ *  - path       : mostra il path dei file
+ *  - stats      : conti base (wrapper di validate.totals)
+ */
 object DebugCommands {
-
-    fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
-        dispatcher.register(
-            literal("plusec-debug")
-                .requires { it.hasPermissionLevel(2) }
-                .then(literal("path").executes(::path))
-                .then(literal("reload").executes(::reload))
-                .then(literal("regen").executes(::regen))
-                .then(literal("validate").executes(::validate))
-                .then(literal("stats").executes(::stats))
-                .then(literal("echo")
-                    .then(argument<ServerCommandSource, String>("msg", StringArgumentType.greedyString())
-                        .executes(::echo)
-                    )
-                )
-        )
-    }
-
-    private fun path(ctx: CommandContext<ServerCommandSource>): Int {
-        val server = ctx.source.server
-        val worldPath = WorldConfigManager.getWorldConfigDir(server)
-        return ok(ctx, "EnchLib config path: $worldPath")
-    }
-
-    private fun reload(ctx: CommandContext<ServerCommandSource>): Int {
-        val server = ctx.source.server
-        WorldConfigManager.reload(server)
-        return ok(ctx, "EnchLib: configurazioni ricaricate dal disco.")
-    }
-
-    private fun regen(ctx: CommandContext<ServerCommandSource>): Int {
-        val server = ctx.source.server
-        WorldConfigManager.regen(server)
-        return ok(ctx, "EnchLib: rigenerazione file completata (merge non distruttivo).")
-    }
-
-    private fun validate(ctx: CommandContext<ServerCommandSource>): Int {
-        val server = ctx.source.server
-        val result = WorldConfigManager.validate(server)
-        return if (result.valid) {
-            ok(ctx, "Validate OK. Vanilla+Mod in sync con JSON (${result.report}).")
-        } else {
-            noop(ctx, "Validate FAILED: ${result.report}")
+    fun register() {
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            registerInternal(dispatcher)
         }
     }
 
-    private fun stats(ctx: CommandContext<ServerCommandSource>): Int {
-        val server = ctx.source.server
-        val s = WorldConfigManager.stats(server)
-        return ok(ctx, "Stats — total:${s.total} enabled:${s.enabled} disabled:${s.disabled} missing:${s.missing}")
-    }
-
-    private fun echo(ctx: CommandContext<ServerCommandSource>): Int {
-        val msg = StringArgumentType.getString(ctx, "msg")
-        return ok(ctx, "[plusec-debug] $msg")
+    private fun registerInternal(dispatcher: CommandDispatcher<ServerCommandSource>) {
+        dispatcher.register(
+            CommandManager.literal("plusec-debug")
+                .requires { it.hasPermissionLevel(2) }
+                .then(CommandManager.literal("reload").executes { ctx ->
+                    val src = ctx.source
+                    val report = WorldConfigManager.reload(src.server)
+                    src.sendFeedback({ Text.literal("§aReload OK. Aviable=${report.aviableCount}, Details=${report.detailsCount}") }, false)
+                    Command.SINGLE_SUCCESS
+                })
+                .then(CommandManager.literal("validate").executes { ctx ->
+                    val src = ctx.source
+                    val rep = WorldConfigManager.validate(src.server)
+                    val sb = StringBuilder()
+                    sb.appendLine("§eValidate report:")
+                    sb.appendLine("Totals: ${rep.totals}")
+                    if (rep.missingInJson.isNotEmpty()) {
+                        sb.appendLine("Missing in JSON (${rep.missingInJson.size}):")
+                        rep.missingInJson.forEach { sb.appendLine("- $it") }
+                    }
+                    if (rep.extraInJson.isNotEmpty()) {
+                        sb.appendLine("Extra in JSON (${rep.extraInJson.size}):")
+                        rep.extraInJson.forEach { sb.appendLine("- $it") }
+                    }
+                    src.sendFeedback({ Text.literal(sb.toString().trim()) }, false)
+                    Command.SINGLE_SUCCESS
+                })
+                .then(CommandManager.literal("path").executes { ctx ->
+                    val src = ctx.source
+                    val root = src.server.getSavePath(WorldSavePath.ROOT).toFile()
+                    val cfg = root.resolve("config/${Enchlib.MOD_ID}").absolutePath
+                    src.sendFeedback({ Text.literal("Config dir: $cfg") }, false)
+                    Command.SINGLE_SUCCESS
+                })
+                .then(CommandManager.literal("stats").executes { ctx ->
+                    val src = ctx.source
+                    val rep = WorldConfigManager.validate(src.server)
+                    src.sendFeedback({ Text.literal("Totals: ${rep.totals}") }, false)
+                    Command.SINGLE_SUCCESS
+                })
+        )
     }
 }

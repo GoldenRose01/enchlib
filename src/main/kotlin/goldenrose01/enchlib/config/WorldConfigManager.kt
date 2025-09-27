@@ -4,258 +4,121 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import com.mojang.logging.LogUtils
+
+import goldenrose01.enchlib.Enchlib
+import goldenrose01.enchlib.util.Json5
 
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
+import net.minecraft.util.WorldSavePath
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.registry.entry.RegistryEntry
 
 import java.nio.file.Path
+import java.io.File
 import kotlin.io.path.exists
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-@Serializable
-data class AviableEnch(val enchantments: MutableList<AvailEntry> = mutableListOf())
 
-@Serializable
-data class AvailEntry(val id: String, val enabled: Boolean = true)
 
-@Serializable
-data class EnchantmentDetail(
-    val id: String,
-    val maxLevel: Int = 1,
-    val multiplier: Double = 1.0,
-    val rarity: String = "common",
-    val category: String = "generic"
-)
-
-@Serializable
-data class EnchantmentDetails(val details: MutableList<EnchantmentDetail> = mutableListOf())
-
-@Serializable
-data class UncompatRule(val enchantment: String, val incompatibleWith: List<String> = emptyList())
-
-@Serializable
-data class Uncompatibility(val rules: MutableList<UncompatRule> = mutableListOf())
-
-@Serializable
-data class MobCategoryRule(val mobId: String, val categories: List<String> = emptyList())
-
-@Serializable
-data class MobCategories(val rules: MutableList<MobCategoryRule> = mutableListOf())
-
-data class ValidateResult(val valid: Boolean, val report: String)
-data class Stats(val total: Int, val enabled: Int, val disabled: Int, val missing: Int)
+/**
+ * Gestisce i file JSON5 per-mondo:
+ * - saves/<world>/config/enchlib/AviableEnch.json5
+ * - saves/<world>/config/enchlib/EnchantmentDetails.json5
+ *
+ * Autopopulate all’avvio: aggiunge tutte le entry del registry runtime.
+ * Merge non distruttivo: mantiene ciò che esiste già.
+ * Cache in memoria + reload live.
+ */
 
 object WorldConfigManager {
+    private val logger = LogUtils.getLogger()
+    private var configDir: File? = null
+    private var aviable = AviableEnch()
+    private var details = EnchantmentDetails()
+    private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
-    private val json = Json {
-        prettyPrint = true
-        encodeDefaults = true
-        ignoreUnknownKeys = true
+    fun onServerStarted(server: MinecraftServer) {
+        val root = server.getSavePath(WorldSavePath.ROOT).toFile()
+        configDir = File(root, "config/${EnchLib.MOD_ID}").apply { mkdirs() }
+        loadOrCreate()
+        autopopulate(server.registryManager)
+        saveAll()
+        logger.info("[${EnchLib.MOD_ID}] Config loaded.")
     }
 
-    private const val FOLDER = "config/enchlib"
-    private const val FN_AVAILABLE = "AviableEnch.json5"
-    private const val FN_DETAILS   = "EnchantmentDetails.json5"
-    private const val FN_UNCOMP    = "Uncompatibility.json5"
-    private const val FN_MOBS      = "Mob_category.json5"
-
-    /** Directory world-based: `<runDir>/saves/<levelName>/config/enchlib` */
-    fun getWorldConfigDir(server: MinecraftServer): Path {
-        val runDir: Path = server.runDirectory.toAbsolutePath()
-        val levelName = server.saveProperties.levelName
-        val target = runDir.resolve("saves").resolve(levelName).resolve(FOLDER)
-        if (!target.exists()) target.createDirectories()
-        return target
+    fun onServerStopping() {
+        saveAll()
     }
 
-    fun initializeWorldConfigs(server: MinecraftServer) {
-        val cfg = getWorldConfigDir(server)
-        if (!cfg.resolve(FN_AVAILABLE).exists()) saveAvailable(cfg, AviableEnch())
-        if (!cfg.resolve(FN_DETAILS).exists())   saveDetails(cfg, EnchantmentDetails())
-        if (!cfg.resolve(FN_UNCOMP).exists())    cfg.resolve(FN_UNCOMP).writeText(json.encodeToString(Uncompatibility()))
-        if (!cfg.resolve(FN_MOBS).exists())      cfg.resolve(FN_MOBS).writeText(json.encodeToString(MobCategories()))
+    fun ensurePresentInJson(id: String) {
+        if (aviable.enchantments.none { it.id == id })
+            aviable.enchantments.add(AviableEntry(id))
+        if (details.entries.none { it.id == id })
+            details.entries.add(EnchDetail(id))
     }
 
-    fun reload(server: MinecraftServer) { getWorldConfigDir(server) }
-    fun regen(server: MinecraftServer)  { initializeWorldConfigs(server) }
-
-    fun validate(server: MinecraftServer): ValidateResult {
-        val cfg = getWorldConfigDir(server)
-        val avail = loadAvailableSafely(cfg)
-        // senza accesso all’elenco globale runtime, la validazione è “interna”
-        val report = "Available=${avail.enchantments.size} (validazione cross-registry disabilitata in questa build)"
-        return ValidateResult(true, report)
+    fun resolveEnchantment(server: MinecraftServer, id: Identifier): RegistryEntry<Enchantment>? {
+        val reg = server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        return reg.get(id).orElse(null)
     }
 
-    fun stats(server: MinecraftServer): Stats {
-        val cfg = getWorldConfigDir(server)
-        val avail = loadAvailableSafely(cfg)
-        val total = avail.enchantments.size
-        val enabled = avail.enchantments.count { it.enabled }
-        val disabled = total - enabled
-        val missing = 0 // senza enumerazione globale
-        return Stats(total, enabled, disabled, missing)
+    fun reload(server: MinecraftServer): ReloadReport {
+        loadOrCreate()
+        return ReloadReport(aviable.enchantments.size, details.entries.size)
     }
 
-    // ====== Accessors per comandi ======
-
-    fun getMaxLevelFor(ench: Enchantment, server: MinecraftServer): Int {
-        val detail = getDetailsFor(ench, server)
-        return detail.maxLevel
+    fun validate(server: MinecraftServer): ValidateReport {
+        val reg = server.registryManager.get(RegistryKeys.ENCHANTMENT)
+        val regIds = reg.keySet().map { it.value.toString() }
+        val jsonIds = (aviable.enchantments.map { it.id } + details.entries.map { it.id }).toSet()
+        return ValidateReport(
+            regIds.filter { it !in jsonIds },
+            jsonIds.filter { it !in regIds },
+            mapOf(
+                "registry" to regIds.size,
+                "aviable" to aviable.enchantments.size,
+                "details" to details.entries.size
+            )
+        )
     }
 
-    fun getDetailsFor(ench: Enchantment, server: MinecraftServer): EnchantmentDetail {
-        val cfg = getWorldConfigDir(server)
-        val idGuess = try { ench.toString() } catch (_: Throwable) { "unknown:unknown" }
-        val details = loadDetailsSafely(cfg)
-        return details.details.firstOrNull { it.id == idGuess } ?: EnchantmentDetail(idGuess)
-    }
-
-    /** Assicura che un id sia presente in Available/Details, senza distruggere valori esistenti. */
-    fun ensurePresentInJson(id: String, server: MinecraftServer) {
-        val cfg = getWorldConfigDir(server)
-
-        val avail = loadAvailableSafely(cfg)
-        if (avail.enchantments.none { it.id == id }) {
-            avail.enchantments.add(AvailEntry(id, true))
-            saveAvailable(cfg, avail)
-        }
-
-        val dets = loadDetailsSafely(cfg)
-        if (dets.details.none { it.id == id }) {
-            dets.details.add(EnchantmentDetail(id))
-            dets.details.sortBy { it.id }
-            saveDetails(cfg, dets)
+    private fun autopopulate(manager: DynamicRegistryManager) {
+        val reg = manager.get(RegistryKeys.ENCHANTMENT)
+        reg.keySet().forEach { key ->
+            val id = key.value.toString()
+            if (aviable.enchantments.none { it.id == id })
+                aviable.enchantments.add(AviableEntry(id))
+            if (details.entries.none { it.id == id })
+                details.entries.add(EnchDetail(id))
         }
     }
 
-    // ====== Helpers JSON (.json5 → sanificati a JSON) ======
-
-    private fun loadAvailableSafely(cfg: Path): AviableEnch {
-        val f = cfg.resolve(FN_AVAILABLE)
-        if (!f.exists()) return AviableEnch()
-        return runCatching {
-            json.decodeFromString<AviableEnch>(sanitizeJson5(f.readText()))
-        }.getOrElse { AviableEnch() }
+    private fun loadOrCreate() {
+        val fA = File(configDir, "AviableEnch.json5")
+        val fD = File(configDir, "EnchantmentDetails.json5")
+        aviable = if (fA.exists()) readAviable(fA) else AviableEnch().also { fA.writeText(json.encodeToString(it)) }
+        details = if (fD.exists()) readDetails(fD) else EnchantmentDetails().also { fD.writeText(json.encodeToString(it)) }
     }
 
-    private fun saveAvailable(cfg: Path, data: AviableEnch) {
-        cfg.resolve(FN_AVAILABLE).writeText(json.encodeToString(data))
+    private fun saveAll() {
+        File(configDir, "AviableEnch.json5").writeText(json.encodeToString(aviable))
+        File(configDir, "EnchantmentDetails.json5").writeText(json.encodeToString(details))
     }
 
-    private fun loadDetailsSafely(cfg: Path): EnchantmentDetails {
-        val f = cfg.resolve(FN_DETAILS)
-        if (!f.exists()) return EnchantmentDetails()
-        return runCatching {
-            json.decodeFromString<EnchantmentDetails>(sanitizeJson5(f.readText()))
-        }.getOrElse { EnchantmentDetails() }
+    private fun readAviable(file: File): AviableEnch {
+        val s = Json5.sanitize(file.readText())
+        return json.decodeFromString(s.ifEmpty { """{"enchantments":[]}""" })
     }
 
-    private fun saveDetails(cfg: Path, data: EnchantmentDetails) {
-        cfg.resolve(FN_DETAILS).writeText(json.encodeToString(data))
-    }
-
-    // ====== JSON5 → JSON sanitizer ======
-
-    private fun sanitizeJson5(input: String): String {
-        val noComments = removeComments(input)
-        return removeTrailingCommas(noComments)
-    }
-
-    private fun removeComments(s: String): String {
-        val out = StringBuilder(s.length)
-        var i = 0
-        var inString = false
-        var stringDelim = '\u0000'
-        var escape = false
-
-        while (i < s.length) {
-            val c = s[i]
-
-            if (inString) {
-                out.append(c)
-                if (escape) {
-                    escape = false
-                } else {
-                    if (c == '\\') {
-                        escape = true
-                    } else if (c == stringDelim) {
-                        inString = false
-                    }
-                }
-                i++
-                continue
-            }
-
-            if (c == '"' || c == '\'') {
-                inString = true
-                stringDelim = c
-                out.append(c)
-                i++
-                continue
-            }
-
-            if (c == '/' && i + 1 < s.length) {
-                val n = s[i + 1]
-                if (n == '/') {
-                    i += 2
-                    while (i < s.length && s[i] != '\n' && s[i] != '\r') i++
-                    continue
-                }
-                if (n == '*') {
-                    i += 2
-                    while (i + 1 < s.length && !(s[i] == '*' && s[i + 1] == '/')) i++
-                    i += 2.coerceAtMost(s.length - i)
-                    continue
-                }
-            }
-
-            out.append(c)
-            i++
-        }
-        return out.toString()
-    }
-
-    private fun removeTrailingCommas(s: String): String {
-        val out = StringBuilder(s.length)
-        var i = 0
-        var inString = false
-        var stringDelim = '\u0000'
-        var escape = false
-
-        while (i < s.length) {
-            val c = s[i]
-
-            if (inString) {
-                out.append(c)
-                if (escape) {
-                    escape = false
-                } else {
-                    if (c == '\\') {
-                        escape = true
-                    } else if (c == stringDelim) {
-                        inString = false
-                    }
-                }
-                i++
-                continue
-            }
-
-            if (c == ',') {
-                var j = i + 1
-                while (j < s.length && s[j].isWhitespace()) j++
-                if (j < s.length && (s[j] == '}' || s[j] == ']')) {
-                    i++
-                    continue
-                }
-            }
-
-            out.append(c)
-            i++
-        }
-        return out.toString()
+    private fun readDetails(file: File): EnchantmentDetails {
+        val s = Json5.sanitize(file.readText())
+        return json.decodeFromString(s.ifEmpty { """{"entries":[]}""" })
     }
 }
