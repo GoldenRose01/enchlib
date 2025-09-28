@@ -1,4 +1,4 @@
-# EnchLib - Libreria Avanzata per Incantesimi Minecraft
+# EnchLib - Libreria per Incantesimi Minecraft
 
 ![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.8-brightgreen)
 ![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.17.2+-blue)
