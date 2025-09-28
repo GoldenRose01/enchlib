@@ -1,5 +1,6 @@
 package goldenrose01.enchlib.config
 
+import goldenrose01.enchlib.utils.EnchLogger
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.registry.Registry
@@ -7,13 +8,19 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
-import goldenrose01.enchlib.utils.EnchLogger
+
+/**
+ * Aggancia il bootstrap di configurazione al ciclo vita del server.
+ * Si limita a garantire che i file di config esistano nella cartella del mondo
+ * e ad effettuare un primo merge/ensure.
+ */
 
 object ConfigBootstrap {
 
-    // Chiave del registry enchantment costruita a runtime
+    // Chiave del registry enchantments
     private val ENCH_REGISTRY_KEY: RegistryKey<Registry<Enchantment>> = RegistryKeys.ENCHANTMENT
 
+    /** Registra l’hook SERVER_STARTED una sola volta. */
     fun registerServerHooks() {
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             try {
@@ -25,46 +32,42 @@ object ConfigBootstrap {
     }
 
     private fun ensureAndMergeFromRegistry(server: MinecraftServer) {
-        ConfigManager.reloadCoreFilesIfNeeded()
+        // Assicura che i file nel mondo esistano (copiandoli da /resources/config se mancano)
+        ConfigManager.reloadCoreFilesIfNeeded(server)
 
         val registry = server.registryManager.getOrThrow(ENCH_REGISTRY_KEY)
-        val allIds: List<Identifier> = registry.getKeys()   // Set<RegistryKey<Enchantment>>
-            .map { key -> key.value }
+        val allIds: List<Identifier> = registry.ids.toList()
 
-        val disabled = ConfigManager.currentDisabledIds()
         var added = 0
-
         for (id in allIds) {
             val idStr = id.toString()
 
             val presentEverywhere =
-                ConfigManager.existsInAvailable(idStr) &&
-                        ConfigManager.existsInLvlMax(idStr) &&
-                        ConfigManager.existsInRarity(idStr) &&
-                        ConfigManager.existsInCompat(idStr) &&
-                        ConfigManager.existsInCategories(idStr) &&
-                        ConfigManager.existsInUncompat(idStr)
+                ConfigManager.existsInAvailable(server, idStr) &&
+                        ConfigManager.existsInLvlMax(server, idStr) &&
+                        ConfigManager.existsInRarity(server, idStr) &&
+                        ConfigManager.existsInCompat(server, idStr) &&
+                        ConfigManager.existsInCategories(server, idStr) &&
+                        ConfigManager.existsInUncompat(server, idStr)
 
             if (presentEverywhere) continue
 
-            // available come boolean properties
-            ConfigManager.ensureAvailable(idStr, enabled = !disabled.contains(idStr))
-
-            // lasciamo vuoto il lvl max (si risolve a runtime col server)
-            ConfigManager.ensureLvlMax(idStr, null)
-            ConfigManager.ensureRarity(idStr, "common")
-            ConfigManager.ensureCompat(idStr, emptyList())
-            ConfigManager.ensureCategories(idStr, emptyList())
-            ConfigManager.ensureUncompat(idStr, emptyList())
-
+            // Available booleano default=true
+            ConfigManager.ensureAvailable(server, idStr, enabled = true)
+            // Non forziamo livello max: lascia vuoto, utente può override
+            ConfigManager.ensureLvlMax(server, idStr, null)
+            ConfigManager.ensureRarity(server, idStr, "common")
+            ConfigManager.ensureCompat(server, idStr, emptyList())
+            ConfigManager.ensureCategories(server, idStr, emptyList())
+            ConfigManager.ensureUncompat(server, idStr, emptyList())
             added++
         }
 
         if (added > 0) {
-            EnchLogger.info("🔧 Aggiunte/aggiornate $added voci nei .config (available=boolean)")
+            EnchLogger.info("🔧 Aggiunte/aggiornate $added voci nei .config del mondo")
         }
 
-        ConfigManager.loadAll()
+        // Carica in memoria lo stato corrente
+        ConfigManager.loadAll(server)
     }
-
 }

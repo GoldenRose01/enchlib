@@ -225,7 +225,7 @@ object DebugCommands {
     private fun reloadConfigs(source: ServerCommandSource): Int {
         source.sendFeedback({ Text.literal("🔄 Ricaricamento configurazioni...") }, false)
         return try {
-            ConfigManager.loadAll()
+            ConfigManager.loadAll(source.server)
             source.sendFeedback({ Text.literal("✅ Configurazioni ricaricate con successo!") }, false)
             EnchLogger.info("Configurazioni ricaricate tramite comando debug")
             1

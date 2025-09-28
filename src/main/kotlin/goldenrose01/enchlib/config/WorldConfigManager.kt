@@ -6,12 +6,11 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import com.mojang.logging.LogUtils
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-
 import goldenrose01.enchlib.Enchlib
 import goldenrose01.enchlib.utils.Json5
 import goldenrose01.enchlib.utils.EnchLogger
+
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.server.MinecraftServer
@@ -27,163 +26,216 @@ import java.nio.file.Path
 import java.nio.file.Files
 import java.io.File
 import java.nio.file.StandardCopyOption
+import java.nio.charset.StandardCharsets
 
 import kotlin.io.path.exists
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-// Formato JSON semplice su disco: lista di id -> level
-data class EnchantmentEntryDto(val id: String, val level: Int)
-data class EnchantmentConfigDto(val enchantments: List<EnchantmentEntryDto> = emptyList())
+/**
+ * WorldConfigManager
+ *
+ * - Opera SOLO nella cartella del mondo: .minecraft/saves/<world>/config/enchlib
+ * - Non crea JSON nel mondo.
+ * - Fornisce le API usate dai comandi:
+ *     - reloadConfigs(server)
+ *     - validateAgainstRegistry(server): List<String>
+ *     - addOrUpdateEnchantment(server, id, level)
+ *     - getCurrentComponent(): wrapper per /plusec list
+ */
+
 
 object WorldConfigManager {
-    private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
-    // Stato attuale in memoria
-    private var current: ItemEnchantmentsComponent = ItemEnchantmentsComponent.DEFAULT
+    private const val FILE_AVAILABLE   = "AviableEnch.config"
+    private const val FILE_LVL_MAX     = "EnchLVLmax.config"
+    private const val FILE_RARITY      = "EnchRarity.config"
+    private const val FILE_COMPAT      = "EnchCompatibility.config"
+    private const val FILE_CATEGORIES  = "EnchCategories.config"
+    private const val FILE_UNCOMPAT    = "EnchUncompatibility.config"
 
-    private fun worldRoot(server: MinecraftServer): File {
-        return server.getSavePath(WorldSavePath.ROOT).toFile()
-    }
-
-    private fun configDir(server: MinecraftServer): File {
-        val dir = File(worldRoot(server), "config/enchlib")
-        if (!dir.exists()) dir.mkdirs()
-        return dir
-    }
-
-    private fun configFile(server: MinecraftServer): File {
-        return File(configDir(server), "AviableEnch.json5")
-    }
-
-    fun getCurrentComponent(): ItemEnchantmentsComponent = current
-
+    /** Ricarica le config del mondo (copiando i default se mancano) e aggiorna lo stato in memoria. */
     fun reloadConfigs(server: MinecraftServer) {
-        val file = configFile(server)
-        // se non esiste, prova a copiare dai resources; se ancora non c'è, autopopola
-        if (!file.exists() || file.readText().isBlank()) {
-            EnchLogger.info("No config found for this world, generating default...")
-            copyDefaultIfPresent(server)
-            if (!file.exists() || file.readText().isBlank()) {
-                autopopulate(server)
-                return
-            }
-        }
-
-        try {
-            val text = file.readText()
-            val dto = gson.fromJson(text, EnchantmentConfigDto::class.java) ?: EnchantmentConfigDto()
-            current = buildComponentFromDto(server, dto)
-            EnchLogger.info("World enchantment config reloaded with ${current.getSize()} entries")
-        } catch (e: Exception) {
-            EnchLogger.error("Failed to parse config, regenerating defaults", e)
-            autopopulate(server)
-        }
+        ConfigManager.loadAll(server)
+        EnchLogger.info("WorldConfigManager: ricaricate configurazioni da ${worldDir(server)}")
     }
 
-    private fun copyDefaultIfPresent(server: MinecraftServer) {
-        val inPath = "/config/enchlib/AviableEnch.json5"
-        javaClass.getResourceAsStream(inPath)?.use { ins ->
-            val out = configFile(server).toPath()
-            Files.createDirectories(out.parent)
-            Files.copy(ins, out, StandardCopyOption.REPLACE_EXISTING)
-            EnchLogger.info("Copied default config from resources: $inPath")
-        }
-    }
-
-    private fun autopopulate(server: MinecraftServer) {
-        val registry = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-
-        val list = mutableListOf<EnchantmentEntryDto>()
-        for (ench in registry) {
-            val id = registry.getId(ench) ?: continue
-            list.add(EnchantmentEntryDto(id.toString(), 1))
-        }
-        val dto = EnchantmentConfigDto(list)
-
-        // salva DTO su file
-        saveDto(server, dto)
-
-        // costruisci il componente in memoria
-        current = buildComponentFromDto(server, dto)
-
-        EnchLogger.info("Default enchantment config generated with ${current.getSize()} entries")
-    }
-
-    private fun buildComponentFromDto(server: MinecraftServer, dto: EnchantmentConfigDto): ItemEnchantmentsComponent {
-        val registry = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-        val builder = ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT)
-
-        for (e in dto.enchantments) {
-            val parsed = Identifier.tryParse(e.id) ?: continue
-            val key: RegistryKey<Enchantment> = RegistryKey.of(RegistryKeys.ENCHANTMENT, parsed)
-            val refOpt = registry.getOptional(key) // Optional<RegistryEntry.Reference<Enchantment>>
-            refOpt.ifPresent { entry: RegistryEntry.Reference<Enchantment> ->
-                builder.set(entry, e.level.coerceIn(1, 255))
-            }
-        }
-        return builder.build()
-    }
-
-    private fun saveDto(server: MinecraftServer, dto: EnchantmentConfigDto) {
-        val file = configFile(server)
-        try {
-            Files.createDirectories(file.toPath().parent)
-            Files.writeString(file.toPath(), gson.toJson(dto))
-            EnchLogger.info("Config saved at ${file.absolutePath}")
-        } catch (e: Exception) {
-            EnchLogger.error("Failed to save config", e)
-        }
-    }
-
-    private fun saveFromCurrent(server: MinecraftServer) {
-        val registry = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-        val list = mutableListOf<EnchantmentEntryDto>()
-        for (entry in current.getEnchantmentEntries()) {
-            val enchEntry: RegistryEntry<Enchantment> = entry.key
-            val lvl = entry.intValue
-            val idStr = registry.getId(enchEntry.value())?.toString() ?: continue
-            list.add(EnchantmentEntryDto(idStr, lvl))
-        }
-        saveDto(server, EnchantmentConfigDto(list))
-    }
-
-    fun addOrUpdateEnchantment(server: MinecraftServer, id: String, level: Int) {
-        val registry = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-        val identifier = Identifier.tryParse(id) ?: return
-        val key: RegistryKey<Enchantment> = RegistryKey.of(RegistryKeys.ENCHANTMENT, identifier)
-        val refOpt = registry.getOptional(key)
-
-        refOpt.ifPresent { ref ->
-            val builder = ItemEnchantmentsComponent.Builder(current)
-            builder.set(ref, level.coerceIn(1, 255))
-            current = builder.build()
-            saveFromCurrent(server)
-        }
-    }
-
+    /**
+     * Valida che tutti gli enchantment presenti in config siano nel registry (e viceversa segnala extra).
+     * Ritorna una lista di stringhe descrittive dei problemi (vuota se ok).
+     */
     fun validateAgainstRegistry(server: MinecraftServer): List<String> {
-        val registry = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-        val existingIds: Set<String> = buildSet {
-            for (ench in registry) {
-                val id = registry.getId(ench)?.toString() ?: continue
-                add(id)
+        val issues = mutableListOf<String>()
+
+        val cfgIds: Set<String> = ConfigManager.availableEnchantments.map { it.id }.toSet()
+
+        val reg = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
+        val registryIds: Set<String> = reg.ids.map { it.toString() }.toSet()
+
+        val missingInRegistry = cfgIds - registryIds
+        val notConfigured = registryIds - cfgIds
+
+        if (missingInRegistry.isNotEmpty()) {
+            issues += "Presenti in config ma non nel registry: ${missingInRegistry.size}"
+            missingInRegistry.sorted().forEach { issues += " - $it" }
+        }
+        if (notConfigured.isNotEmpty()) {
+            issues += "Presenti nel registry ma non in config: ${notConfigured.size}"
+            notConfigured.sorted().forEach { issues += " - $it" }
+        }
+
+        // Controllo bidirezionalità incompatibilità
+        ConfigManager.enchantmentUncompatibility.forEach { (a, list) ->
+            list.forEach { b ->
+                val back = ConfigManager.enchantmentUncompatibility[b]
+                if (back?.contains(a) != true) {
+                    issues += "Incompatibilità non bidirezionale: $a <-> $b"
+                }
             }
         }
 
-        val issues = mutableListOf<String>()
-        for (entry in current.getEnchantmentEntries()) {
-            val enchEntry: RegistryEntry<Enchantment> = entry.key
-            val lvl = entry.intValue
-            val idStr = registry.getId(enchEntry.value())?.toString() ?: "unknown"
-            if (idStr !in existingIds) {
-                issues.add("Unknown enchantment: $idStr")
-            }
-            if (lvl !in 1..255) {
-                issues.add("Invalid level for $idStr: $lvl")
-            }
-        }
         return issues
+    }
+
+    /**
+     * Aggiunge/aggiorna un incantesimo in config:
+     * - in AviableEnch.config mette id=true
+     * - in EnchLVLmax.config scrive/aggiorna id=<level>
+     */
+    fun addOrUpdateEnchantment(server: MinecraftServer, id: String, level: Int) {
+        setAvailable(server, id, true)
+        setMaxLevelOverride(server, id, level)
+        ConfigManager.loadAll(server)
+    }
+
+    /**
+     * Espone una “vista” della configurazione corrente per /plusec list.
+     * Mostra solo le voci abilitate; il livello è l’override se presente, altrimenti 1.
+     */
+    fun getCurrentComponent(): CurrentComponent {
+        val enabled = ConfigManager.availableEnchantments
+            .filter { it.sources.firstOrNull()?.equals("enabled", true) == true }
+            .map { it.id }
+        val levels = ConfigManager.enchantmentLevelMax
+
+        val entries = enabled.map { id ->
+            val lvl = levels[id] ?: 1
+            EnchantmentEntry(EnchRef(id), lvl)
+        }
+        return CurrentComponent(entries)
+    }
+
+    // ===== setter mirati usati dai comandi =====
+
+    private fun setAvailable(server: MinecraftServer, id: String, enabled: Boolean) {
+        val path = worldDir(server).resolve(FILE_AVAILABLE)
+        ensureFileExists(server, path, FILE_AVAILABLE)
+        upsertKeyValue(path, id, if (enabled) "true" else "false", headerFor(FILE_AVAILABLE))
+    }
+
+    private fun setMaxLevelOverride(server: MinecraftServer, id: String, level: Int?) {
+        val path = worldDir(server).resolve(FILE_LVL_MAX)
+        ensureFileExists(server, path, FILE_LVL_MAX)
+        if (level == null) {
+            removeKey(path, id, headerFor(FILE_LVL_MAX))
+        } else {
+            upsertKeyValue(path, id, level.toString(), headerFor(FILE_LVL_MAX))
+        }
+    }
+
+    // ===== util I/O su file properties =====
+
+    private fun worldDir(server: MinecraftServer): Path =
+        ConfigManager.worldConfigDir(server)
+
+    /**
+     * Se il file non esiste nel mondo, lascia che ConfigManager copi il default da resources.
+     * Se ancora assente, crea un file con header minimo.
+     */
+    private fun ensureFileExists(server: MinecraftServer, file: Path, logicalName: String) {
+        if (Files.exists(file)) return
+        ConfigManager.reloadCoreFilesIfNeeded(server)
+        if (!Files.exists(file)) {
+            Files.createDirectories(file.parent)
+            Files.writeString(file, headerFor(logicalName).joinToString("\n") + "\n", StandardCharsets.UTF_8)
+        }
+    }
+
+    private fun headerFor(fileName: String): List<String> = when (fileName) {
+        FILE_AVAILABLE -> listOf(
+            "# EnchLib - AviableEnch.config (properties)",
+            "# <id>=true|false",
+            ""
+        )
+        FILE_LVL_MAX -> listOf(
+            "# EnchLib - Max levels (id=level)",
+            ""
+        )
+        FILE_RARITY -> listOf(
+            "# EnchLib - Rarity per enchantment (id=rarity)",
+            ""
+        )
+        FILE_COMPAT -> listOf(
+            "# EnchLib - Compatibility per enchantment (id=group1,group2,...)",
+            ""
+        )
+        FILE_CATEGORIES -> listOf(
+            "# EnchLib - Categories per enchantment (id=cat1,cat2,...)",
+            ""
+        )
+        FILE_UNCOMPAT -> listOf(
+            "# EnchLib - Uncompatibility pairs (id=incompat1,incompat2,...)",
+            ""
+        )
+        else -> listOf("# EnchLib", "")
+    }
+
+    private fun readAll(path: Path): List<String> =
+        if (!Files.exists(path)) emptyList() else Files.readAllLines(path, StandardCharsets.UTF_8)
+
+    private fun writeAll(path: Path, lines: List<String>, header: List<String>) {
+        val body = lines
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("#") }
+            .sortedBy { it.substringBefore("=").trim() }
+        val content = (header + body).joinToString("\n") + "\n"
+        Files.writeString(path, content, StandardCharsets.UTF_8)
+    }
+
+    private fun indexOfKey(lines: List<String>, key: String): Int {
+        for (i in lines.indices) {
+            val raw = lines[i].trim()
+            if (raw.isEmpty() || raw.startsWith("#")) continue
+            val k = raw.substringBefore("=").trim()
+            if (k == key) return i
+        }
+        return -1
+    }
+
+    private fun upsertKeyValue(path: Path, key: String, value: String, header: List<String>) {
+        val lines = readAll(path).toMutableList()
+        val idx = indexOfKey(lines, key)
+        val newLine = "$key=$value"
+        if (idx >= 0) lines[idx] = newLine else lines.add(newLine)
+        writeAll(path, lines, header)
+    }
+
+    private fun removeKey(path: Path, key: String, header: List<String>) {
+        val lines = readAll(path).toMutableList()
+        val idx = indexOfKey(lines, key)
+        if (idx >= 0) {
+            lines.removeAt(idx)
+            writeAll(path, lines, header)
+        }
+    }
+
+    // ===== tipi wrapper per /plusec list =====
+
+    data class EnchRef(val idAsString: String)
+    data class EnchantmentEntry(val key: EnchRef, val intValue: Int)
+    class CurrentComponent(private val entries: List<EnchantmentEntry>) {
+        fun getSize(): Int = entries.size
+        fun getEnchantmentEntries(): List<EnchantmentEntry> = entries
     }
 }
