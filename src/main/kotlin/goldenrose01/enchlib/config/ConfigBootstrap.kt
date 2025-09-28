@@ -25,14 +25,11 @@ object ConfigBootstrap {
     }
 
     private fun ensureAndMergeFromRegistry(server: MinecraftServer) {
-        // Assicura intestazioni + carica available/disabled per sapere cosa è off
         ConfigManager.reloadCoreFilesIfNeeded()
 
-        // 1.21: usare getOrThrow(...)
         val registry = server.registryManager.getOrThrow(ENCH_REGISTRY_KEY)
-
-        // 1.21: niente getIds(); iteriamo le entry e prendiamo l'Identifier dalla chiave
-        val allIds: List<Identifier> = registry.entrySet.map { it.key.value }.toList()
+        val allIds: List<Identifier> = registry.getKeys()   // Set<RegistryKey<Enchantment>>
+            .map { key -> key.value }
 
         val disabled = ConfigManager.currentDisabledIds()
         var added = 0
@@ -50,11 +47,11 @@ object ConfigBootstrap {
 
             if (presentEverywhere) continue
 
-            // Available booleana (true/false) in AviableEnch.config
+            // available come boolean properties
             ConfigManager.ensureAvailable(idStr, enabled = !disabled.contains(idStr))
 
-            // Opzionali/di default
-            ConfigManager.ensureLvlMax(idStr, null)              // lascia runtime
+            // lasciamo vuoto il lvl max (si risolve a runtime col server)
+            ConfigManager.ensureLvlMax(idStr, null)
             ConfigManager.ensureRarity(idStr, "common")
             ConfigManager.ensureCompat(idStr, emptyList())
             ConfigManager.ensureCategories(idStr, emptyList())
@@ -67,7 +64,7 @@ object ConfigBootstrap {
             EnchLogger.info("🔧 Aggiunte/aggiornate $added voci nei .config (available=boolean)")
         }
 
-        // Ricarica tutto lo stato in memoria
         ConfigManager.loadAll()
     }
+
 }

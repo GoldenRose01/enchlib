@@ -188,7 +188,7 @@ object EnchLibCommands {
         all.forEach { e ->
             val id = e.idString()
             val lvl = comp.getLevel(e)
-            val max = ConfigManager.getMaxLevel(id)
+            val max = ConfigManager.getMaxLevel(id, source.server!!)
             val rarity = ConfigManager.enchantmentRarity[id] ?: "unknown"
             source.sendFeedback({ Text.literal("$id: $lvl/$max ($rarity)") }, false)
         }
@@ -225,7 +225,7 @@ object EnchLibCommands {
         source.sendFeedback({ Text.literal("=== Info Incantesimo: $id ===") }, false)
 
         val isEnabled = ConfigManager.isEnchantmentEnabled(id)
-        val maxLevel = ConfigManager.getMaxLevel(id)
+        val maxLevel = ConfigManager.getMaxLevel(id, source.server!!)
         val rarity = ConfigManager.enchantmentRarity[id] ?: "non configurata"
 
         source.sendFeedback({ Text.literal("Abilitato: ${if (isEnabled) "Sì" else "No"}") }, false)

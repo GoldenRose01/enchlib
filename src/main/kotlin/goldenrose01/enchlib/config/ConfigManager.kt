@@ -20,14 +20,10 @@ import java.nio.file.Files
  */
 
 object ConfigManager {
-    /**
-     * Posizione della cartella di configurazione. Tutti i file `.config` devono
-     * trovarsi in questa cartella. Di default è `config/enchlib`.
-     */
 
     // ==== Nomi file ====
     private const val FILE_AVAILABLE   = "AviableEnch.config"
-    private const val FILE_DISABLED    = "DisabledEnch.config"
+    private const val FILE_DISABLED    = "DisabledEnch.config"         // <-- MANCAVA
     private const val FILE_LVL_MAX     = "EnchLVLmax.config"
     private const val FILE_RARITY      = "EnchRarity.config"
     private const val FILE_COMPAT      = "EnchCompatibility.config"
@@ -85,6 +81,7 @@ object ConfigManager {
         maxLevelMap[id]?.let { return it }
         return resolveRuntimeMaxLevel(id, server) ?: 1
     }
+    @Suppress("DEPRECATION")
     fun getMaxLevel(id: String): Int {
         maxLevelMap[id]?.let { return it }
         val server = FabricLoader.getInstance().gameInstance as? net.minecraft.server.MinecraftServer
