@@ -1,271 +1,203 @@
 package goldenrose01.enchlib.commands
 
-import com.mojang.brigadier.Command
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.arguments.StringArgumentType
-import com.mojang.brigadier.builder.RequiredArgumentBuilder.argument
-import com.mojang.brigadier.context.CommandContext
-import com.mojang.brigadier.tree.LiteralCommandNode
-
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
-
-import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.command.CommandRegistryAccess
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.MinecraftServer
-import net.minecraft.command.argument.RegistryEntryReferenceArgumentType
-import net.minecraft.command.argument.IdentifierArgumentType
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import com.mojang.brigadier.suggestion.SuggestionProvider
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.command.argument.ItemStackArgumentType
-import net.minecraft.component.type.ItemEnchantmentsComponent
-import net.minecraft.util.Identifier
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtList
+import net.minecraft.registry.Registries
+import net.minecraft.server.command.CommandManager.argument
+import net.minecraft.server.command.CommandManager.literal
+import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
-
-import goldenrose01.enchlib.Enchlib
-import goldenrose01.enchlib.config.WorldConfigManager
-import goldenrose01.enchlib.utils.EnchLogger
-import goldenrose01.enchlib.config.ConfigManager
-import goldenrose01.enchlib.utils.msg
-import goldenrose01.enchlib.utils.err
-import goldenrose01.enchlib.utils.noop
-import goldenrose01.enchlib.utils.ok
-import net.minecraft.registry.RegistryKey
-import java.util.Optional
-
+import net.minecraft.util.Hand
+import net.minecraft.util.Identifier
+import net.minecraft.entity.player.PlayerEntity
 
 object EnchLibCommands {
-    fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
-        dispatcher.register(
-            CommandManager.literal("plusec")
-                .then(
-                    CommandManager.literal("add")
-                        .then(
-                            CommandManager.argument("id", StringArgumentType.string())
-                                .then(
-                                    CommandManager.argument("level", IntegerArgumentType.integer(1, 255))
-                                        .executes { ctx ->
-                                            val id = StringArgumentType.getString(ctx, "id")
-                                            val level = IntegerArgumentType.getInteger(ctx, "level")
-                                            val server = ctx.source.server
 
-                                            WorldConfigManager.addOrUpdateEnchantment(server, id, level)
-                                            ctx.source.sendFeedback(
-                                                { Text.literal("Added/Updated enchantment $id -> $level") },
-                                                false
-                                            )
-                                            1
-                                        }
-                                )
+    private const val PERM = 2
+
+    fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
+        val root: LiteralArgumentBuilder<ServerCommandSource> = literal("plusec")
+            .requires { src -> src.hasPermissionLevel(PERM) }
+
+        val addNode =
+            literal("add")
+                .then(
+                    argument("id", StringArgumentType.string())
+                        .suggests(ENCH_SUGGEST)
+                        .then(
+                            argument("level", IntegerArgumentType.integer(1))
+                                .executes { ctx ->
+                                    val source = ctx.source
+                                    val idInput = StringArgumentType.getString(ctx, "id")
+                                    val level = IntegerArgumentType.getInteger(ctx, "level")
+
+                                    val player: PlayerEntity? = try {
+                                        source.player
+                                    } catch (_: Throwable) {
+                                        try { source.getPlayer() } catch (_: Throwable) { null }
+                                    }
+
+                                    if (player == null) {
+                                        source.sendError(Text.literal("Devi essere un giocatore per usare questo comando."))
+                                        return@executes 0
+                                    }
+
+                                    val stack: ItemStack = try {
+                                        player.mainHandStack
+                                    } catch (_: Throwable) {
+                                        player.getStackInHand(Hand.MAIN_HAND)
+                                    }
+
+                                    if (stack.isEmpty) {
+                                        source.sendError(Text.literal("Tieni un oggetto in mano (mano principale)."))
+                                        return@executes 0
+                                    }
+
+                                    val resolved = resolveEnchantment(idInput)
+                                    if (resolved == null) {
+                                        source.sendError(Text.literal("Incantesimo non trovato: $idInput"))
+                                        return@executes 0
+                                    }
+                                    val (_, normalizedId) = resolved
+
+                                    val ok = forceApplyEnchantmentNbt(stack, normalizedId, level)
+                                    if (ok) {
+                                        source.sendFeedback({ Text.literal("Added/Updated enchantment $normalizedId -> $level") }, false)
+                                        try { player.currentScreenHandler.sendContentUpdates() } catch (_: Throwable) {}
+                                        1
+                                    } else {
+                                        source.sendError(Text.literal("Impossibile applicare l'incantesimo (API/NBT non disponibili)."))
+                                        0
+                                    }
+                                }
                         )
                 )
-                .then(
-                    CommandManager.literal("list")
-                        .executes { ctx ->
-                            val component = WorldConfigManager.getCurrentComponent()
-                            ctx.source.sendFeedback(
-                                { Text.literal("Configured enchantments (${component.getSize()}):") },
-                                false
-                            )
-                            for (entry in component.getEnchantmentEntries()) {
-                                val ench = entry.key
-                                val lvl = entry.intValue
-                                ctx.source.sendFeedback(
-                                    { Text.literal(" - ${ench.idAsString}: $lvl") },
-                                    false
-                                )
-                            }
-                            1
-                        }
-                )
-        )
+
+        dispatcher.register(root.then(addNode))
     }
 
-    private fun executeAdd(context: CommandContext<ServerCommandSource>): Int {
-        val enchantRef: RegistryEntry.Reference<Enchantment> =
-            RegistryEntryReferenceArgumentType.getEnchantment(context, "enchantment")
-        val level = IntegerArgumentType.getInteger(context, "level")
-        return addEnchantmentToHeld(context.source, enchantRef, level)
-    }
-
-    private fun executeAddDefault(context: CommandContext<ServerCommandSource>): Int {
-        val enchantRef: RegistryEntry.Reference<Enchantment> =
-            RegistryEntryReferenceArgumentType.getEnchantment(context, "enchantment")
-        return addEnchantmentToHeld(context.source, enchantRef, 1)
-    }
-
-    private fun addEnchantmentToHeld(
-        source: ServerCommandSource,
-        enchantment: RegistryEntry<Enchantment>,
-        level: Int
-    ): Int {
-        val player = source.player ?: return 0
-        val stack: ItemStack = player.mainHandStack
-
-        if (!stack.isEnchantable || stack.item === Items.AIR) {
-            source.err({ "L'oggetto in mano non può essere incantato" })
-            return 0
+    /** Suggerimenti: mostra sia "namespace:path" sia "path". */
+    private val ENCH_SUGGEST: SuggestionProvider<ServerCommandSource> =
+        SuggestionProvider { _, builder: SuggestionsBuilder ->
+            for (id in Registries.ENCHANTMENT.ids) {
+                builder.suggest(id.toString())
+                builder.suggest(id.path)
+            }
+            builder.buildFuture()
         }
 
-        val id = enchantment.idString()
-
-        if (!ConfigManager.isEnchantmentEnabled(id)) {
-            source.err({ "L'incantesimo $id non è abilitato nella configurazione" })
-            return 0
-        }
-
-        // Max dinamico dal registry del server, con eventuale override da config
-        val maxLevel = ConfigManager.getMaxLevel(id, source.server!!)
-        if (level > maxLevel) {
-            source.err({ "Il livello specificato ($level) supera il limite massimo ($maxLevel) per l'incantesimo $id" })
-            return 0
-        }
-
-        // Scrittura via Data Components (1.21+)
-        val current = stack.get(DataComponentTypes.ENCHANTMENTS) ?: ItemEnchantmentsComponent.DEFAULT
-        val builder = ItemEnchantmentsComponent.Builder(current)
-        builder.set(enchantment, level)
-        stack.set(DataComponentTypes.ENCHANTMENTS, builder.build())
-
-        source.msg({ "✅ Aggiunto l'incantesimo $id livello $level all'oggetto in mano" })
-        EnchLogger.debug("Applicato incantesimo $id livello $level da ${source.name}")
-        return 1
-    }
-
-    private fun executeRemove(context: CommandContext<ServerCommandSource>): Int {
-        val enchantRef: RegistryEntry.Reference<Enchantment> =
-            RegistryEntryReferenceArgumentType.getEnchantment(context, "enchantment")
-        val source = context.source
-        val player = source.player ?: return 0
-        val stack: ItemStack = player.mainHandStack
-
-        val comp = stack.get(DataComponentTypes.ENCHANTMENTS) ?: ItemEnchantmentsComponent.DEFAULT
-        val currentLevel = comp.getLevel(enchantRef)
-
-        if (currentLevel > 0) {
-            // Ricostruisce senza l’incantesimo target
-            val rebuilt = ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT).also { b ->
-                comp.getEnchantments().forEach { entry ->
-                    if (entry != enchantRef) b.set(entry, comp.getLevel(entry))
-                }
-            }.build()
-            stack.set(DataComponentTypes.ENCHANTMENTS, rebuilt)
-
-            val id = enchantRef.idString()
-            source.msg({ "✅ Rimosso l'incantesimo $id dall'oggetto in mano" })
-            EnchLogger.debug("Rimosso incantesimo $id da ${source.name}")
-            return 1
+    /** Risolve un Enchantment accettando "ns:path" o solo "path" (default "minecraft:path"). */
+    private fun resolveEnchantment(input: String): Pair<Enchantment, String>? {
+        val id: Identifier? = if (input.contains(":")) {
+            Identifier.tryParse(input)
         } else {
-            val id = enchantRef.idString()
-            source.err({ "L'oggetto in mano non ha l'incantesimo $id" })
-            return 0
+            Identifier.tryParse("minecraft:$input")
+        }
+        if (id == null) return null
+        val ench = Registries.ENCHANTMENT.get(id) ?: return null
+        return ench to id.toString()
+    }
+
+    /**
+     * Applica forzatamente l’enchant tramite NBT:
+     *  - lista "Enchantments" di compound {id:"<ns:id>", lvl:<short>}
+     *  - rimuove eventuali duplicati, poi inserisce/aggiorna
+     *
+     * Stabile tra versioni e replica /enchant senza controlli.
+     */
+    private fun forceApplyEnchantmentNbt(stack: ItemStack, enchantId: String, level: Int): Boolean {
+        return try {
+            val nbt = getOrCreateNbtCompat(stack)
+            val listKey = "Enchantments"
+
+            val list: NbtList = if (nbt.contains(listKey, 9)) {
+                nbt.getList(listKey, 10) as NbtList // 9=list, 10=compound
+            } else {
+                NbtList()
+            }
+
+            // rimuovi voci esistenti con lo stesso id
+            val toRemove = ArrayList<Int>()
+            for (i in 0 until list.size) {
+                val c = list.getCompound(i)
+                val existingId = runCatching { c.getString("id") }.getOrNull() ?: ""
+                if (existingId == enchantId) toRemove.add(i)
+            }
+            for (i in toRemove.asReversed()) list.removeAt(i)
+
+            val comp = NbtCompound()
+            comp.putString("id", enchantId)
+            comp.putShort("lvl", level.toShort())
+            list.add(comp)
+
+            nbt.put(listKey, list)
+            setNbtCompat(stack, nbt)
+            true
+        } catch (_: Throwable) {
+            false
         }
     }
 
-    private fun listEnchantments(source: ServerCommandSource): Int {
-        val player = source.player ?: return 0
-        val stack: ItemStack = player.mainHandStack
-        if (stack.item === Items.AIR) {
-            source.err({ "Nessun oggetto in mano" })
-            return 0
+    // === Helpers compatibilità NBT tra mapping/versioni ===
+
+    private fun getOrCreateNbtCompat(stack: ItemStack): NbtCompound {
+        // 1) Metodo classico getOrCreateNbt()
+        runCatching {
+            val m = ItemStack::class.java.getMethod("getOrCreateNbt")
+            val r = m.invoke(stack)
+            if (r is NbtCompound) return r
         }
 
-        val comp = stack.get(DataComponentTypes.ENCHANTMENTS) ?: ItemEnchantmentsComponent.DEFAULT
-        val all = comp.getEnchantments()
-        if (all.isEmpty()) {
-            source.msg({ "L'oggetto in mano non ha incantesimi" })
-            return 1
+        // 2) Property Kotlin "orCreateNbt" (se esiste)
+        runCatching {
+            val f = ItemStack::class.java.getDeclaredField("nbt")
+            f.isAccessible = true
+            val current = f.get(stack) as? NbtCompound
+            if (current != null) return current
+            val nc = NbtCompound()
+            f.set(stack, nc)
+            return nc
         }
 
-        source.sendFeedback({ Text.literal("=== Incantesimi su ${stack.item.name.string} ===") }, false)
-        all.forEach { e ->
-            val id = e.idString()
-            val lvl = comp.getLevel(e)
-            val max = ConfigManager.getMaxLevel(id, source.server!!)
-            val rarity = ConfigManager.enchantmentRarity[id] ?: "unknown"
-            source.sendFeedback({ Text.literal("$id: $lvl/$max ($rarity)") }, false)
+        // 3) Coppia getNbt()/setNbt(NbtCompound)
+        runCatching {
+            val getM = ItemStack::class.java.methods.firstOrNull { it.name == "getNbt" && it.parameterCount == 0 }
+            val setM = ItemStack::class.java.methods.firstOrNull { it.name == "setNbt" && it.parameterCount == 1 }
+            val cur = getM?.invoke(stack) as? NbtCompound
+            if (cur != null) return cur
+            val nc = NbtCompound()
+            setM?.invoke(stack, nc)
+            return nc
         }
-        return 1
+
+        // Fallback: nuovo Nbt senza collegarlo (meglio di crash)
+        return NbtCompound()
     }
 
-    private fun clearEnchantments(source: ServerCommandSource): Int {
-        val player = source.player ?: return 0
-        val stack: ItemStack = player.mainHandStack
-        if (stack.item === Items.AIR) {
-            source.err({ "Nessun oggetto in mano" })
-            return 0
+    private fun setNbtCompat(stack: ItemStack, nbt: NbtCompound) {
+        // prova setNbt(NbtCompound)
+        runCatching {
+            val setM = ItemStack::class.java.methods.firstOrNull { it.name == "setNbt" && it.parameterCount == 1 }
+            if (setM != null) {
+                setM.invoke(stack, nbt)
+                return
+            }
         }
-
-        val comp = stack.get(DataComponentTypes.ENCHANTMENTS) ?: ItemEnchantmentsComponent.DEFAULT
-        val count = comp.getEnchantments().size
-        if (count == 0) {
-            source.msg({ "L'oggetto in mano non ha incantesimi da rimuovere" })
-            return 1
+        // prova campo "nbt"
+        runCatching {
+            val f = ItemStack::class.java.getDeclaredField("nbt")
+            f.isAccessible = true
+            f.set(stack, nbt)
+            return
         }
-
-        stack.set(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
-        source.msg({ "✅ Rimossi $count incantesimi dall'oggetto in mano" })
-        EnchLogger.debug("Rimossi tutti gli incantesimi ($count) da ${source.name}")
-        return 1
-    }
-
-    private fun showEnchantmentInfo(context: CommandContext<ServerCommandSource>): Int {
-        val enchantRef: RegistryEntry.Reference<Enchantment> =
-            RegistryEntryReferenceArgumentType.getEnchantment(context, "enchantment")
-        val source = context.source
-        val id = enchantRef.idString()
-
-        source.sendFeedback({ Text.literal("=== Info Incantesimo: $id ===") }, false)
-
-        val isEnabled = ConfigManager.isEnchantmentEnabled(id)
-        val maxLevel = ConfigManager.getMaxLevel(id, source.server!!)
-        val rarity = ConfigManager.enchantmentRarity[id] ?: "non configurata"
-
-        source.sendFeedback({ Text.literal("Abilitato: ${if (isEnabled) "Sì" else "No"}") }, false)
-        source.sendFeedback({ Text.literal("Livello massimo: $maxLevel") }, false)
-        source.sendFeedback({ Text.literal("Rarità: $rarity") }, false)
-
-        val compatibleWith = ConfigManager.enchantmentCompatibility[id]
-        if (!compatibleWith.isNullOrEmpty()) {
-            source.sendFeedback({ Text.literal("Compatibile con: ${compatibleWith.joinToString(", ")}") }, false)
-        }
-
-        val incompatibleWith = ConfigManager.enchantmentUncompatibility[id]
-        if (!incompatibleWith.isNullOrEmpty()) {
-            source.sendFeedback({ Text.literal("Incompatibile con: ${incompatibleWith.joinToString(", ")}") }, false)
-        }
-
-        val categories = ConfigManager.enchantmentCategories[id]
-        if (!categories.isNullOrEmpty()) {
-            source.sendFeedback({ Text.literal("Categorie: ${categories.joinToString(", ")}") }, false)
-        }
-
-        val enchantConfig = ConfigManager.availableEnchantments.find { it.id == id }
-        if (enchantConfig != null) {
-            source.sendFeedback({ Text.literal("Sorgenti: ${enchantConfig.sources.joinToString(", ")}") }, false)
-        }
-
-        return 1
-    }
-}
-
-private fun RegistryEntry<Enchantment>.idString(): String {
-    // Alcune mappature esprimono getKey(): Optional<RegistryKey<...>>
-    return try {
-        val mGetKey = this.javaClass.getMethod("getKey")
-        val opt = mGetKey.invoke(this) as java.util.Optional<*>
-        val regKey = opt.orElse(null) ?: return "<?>"
-        val mGetValue = regKey.javaClass.getMethod("getValue") // -> Identifier
-        val identifier = mGetValue.invoke(regKey) as net.minecraft.util.Identifier
-        identifier.toString()
-    } catch (_: Throwable) {
-        "<?>"
+        // se nessuna delle due, non facciamo nulla (già messo nell’oggetto in getOrCreate)
     }
 }

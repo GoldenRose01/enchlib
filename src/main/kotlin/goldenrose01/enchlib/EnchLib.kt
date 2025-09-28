@@ -10,6 +10,7 @@ import com.mojang.brigadier.CommandDispatcher
 import goldenrose01.enchlib.commands.DebugCommands
 import goldenrose01.enchlib.commands.EnchLibCommands
 import goldenrose01.enchlib.config.WorldConfigBootstrap
+import goldenrose01.enchlib.utils.EnchLogger
 
 import org.slf4j.LoggerFactory
 
@@ -20,16 +21,14 @@ object Enchlib : ModInitializer {
     override fun onInitialize() {
         LOGGER.info("[$MOD_ID] Initializing...")
 
-        //world Configuration
+        // World configuration
         WorldConfigBootstrap.register()
-        // Comandi
-        CommandRegistrationCallback.EVENT.register(
-            CommandRegistrationCallback { dispatcher: CommandDispatcher<ServerCommandSource>, _, _ ->
-                EnchLibCommands.register(dispatcher)
-                DebugCommands.register(dispatcher)
-            }
-        )
 
-
+        // Comandi (solo dispatcher: le versioni attuali di EnchLibCommands/DebugCommands
+        // espongono register(dispatcher) senza registryAccess)
+        CommandRegistrationCallback.EVENT.register { dispatcher: CommandDispatcher<ServerCommandSource>, _, _ ->
+            EnchLibCommands.register(dispatcher)
+            DebugCommands.register(dispatcher)
+        }
     }
 }
