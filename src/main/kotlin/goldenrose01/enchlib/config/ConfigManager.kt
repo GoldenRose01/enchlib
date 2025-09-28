@@ -25,15 +25,16 @@ object ConfigManager {
      * trovarsi in questa cartella. Di default è `config/enchlib`.
      */
 
-    private const val FILE_AVAILABLE = "AviableEnch.config"
-    private const val FILE_DISABLED = "DisabledEnch.config"
-    private const val FILE_LVL_MAX  = "EnchLVLmax.config"
-    private const val FILE_RARITY   = "EnchRarity.config"
-    private const val FILE_COMPAT   = "EnchCompatibility.config"
-    private const val FILE_CATEGORIES = "EnchCategories.config"
-    private const val FILE_UNCOMPAT   = "EnchUncompatibility.config"
+    // ==== Nomi file ====
+    private const val FILE_AVAILABLE   = "AviableEnch.config"
+    private const val FILE_DISABLED    = "DisabledEnch.config"
+    private const val FILE_LVL_MAX     = "EnchLVLmax.config"
+    private const val FILE_RARITY      = "EnchRarity.config"
+    private const val FILE_COMPAT      = "EnchCompatibility.config"
+    private const val FILE_CATEGORIES  = "EnchCategories.config"
+    private const val FILE_UNCOMPAT    = "EnchUncompatibility.config"
 
-    // Stato in memoria caricato dai .config
+    // ==== Stato in memoria ====
     private val availableSources: MutableMap<String, List<String>> = ConcurrentHashMap()
     private val disabledSet: MutableSet<String> = ConcurrentHashMap.newKeySet()
     private val maxLevelMap: MutableMap<String, Int> = ConcurrentHashMap()
@@ -58,31 +59,20 @@ object ConfigManager {
         EnchLogger.info("Config EnchLib caricati")
     }
 
-
     fun reloadCoreFilesIfNeeded() {
         ensureCoreFiles()
         loadAvailable()
         loadDisabled()
     }
 
-    // Stato “compat” per DebugCommands esistente
+    // ==== Accessors read-only per comandi/debug ====
     val availableEnchantments: List<AvailableEnchant>
         get() = availableSources.entries.map { AvailableEnchant(it.key, it.value) }
-
-    val enchantmentLevelMax: Map<String, Int>
-        get() = maxLevelMap.toMap()
-
-    val enchantmentRarity: Map<String, String>
-        get() = rarityMap.toMap()
-
-    val enchantmentCompatibility: Map<String, List<String>>
-        get() = compatibilityMap.toMap()
-
-    val enchantmentCategories: Map<String, List<String>>
-        get() = categoriesMap.toMap()
-
-    val enchantmentUncompatibility: Map<String, List<String>>
-        get() = uncompatibilityMap.toMap()
+    val enchantmentLevelMax: Map<String, Int> get() = maxLevelMap.toMap()
+    val enchantmentRarity: Map<String, String> get() = rarityMap.toMap()
+    val enchantmentCompatibility: Map<String, List<String>> get() = compatibilityMap.toMap()
+    val enchantmentCategories: Map<String, List<String>> get() = categoriesMap.toMap()
+    val enchantmentUncompatibility: Map<String, List<String>> get() = uncompatibilityMap.toMap()
 
     fun isEnchantmentEnabled(id: String): Boolean {
         if (disabledSet.contains(id)) return false
@@ -90,43 +80,40 @@ object ConfigManager {
         return sources.isNotEmpty() && !(sources.size == 1 && sources[0].equals("disabled", true))
     }
 
-    // Max dinamico: override da file o valore runtime dal registry server
+    // Max dinamico: override da file o valore runtime dal registry del server
     fun getMaxLevel(id: String, server: net.minecraft.server.MinecraftServer): Int {
         maxLevelMap[id]?.let { return it }
         return resolveRuntimeMaxLevel(id, server) ?: 1
     }
-
-    // Variante senza server (fallback)
     fun getMaxLevel(id: String): Int {
         maxLevelMap[id]?.let { return it }
-        val server = net.fabricmc.loader.api.FabricLoader.getInstance().gameInstance as? net.minecraft.server.MinecraftServer
+        val server = FabricLoader.getInstance().gameInstance as? net.minecraft.server.MinecraftServer
         return if (server != null) resolveRuntimeMaxLevel(id, server) ?: 1 else 1
     }
 
-    // Helpers per bootstrap
+    // ==== Helper bootstrap ====
     fun currentDisabledIds(): Set<String> = disabledSet
-    fun existsInAvailable(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_AVAILABLE), id)
-    fun existsInLvlMax(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_LVL_MAX), id)
-    fun existsInRarity(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_RARITY), id)
-    fun existsInCompat(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_COMPAT), id)
-    fun existsInCategories(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_CATEGORIES), id)
-    fun existsInUncompat(id: String): Boolean = fileContainsKey(configDir().resolve(FILE_UNCOMPAT), id)
+    fun existsInAvailable(id: String)  = fileContainsKey(configDir().resolve(FILE_AVAILABLE), id)
+    fun existsInLvlMax(id: String)     = fileContainsKey(configDir().resolve(FILE_LVL_MAX), id)
+    fun existsInRarity(id: String)     = fileContainsKey(configDir().resolve(FILE_RARITY), id)
+    fun existsInCompat(id: String)     = fileContainsKey(configDir().resolve(FILE_COMPAT), id)
+    fun existsInCategories(id: String) = fileContainsKey(configDir().resolve(FILE_CATEGORIES), id)
+    fun existsInUncompat(id: String)   = fileContainsKey(configDir().resolve(FILE_UNCOMPAT), id)
 
-    fun ensureAvailable(id: String, fullLine: String) {
+    fun ensureAvailable(id: String, enabled: Boolean) {
         val p = configDir().resolve(FILE_AVAILABLE)
-        if (!fileContainsKey(p, id)) appendLine(p, fullLine)
+        if (!fileContainsKey(p, id)) {
+            appendLine(p, "$id=${if (enabled) "true" else "false"}")
+        }
     }
-
     fun ensureLvlMax(id: String, level: Int?) {
         val p = configDir().resolve(FILE_LVL_MAX)
         if (!fileContainsKey(p, id) && level != null) appendLine(p, "$id=$level")
     }
-
     fun ensureRarity(id: String, rarity: String) {
         val p = configDir().resolve(FILE_RARITY)
         if (!fileContainsKey(p, id)) appendLine(p, "$id=$rarity")
     }
-
     fun ensureCompat(id: String, groups: List<String>) {
         val p = configDir().resolve(FILE_COMPAT)
         if (!fileContainsKey(p, id)) {
@@ -134,7 +121,6 @@ object ConfigManager {
             appendLine(p, "$id=$value")
         }
     }
-
     fun ensureCategories(id: String, groups: List<String>) {
         val p = configDir().resolve(FILE_CATEGORIES)
         if (!fileContainsKey(p, id)) {
@@ -142,7 +128,6 @@ object ConfigManager {
             appendLine(p, "$id=$value")
         }
     }
-
     fun ensureUncompat(id: String, groups: List<String>) {
         val p = configDir().resolve(FILE_UNCOMPAT)
         if (!fileContainsKey(p, id)) {
@@ -154,12 +139,26 @@ object ConfigManager {
     // ====== Runtime resolver ======
     private fun resolveRuntimeMaxLevel(id: String, server: net.minecraft.server.MinecraftServer): Int? {
         return try {
-            val registry = server.registryManager.get(net.minecraft.registry.RegistryKeys.ENCHANTMENT)
+            val reg = server.registryManager.getOrThrow(net.minecraft.registry.RegistryKeys.ENCHANTMENT)
             val identifier = net.minecraft.util.Identifier.tryParse(id) ?: return null
-            val ench = registry.get(identifier) ?: return null
-            try {
-                ench.getMaxLevel() // Yarn recente
+
+            // getEntry(Identifier) -> Optional<RegistryEntry.Reference<Enchantment>>
+            val opt = reg.getEntry(identifier)
+            if (!opt.isPresent) return null
+            val ref = opt.get()
+
+            // Prova a ricavare l'istanza Enchantment (value()) con reflection
+            val ench = try {
+                val mValue = ref.javaClass.getMethod("value")
+                mValue.invoke(ref) as net.minecraft.enchantment.Enchantment
             } catch (_: Throwable) {
+                return 1
+            }
+
+            // getMaxLevel() o maxLevel()
+            ench.javaClass.methods.firstOrNull { it.name.equals("getMaxLevel", true) && it.parameterCount == 0 }?.let {
+                (it.invoke(ench) as? Int) ?: 1
+            } ?: run {
                 val m = ench.javaClass.methods.firstOrNull { it.name.equals("maxLevel", true) && it.parameterCount == 0 }
                 (m?.invoke(ench) as? Int) ?: 1
             }
@@ -168,12 +167,13 @@ object ConfigManager {
         }
     }
 
-    // ====== I/O config ======
+    // ====== I/O config ======   <-- **TUTTO QUESTO ORA È DENTRO L'OBJECT**
     private fun appendLine(path: Path, line: String) {
         Files.writeString(
             path,
             line + System.lineSeparator(),
             StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE,         // crea se manca
             StandardOpenOption.APPEND
         )
     }
@@ -192,13 +192,13 @@ object ConfigManager {
     private fun ensureCoreFiles() {
         val dir = configDir()
         Files.createDirectories(dir)
-        createIfMissing(dir.resolve(FILE_AVAILABLE), headerAvailable())
-        createIfMissing(dir.resolve(FILE_DISABLED), headerGeneric("Disabled enchantments - one id per line"))
-        createIfMissing(dir.resolve(FILE_LVL_MAX), headerGeneric("Max levels (id=level), leave empty to use runtime value"))
-        createIfMissing(dir.resolve(FILE_RARITY), headerGeneric("Rarity per enchantment (id=rarity)"))
-        createIfMissing(dir.resolve(FILE_COMPAT), headerGeneric("Compatibility per enchantment (id=group1,group2)"))
-        createIfMissing(dir.resolve(FILE_CATEGORIES), headerGeneric("Categories per enchantment (id=cat1,cat2)"))
-        createIfMissing(dir.resolve(FILE_UNCOMPAT), headerGeneric("Uncompatibility pairs (id=incompat1,incompat2)"))
+        createIfMissing(dir.resolve(FILE_AVAILABLE),   headerAvailable())
+        createIfMissing(dir.resolve(FILE_DISABLED),    headerGeneric("Disabled enchantments - one id per line"))
+        createIfMissing(dir.resolve(FILE_LVL_MAX),     headerGeneric("Max levels (id=level), leave empty to use runtime value"))
+        createIfMissing(dir.resolve(FILE_RARITY),      headerGeneric("Rarity per enchantment (id=rarity)"))
+        createIfMissing(dir.resolve(FILE_COMPAT),      headerGeneric("Compatibility per enchantment (id=group1,group2)"))
+        createIfMissing(dir.resolve(FILE_CATEGORIES),  headerGeneric("Categories per enchantment (id=cat1,cat2)"))
+        createIfMissing(dir.resolve(FILE_UNCOMPAT),    headerGeneric("Uncompatibility pairs (id=incompat1,incompat2)"))
     }
 
     private fun createIfMissing(path: Path, header: String) {
@@ -208,10 +208,9 @@ object ConfigManager {
     }
 
     private fun headerAvailable(): String = buildString {
-        appendLine("# EnchLib - AviableEnch.config")
-        appendLine("# Formato: <id>=source1,source2 oppure <id>=disabled")
-        appendLine("# Default attivo: enchanting_table,chest_loot,villager_trade")
-        appendLine("# DisabledEnch.config sovrascrive con 'disabled' se l'utente lo elenca")
+        appendLine("# EnchLib - AviableEnch.config (properties)")
+        appendLine("# Formato: <id>=true|false   (true = abilitato, false = disabilitato)")
+        appendLine("# Esempio: minecraft:sharpness=true")
         appendLine()
     }
 
@@ -230,8 +229,29 @@ object ConfigManager {
             val parts = line.split("=", limit = 2)
             if (parts.size != 2) return@forEach
             val id = parts[0].trim()
-            val sources = parts[1].split(",").map { it.trim() }.filter { it.isNotEmpty() }
-            availableSources[id] = sources
+            val v  = parts[1].trim()
+
+            when (v.lowercase()) {
+                "true", "enabled" -> {
+                    availableSources[id] = listOf("enabled")
+                    disabledSet.remove(id)
+                }
+                "false", "disabled" -> {
+                    availableSources[id] = listOf("disabled")
+                    disabledSet.add(id)
+                }
+                else -> {
+                    // Back-compat (vecchio formato sorgenti CSV)
+                    val sources = v.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                    if (sources.size == 1 && sources[0].equals("disabled", true)) {
+                        availableSources[id] = listOf("disabled")
+                        disabledSet.add(id)
+                    } else {
+                        availableSources[id] = sources
+                        disabledSet.remove(id)
+                    }
+                }
+            }
         }
     }
 

@@ -31,10 +31,15 @@ import net.minecraft.text.Text
 
 import goldenrose01.enchlib.Enchlib
 import goldenrose01.enchlib.config.WorldConfigManager
+import goldenrose01.enchlib.utils.EnchLogger
+import goldenrose01.enchlib.config.ConfigManager
 import goldenrose01.enchlib.utils.msg
 import goldenrose01.enchlib.utils.err
 import goldenrose01.enchlib.utils.noop
 import goldenrose01.enchlib.utils.ok
+import net.minecraft.registry.RegistryKey
+import java.util.Optional
+
 
 object EnchLibCommands {
     fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
@@ -251,3 +256,16 @@ object EnchLibCommands {
     }
 }
 
+private fun RegistryEntry<Enchantment>.idString(): String {
+    // Alcune mappature esprimono getKey(): Optional<RegistryKey<...>>
+    return try {
+        val mGetKey = this.javaClass.getMethod("getKey")
+        val opt = mGetKey.invoke(this) as java.util.Optional<*>
+        val regKey = opt.orElse(null) ?: return "<?>"
+        val mGetValue = regKey.javaClass.getMethod("getValue") // -> Identifier
+        val identifier = mGetValue.invoke(regKey) as net.minecraft.util.Identifier
+        identifier.toString()
+    } catch (_: Throwable) {
+        "<?>"
+    }
+}

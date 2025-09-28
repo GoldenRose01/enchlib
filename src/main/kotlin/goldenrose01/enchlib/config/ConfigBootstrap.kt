@@ -25,16 +25,18 @@ object ConfigBootstrap {
     }
 
     private fun ensureAndMergeFromRegistry(server: MinecraftServer) {
-        // ricarica i file base (preserva commenti)
+        // Assicura intestazioni + carica available/disabled per sapere cosa è off
         ConfigManager.reloadCoreFilesIfNeeded()
 
-        val registry = server.registryManager.get(ENCH_REGISTRY_KEY)
-        // Alcuni mapping espongono getIds() anziché una property; usa il getter
-        val allIds: List<Identifier> = registry.getIds().toList()
+        // 1.21: usare getOrThrow(...)
+        val registry = server.registryManager.getOrThrow(ENCH_REGISTRY_KEY)
+
+        // 1.21: niente getIds(); iteriamo le entry e prendiamo l'Identifier dalla chiave
+        val allIds: List<Identifier> = registry.entrySet.map { it.key.value }.toList()
 
         val disabled = ConfigManager.currentDisabledIds()
-
         var added = 0
+
         for (id in allIds) {
             val idStr = id.toString()
 
@@ -48,14 +50,11 @@ object ConfigBootstrap {
 
             if (presentEverywhere) continue
 
-            // Default: attivo con fonti standard; se l’utente lo ha messo in DisabledEnch, scrivi "=disabled"
-            val defaultSources = "enchanting_table,chest_loot,villager_trade"
-            val lineAvailable = if (disabled.contains(idStr)) "$idStr=disabled" else "$idStr=$defaultSources"
+            // Available booleana (true/false) in AviableEnch.config
+            ConfigManager.ensureAvailable(idStr, enabled = !disabled.contains(idStr))
 
-            // Assicura presenza in ogni file, senza toccare commenti esistenti
-            ConfigManager.ensureAvailable(idStr, lineAvailable)
-            // Non imponiamo un livello max nel file: il runtime fornirà il valore
-            ConfigManager.ensureLvlMax(idStr, null)
+            // Opzionali/di default
+            ConfigManager.ensureLvlMax(idStr, null)              // lascia runtime
             ConfigManager.ensureRarity(idStr, "common")
             ConfigManager.ensureCompat(idStr, emptyList())
             ConfigManager.ensureCategories(idStr, emptyList())
@@ -65,10 +64,10 @@ object ConfigBootstrap {
         }
 
         if (added > 0) {
-            EnchLogger.info("🔧 Aggiunte/aggiornate $added voci di incantesimi nei .config")
+            EnchLogger.info("🔧 Aggiunte/aggiornate $added voci nei .config (available=boolean)")
         }
 
-        // ricarica stato completo
+        // Ricarica tutto lo stato in memoria
         ConfigManager.loadAll()
     }
 }

@@ -20,10 +20,14 @@ import net.minecraft.component.DataComponentTypes
 
 import goldenrose01.enchlib.Enchlib
 import goldenrose01.enchlib.config.WorldConfigManager
+import goldenrose01.enchlib.config.ConfigManager
 import goldenrose01.enchlib.utils.msg
 import goldenrose01.enchlib.utils.err
 import goldenrose01.enchlib.utils.noop
 import goldenrose01.enchlib.utils.ok
+import goldenrose01.enchlib.utils.EnchLogger
+import goldenrose01.enchlib.registry.EnchantmentRegistry
+
 
 
 object DebugCommands {
@@ -270,5 +274,4 @@ object DebugCommands {
         }
         return issues
     }
-}
 }
