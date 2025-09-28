@@ -26,6 +26,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.text.Text
 
 import goldenrose01.enchlib.Enchlib
@@ -104,21 +105,21 @@ object EnchLibCommands {
         val stack: ItemStack = player.mainHandStack
 
         if (!stack.isEnchantable || stack.item === Items.AIR) {
-            source.err("L'oggetto in mano non può essere incantato")
+            source.err({ "L'oggetto in mano non può essere incantato" })
             return 0
         }
 
         val id = enchantment.idString()
 
         if (!ConfigManager.isEnchantmentEnabled(id)) {
-            source.err("L'incantesimo $id non è abilitato nella configurazione")
+            source.err({ "L'incantesimo $id non è abilitato nella configurazione" })
             return 0
         }
 
         // Max dinamico dal registry del server, con eventuale override da config
         val maxLevel = ConfigManager.getMaxLevel(id, source.server!!)
         if (level > maxLevel) {
-            source.err("Il livello specificato ($level) supera il limite massimo ($maxLevel) per l'incantesimo $id")
+            source.err({ "Il livello specificato ($level) supera il limite massimo ($maxLevel) per l'incantesimo $id" })
             return 0
         }
 
@@ -128,7 +129,7 @@ object EnchLibCommands {
         builder.set(enchantment, level)
         stack.set(DataComponentTypes.ENCHANTMENTS, builder.build())
 
-        source.msg("✅ Aggiunto l'incantesimo $id livello $level all'oggetto in mano")
+        source.msg({ "✅ Aggiunto l'incantesimo $id livello $level all'oggetto in mano" })
         EnchLogger.debug("Applicato incantesimo $id livello $level da ${source.name}")
         return 1
     }
@@ -153,12 +154,12 @@ object EnchLibCommands {
             stack.set(DataComponentTypes.ENCHANTMENTS, rebuilt)
 
             val id = enchantRef.idString()
-            source.msg("✅ Rimosso l'incantesimo $id dall'oggetto in mano")
+            source.msg({ "✅ Rimosso l'incantesimo $id dall'oggetto in mano" })
             EnchLogger.debug("Rimosso incantesimo $id da ${source.name}")
             return 1
         } else {
             val id = enchantRef.idString()
-            source.err("L'oggetto in mano non ha l'incantesimo $id")
+            source.err({ "L'oggetto in mano non ha l'incantesimo $id" })
             return 0
         }
     }
@@ -167,14 +168,14 @@ object EnchLibCommands {
         val player = source.player ?: return 0
         val stack: ItemStack = player.mainHandStack
         if (stack.item === Items.AIR) {
-            source.err("Nessun oggetto in mano")
+            source.err({ "Nessun oggetto in mano" })
             return 0
         }
 
         val comp = stack.get(DataComponentTypes.ENCHANTMENTS) ?: ItemEnchantmentsComponent.DEFAULT
         val all = comp.getEnchantments()
         if (all.isEmpty()) {
-            source.msg("L'oggetto in mano non ha incantesimi")
+            source.msg({ "L'oggetto in mano non ha incantesimi" })
             return 1
         }
 
@@ -193,19 +194,19 @@ object EnchLibCommands {
         val player = source.player ?: return 0
         val stack: ItemStack = player.mainHandStack
         if (stack.item === Items.AIR) {
-            source.err("Nessun oggetto in mano")
+            source.err({ "Nessun oggetto in mano" })
             return 0
         }
 
         val comp = stack.get(DataComponentTypes.ENCHANTMENTS) ?: ItemEnchantmentsComponent.DEFAULT
         val count = comp.getEnchantments().size
         if (count == 0) {
-            source.msg("L'oggetto in mano non ha incantesimi da rimuovere")
+            source.msg({ "L'oggetto in mano non ha incantesimi da rimuovere" })
             return 1
         }
 
         stack.set(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
-        source.msg("✅ Rimossi $count incantesimi dall'oggetto in mano")
+        source.msg({ "✅ Rimossi $count incantesimi dall'oggetto in mano" })
         EnchLogger.debug("Rimossi tutti gli incantesimi ($count) da ${source.name}")
         return 1
     }
@@ -249,4 +250,4 @@ object EnchLibCommands {
         return 1
     }
 }
-}
+
