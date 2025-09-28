@@ -39,6 +39,10 @@ class EnchlibItemTagProvider(
         val TOOLS    = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "tools"))
         val ARMOR    = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "armor"))
         val WEAPONS  = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "weapons"))
+        val BOWS     = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "bows"))
+        val WEIGHTED = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "weighted"))
+
+
 
         // pickaxes
         getOrCreateTagBuilder(PICKAXES)
@@ -82,16 +86,27 @@ class EnchlibItemTagProvider(
             .forceAddTag(SHOVELS)
             .forceAddTag(HOES)
 
+
         // armor -> usa tag vanilla armatura
         getOrCreateTagBuilder(ARMOR)
             .forceAddTag(ItemTags.HEAD_ARMOR)
             .forceAddTag(ItemTags.CHEST_ARMOR)
             .forceAddTag(ItemTags.LEG_ARMOR)
             .forceAddTag(ItemTags.FOOT_ARMOR)
+            .add(Items.ELYTRA)
 
         // weapons -> swords + archi/balestre/tridente
         getOrCreateTagBuilder(WEAPONS)
             .forceAddTag(SWORDS)
-            .add(Items.BOW, Items.CROSSBOW, Items.TRIDENT)
+            .add(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.MACE)
+
+        // bows -> bow + cross
+        getOrCreateTagBuilder(BOWS)
+            .add(Items.BOW, Items.CROSSBOW)
+
+        // weighted -> Mace + shovel
+        getOrCreateTagBuilder(WEIGHTED)
+            .forceAddTag(SHOVELS)
+            .add(Items.MACE)
     }
 }

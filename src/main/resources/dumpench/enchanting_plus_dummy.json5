@@ -1,0 +1,2127 @@
+{
+  "enchantments": [
+    {
+      "id": "enchrevolution:armored",
+      "name": "Armored",
+      "max_level": 5,
+      "applicable_to": [
+        "elytra"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_armor_points": 1},
+        {"level": 2, "extra_armor_points": 2},
+        {"level": 3, "extra_armor_points": 3},
+        {"level": 4, "extra_armor_points": 4},
+        {"level": 5, "extra_armor_points": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:backslash",
+      "name": "Backslash",
+      "max_level": 5,
+      "applicable_to": [
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "knockback": 1,
+          "weakness_level": 1},
+        {"level": 2, "knockback": 2,
+          "weakness_level": 1},
+        {"level": 3, "knockback": 3,
+          "weakness_level": 2},
+        {"level": 4, "knockback": 4,
+          "weakness_level": 2},
+        {"level": 5, "knockback": 5,
+          "weakness_level": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:bane_of_end",
+      "name": "Bane Of End",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Void"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:blade_of_apocalypse",
+      "name": "Blade of Apocalypse",
+      "max_level": 9,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Animals",
+        "Undead",
+        "Void",
+        "Magik",
+        "Rebel"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 3},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 8},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 13},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 18},
+        {"level": 8, "extra_damage": 20},
+        {"level": 9, "extra_damage": 25}
+      ]
+    },
+    {
+      "id": "enchrevolution:blessing_of_the_night",
+      "name": "Night Blessing",
+      "max_level": 5,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "xp_per_min": 5},
+        {"level": 2, "xp_per_min": 10},
+        {"level": 3, "xp_per_min": 15},
+        {"level": 4, "xp_per_min": 20},
+        {"level": 5, "xp_per_min": 25}
+      ]
+    },
+    {
+      "id": "enchrevolution:butcher",
+      "name": "Butcher",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Animals"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:catapult",
+      "name": "Catapult",
+      "max_level": 2,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "launch_height_blocks": 2},
+        {"level": 2, "launch_height_blocks": 4}
+      ]
+    },
+    {
+      "id": "enchrevolution:clearmind",
+      "name": "ClearMind",
+      "max_level": 5,
+      "applicable_to": [
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "zoom_multiplier": 1.2,
+          "activation_time_sec": 10},
+        {"level": 2, "zoom_multiplier": 1.4,
+          "activation_time_sec": 10},
+        {"level": 3, "zoom_multiplier": 1.6,
+          "activation_time_sec": 7.5},
+        {"level": 4, "zoom_multiplier": 1.8,
+          "activation_time_sec": 7.5},
+        {"level": 5, "zoom_multiplier": 2.0,
+          "activation_time_sec": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:combustion_protection",
+      "name": "Combustion Protection",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "damage_reduction": 0.08},
+        {"level": 2, "damage_reduction": 0.16},
+        {"level": 3, "damage_reduction": 0.24},
+        {"level": 4, "damage_reduction": 0.32},
+        {"level": 5, "damage_reduction": 0.4}
+      ]
+    },
+    {
+      "id": "enchrevolution:creeping_threat",
+      "name": "Creeping Threat",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Arthropods"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:curse_of_fragility",
+      "name": "Curse of Fragility",
+      "max_level": 3,
+      "applicable_to": [
+        "all"
+      ],
+      "description": "",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "durability_penalty": 0.33},
+        {"level": 2, "durability_penalty": 0.66},
+        {"level": 3, "durability_penalty": 1.0}
+      ]
+    },
+    {
+      "id": "enchrevolution:curse_of_perish",
+      "name": "Curse of Perish",
+      "max_level": 3,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "wither_level": 1,
+          "duration_sec": 4},
+        {"level": 2, "wither_level": 2,
+          "duration_sec": 4},
+        {"level": 3, "wither_level": 3,
+          "duration_sec": 4}
+      ]
+    },
+    {
+      "id": "enchrevolution:curse_of_spider",
+      "name": "Curse of Spiders",
+      "max_level": 5,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "Arthropods"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "poison_level": 1,
+          "duration_sec": 4},
+        {"level": 2, "poison_level": 2,
+          "duration_sec": 4},
+        {"level": 3, "poison_level": 3,
+          "duration_sec": 4},
+        {"level": 4, "poison_level": 4,
+          "duration_sec": 4},
+        {"level": 5, "poison_level": 5,
+          "duration_sec": 8}
+      ]
+    },
+    {
+      "id": "enchrevolution:curse_of_target",
+      "name": "Target Curse",
+      "max_level": 5,
+      "applicable_to": [
+        "bow",
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "glowing_seconds": 2},
+        {"level": 2, "glowing_seconds": 4},
+        {"level": 3, "glowing_seconds": 6},
+        {"level": 4, "glowing_seconds": 8},
+        {"level": 5, "glowing_seconds": 10}
+      ]
+    },
+    {
+      "id": "enchrevolution:curse_of_the_forest",
+      "name": "Curse of the Forest",
+      "max_level": 2,
+      "applicable_to": [
+        "all"
+      ],
+      "description": "",
+      "enc_category": [
+        "Curse"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "explosion_type": "creeper"},
+        {"level": 2, "explosion_type": "charged_creeper"}
+      ]
+    },
+    {
+      "id": "enchrevolution:dash",
+      "name": "Dash",
+      "max_level": 5,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "damage_bonus": 0.5},
+        {"level": 2, "damage_bonus": 1.0},
+        {"level": 3, "damage_bonus": 1.5},
+        {"level": 4, "damage_bonus": 2.0},
+        {"level": 5, "damage_bonus": 2.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:deathbreak",
+      "name": "DeathBreak",
+      "max_level": 1,
+      "applicable_to": [
+        "all"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "unbreakable": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:digger",
+      "name": "Digger",
+      "max_level": 1,
+      "applicable_to": [
+        "pickaxe",
+        "shovel"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "area": "3x3"}
+      ]
+    },
+    {
+      "id": "enchrevolution:drain_looting",
+      "name": "Drain Looting",
+      "max_level": 5,
+      "applicable_to": [
+        "netherite_hoe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Loot"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "crop_looting_multiplier": 5},
+        {"level": 2, "crop_looting_multiplier": 10},
+        {"level": 3, "crop_looting_multiplier": 15},
+        {"level": 4, "crop_looting_multiplier": 20},
+        {"level": 5, "crop_looting_multiplier": 25}
+      ]
+    },
+    {
+      "id": "enchrevolution:dual_sweeping",
+      "name": "Dual Sweeping",
+      "max_level": 2,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "sweeping_damage_equal": true},
+        {"level": 2, "sweeping_damage_multiplier": 2.0}
+      ]
+    },
+    {
+      "id": "enchrevolution:dwarf_flakes",
+      "name": "Dwarf Flakes",
+      "max_level": 3,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "durability_regen_interval_min": 4},
+        {"level": 2, "durability_regen_interval_min": 2},
+        {"level": 3, "durability_regen_interval_min": 1.33}
+      ]
+    },
+    {
+      "id": "enchrevolution:dwarf_forged",
+      "name": "Dwarf Forged",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "unbreaking_bonus": 1},
+        {"level": 2, "unbreaking_bonus": 2},
+        {"level": 3, "unbreaking_bonus": 3},
+        {"level": 4, "unbreaking_bonus": 4},
+        {"level": 5, "unbreaking_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:elasticity",
+      "name": "Elasticity",
+      "max_level": 3,
+      "applicable_to": [
+        "bow",
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "arrow_speed_multiplier": 1},
+        {"level": 2, "arrow_speed_multiplier": 2},
+        {"level": 3, "arrow_speed_multiplier": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:end_adaptability",
+      "name": "End Adaptability",
+      "max_level": 1,
+      "applicable_to": [
+        "leggings"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "Void"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "negate_void_damage": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:end_blessing",
+      "name": "End Blessing",
+      "max_level": 1,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "Void"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "saturation_drain": 0}
+      ]
+    },
+    {
+      "id": "enchrevolution:end_flakes",
+      "name": "End Flakes",
+      "max_level": 3,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "Void"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "durability_regen_per_sec": 0.01},
+        {"level": 2, "durability_regen_per_sec": 0.02},
+        {"level": 3, "durability_regen_per_sec": 0.03}
+      ]
+    },
+    {
+      "id": "enchrevolution:end_forged",
+      "name": "End Forged",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "Void"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "unbreaking_bonus": 1},
+        {"level": 2, "unbreaking_bonus": 2},
+        {"level": 3, "unbreaking_bonus": 3},
+        {"level": 4, "unbreaking_bonus": 4},
+        {"level": 5, "unbreaking_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:enduring",
+      "name": "Enduring",
+      "max_level": 1,
+      "applicable_to": [
+        "all"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "items_last_forever": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:engine",
+      "name": "Engine",
+      "max_level": 10,
+      "applicable_to": [
+        "elytra"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "rocket_save_chance": 0.1},
+        {"level": 2, "rocket_save_chance": 0.2},
+        {"level": 3, "rocket_save_chance": 0.3},
+        {"level": 4, "rocket_save_chance": 0.4},
+        {"level": 5, "rocket_save_chance": 0.5},
+        {"level": 6, "rocket_save_chance": 0.6},
+        {"level": 7, "rocket_save_chance": 0.7},
+        {"level": 8, "rocket_save_chance": 0.8},
+        {"level": 9, "rocket_save_chance": 0.9},
+        {"level": 10, "rocket_save_chance": 1.0}
+      ]
+    },
+    {
+      "id": "enchrevolution:excavator",
+      "name": "Excavator",
+      "max_level": 3,
+      "applicable_to": [
+        "axe",
+        "pickaxe",
+        "shovel"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "reach_bonus": 1},
+        {"level": 2, "reach_bonus": 2},
+        {"level": 3, "reach_bonus": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:exorcist",
+      "name": "Exorcist",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Hell"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:experienced",
+      "name": "Experienced",
+      "max_level": 1,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "critical_multiplier_exp_based": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:flogging",
+      "name": "Flogging",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Rebel"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:freeze_aspect",
+      "name": "Freezing Aspect",
+      "max_level": 5,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "slowness_level": 1,
+          "duration_sec": 3},
+        {"level": 2, "slowness_level": 2,
+          "duration_sec": 3},
+        {"level": 3, "slowness_level": 3,
+          "duration_sec": 3},
+        {"level": 4, "slowness_level": 4,
+          "duration_sec": 3},
+        {"level": 5, "slowness_level": 5,
+          "duration_sec": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:god_protection",
+      "name": "God's Protection",
+      "max_level": 1,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "damage_reduction": 1,
+          "fire_reduction": 1,
+          "blast_reduction": 1,
+          "projectile_reduction": 1}
+      ]
+    },
+    {
+      "id": "enchrevolution:gream_reaper",
+      "name": "Gream Reaper",
+      "max_level": 10,
+      "applicable_to": [
+        "netherite_hoe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Animals",
+        "Undead",
+        "Void",
+        "Hell",
+        "Water",
+        "Arthropods",
+        "Rebel",
+        "Fungi",
+        "Magik",
+        "Cubic",
+        "Flying"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 5},
+        {"level": 2, "extra_damage": 10},
+        {"level": 3, "extra_damage": 15},
+        {"level": 4, "extra_damage": 20},
+        {"level": 5, "extra_damage": 25},
+        {"level": 6, "extra_damage": 30},
+        {"level": 7, "extra_damage": 35},
+        {"level": 8, "extra_damage": 40},
+        {"level": 9, "extra_damage": 45},
+        {"level": 10, "extra_damage": 50}
+      ]
+    },
+    {
+      "id": "enchrevolution:healing_aura",
+      "name": "Healing Aura",
+      "max_level": 3,
+      "applicable_to": [
+        "leggings"
+      ],
+      "description": "",
+      "enc_category": [
+        "Healing"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "healing_radius_blocks": 1.25},
+        {"level": 2, "healing_radius_blocks": 2.5},
+        {"level": 3, "healing_radius_blocks": 3.75}
+      ]
+    },
+    {
+      "id": "enchrevolution:health_upgrade",
+      "name": "Health Upgrade",
+      "max_level": 5,
+      "applicable_to": [
+        "chestplate"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_hearts": 2},
+        {"level": 2, "extra_hearts": 4},
+        {"level": 3, "extra_hearts": 6},
+        {"level": 4, "extra_hearts": 8},
+        {"level": 5, "extra_hearts": 10}
+      ]
+    },
+    {
+      "id": "enchrevolution:heart_depth",
+      "name": "Heart of Depth",
+      "max_level": 1,
+      "applicable_to": [
+        "chestplate"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "effect": "darkness_on_attacker"}
+      ]
+    },
+    {
+      "id": "enchrevolution:heart_nether",
+      "name": "Heart of Nether",
+      "max_level": 1,
+      "applicable_to": [
+        "chestplate"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "Hell"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "effect": "ignite_attacker"}
+      ]
+    },
+    {
+      "id": "enchrevolution:heart_sea",
+      "name": "Heart of the Sea",
+      "max_level": 1,
+      "applicable_to": [
+        "chestplate"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "effect": "conduit_and_dolphins_grace"}
+      ]
+    },
+    {
+      "id": "enchrevolution:heart_sky",
+      "name": "Heart of the Sky",
+      "max_level": 1,
+      "applicable_to": [
+        "chestplate"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "Flying"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "effect": "frost_on_attacker"}
+      ]
+    },
+    {
+      "id": "enchrevolution:hell_blessing",
+      "name": "Hell Blessing",
+      "max_level": 5,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "Hell"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "xp_gain_per_sec": 10},
+        {"level": 2, "xp_gain_per_sec": 20},
+        {"level": 3, "xp_gain_per_sec": 30},
+        {"level": 4, "xp_gain_per_sec": 40},
+        {"level": 5, "xp_gain_per_sec": 50}
+      ]
+    },
+    {
+      "id": "enchrevolution:hell_flakes",
+      "name": "Hell Flakes",
+      "max_level": 3,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "Hell"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "durability_regen_per_sec": 1},
+        {"level": 2, "durability_regen_per_sec": 2},
+        {"level": 3, "durability_regen_per_sec": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:herbicide",
+      "name": "Herbicide",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Fungi"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:hicker",
+      "name": "Hicker",
+      "max_level": 5,
+      "applicable_to": [
+        "leggings"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_jump_blocks": 0.2},
+        {"level": 2, "extra_jump_blocks": 0.4},
+        {"level": 3, "extra_jump_blocks": 0.6},
+        {"level": 4, "extra_jump_blocks": 0.8},
+        {"level": 5, "extra_jump_blocks": 1.0}
+      ]
+    },
+    {
+      "id": "enchrevolution:ice_speed",
+      "name": "Ice Speed",
+      "max_level": 5,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "speed_multiplier": 1.1},
+        {"level": 2, "speed_multiplier": 1.2},
+        {"level": 3, "speed_multiplier": 1.3},
+        {"level": 4, "speed_multiplier": 1.4},
+        {"level": 5, "speed_multiplier": 1.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:inking",
+      "name": "Inking",
+      "max_level": 5,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "darkness_sec": 3,
+          "glowing_sec": 3,
+          "weakness_sec": 3},
+        {"level": 2, "darkness_sec": 5,
+          "glowing_sec": 5,
+          "weakness_sec": 5},
+        {"level": 3, "darkness_sec": 7,
+          "glowing_sec": 7,
+          "weakness_sec": 7},
+        {"level": 4, "darkness_sec": 9,
+          "glowing_sec": 9,
+          "weakness_sec": 9},
+        {"level": 5, "darkness_sec": 12,
+          "glowing_sec": 12,
+          "weakness_sec": 12}
+      ]
+    },
+    {
+      "id": "enchrevolution:katana",
+      "name": "Katana",
+      "max_level": 10,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 1.5},
+        {"level": 2, "extra_damage": 3},
+        {"level": 3, "extra_damage": 4.5},
+        {"level": 4, "extra_damage": 6},
+        {"level": 5, "extra_damage": 7.5},
+        {"level": 6, "extra_damage": 9},
+        {"level": 7, "extra_damage": 10.5},
+        {"level": 8, "extra_damage": 12},
+        {"level": 9, "extra_damage": 13.5},
+        {"level": 10, "extra_damage": 15}
+      ]
+    },
+    {
+      "id": "enchrevolution:launch",
+      "name": "Launch",
+      "max_level": 5,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "throw_speed_multiplier": 1.1},
+        {"level": 2, "throw_speed_multiplier": 1.2},
+        {"level": 3, "throw_speed_multiplier": 1.4},
+        {"level": 4, "throw_speed_multiplier": 1.8},
+        {"level": 5, "throw_speed_multiplier": 2.6}
+      ]
+    },
+    {
+      "id": "enchrevolution:leeching_aspect",
+      "name": "Leeching Aspect",
+      "max_level": 2,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Healing"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "absorption_hearts": 1},
+        {"level": 2, "absorption_hearts": 2}
+      ]
+    },
+    {
+      "id": "enchrevolution:lunge",
+      "name": "Lunge",
+      "max_level": 1,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "knockback": 5,
+          "armor_break": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:mida_touch",
+      "name": "Mida's Touch",
+      "max_level": 5,
+      "applicable_to": [
+        "sword",
+        "netherite_hoe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Loot"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "guaranteed": "1_nugget",
+          "extra_nugget_chance": 0.25},
+        {"level": 2, "guaranteed": "1_nugget",
+          "extra_nugget_chance": 0.5,
+          "zombie_pigman_bonus": "1_ingot"},
+        {"level": 3, "guaranteed": "1_nugget",
+          "extra_nugget_range": [
+            1,
+            3
+          ],
+          "ingot_chance": 0.15},
+        {"level": 4, "guaranteed": "1_ingot",
+          "extra_nugget_range": [
+            1,
+            7
+          ],
+          "extra_ingot_chance": 0.25},
+        {"level": 5, "guaranteed": "1_ingot",
+          "extra_nugget_range": [
+            1,
+            11
+          ],
+          "extra_ingot_chance": 0.5,
+          "gold_block_chance": 0.01,
+          "zombie_pigman_bonus": "1_block"}
+      ]
+    },
+    {
+      "id": "enchrevolution:neptune_will",
+      "name": "Neptune's Will",
+      "max_level": 3,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "attack_points_bonus": 1},
+        {"level": 2, "attack_points_bonus": 2},
+        {"level": 3, "attack_points_bonus": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:nether_forged",
+      "name": "Nether Forged",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "Hell"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "unbreaking_bonus": 1},
+        {"level": 2, "unbreaking_bonus": 2},
+        {"level": 3, "unbreaking_bonus": 3},
+        {"level": 4, "unbreaking_bonus": 4},
+        {"level": 5, "unbreaking_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:nineleven",
+      "name": "It's a plane?",
+      "max_level": 1,
+      "applicable_to": [
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Flying"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "instakill_targets": [
+            "phantom",
+            "bat"
+          ]}
+      ]
+    },
+    {
+      "id": "enchrevolution:payback",
+      "name": "Payback",
+      "max_level": 5,
+      "applicable_to": [
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "formula": "damage * (missing_health_ratio * 0.4)"},
+        {"level": 2, "formula": "damage * (missing_health_ratio * 0.8)"},
+        {"level": 3, "formula": "damage * (missing_health_ratio * 1.2)"},
+        {"level": 4, "formula": "damage * (missing_health_ratio * 1.6)"},
+        {"level": 5, "formula": "damage * (missing_health_ratio * 2.0)"}
+      ]
+    },
+    {
+      "id": "enchrevolution:pop",
+      "name": "Pop",
+      "max_level": 5,
+      "applicable_to": [
+        "bow",
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "firework_power": 1},
+        {"level": 2, "firework_power": 2},
+        {"level": 3, "firework_power": 3},
+        {"level": 4, "firework_power": 4},
+        {"level": 5, "firework_power": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:pruning",
+      "name": "Pruning",
+      "max_level": 1,
+      "applicable_to": [
+        "shears"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "instamine_shears_blocks": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:quick_hit",
+      "name": "Quick Hit",
+      "max_level": 5,
+      "applicable_to": [
+        "sword",
+        "axe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "attack_speed_bonus": 0.1},
+        {"level": 2, "attack_speed_bonus": 0.2},
+        {"level": 3, "attack_speed_bonus": 0.3},
+        {"level": 4, "attack_speed_bonus": 0.4},
+        {"level": 5, "attack_speed_bonus": 0.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:rabbit_foot",
+      "name": "Rabbit Foot",
+      "max_level": 5,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "luck_bonus": 1},
+        {"level": 2, "luck_bonus": 2},
+        {"level": 3, "luck_bonus": 3},
+        {"level": 4, "luck_bonus": 4},
+        {"level": 5, "luck_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:refill",
+      "name": "Refill",
+      "max_level": 1,
+      "applicable_to": [
+        "shulker"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "auto_refill_mainhand": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:replenish",
+      "name": "Replenish",
+      "max_level": 3,
+      "applicable_to": [
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "special_projectile_save_chance": 0.33},
+        {"level": 2, "special_projectile_save_chance": 0.66},
+        {"level": 3, "special_projectile_save_chance": 0.99}
+      ]
+    },
+    {
+      "id": "enchrevolution:sea_breeze",
+      "name": "Sea Breeze",
+      "max_level": 3,
+      "applicable_to": [
+        "trident"
+      ],
+      "description": "",
+      "enc_category": [
+        "Combat"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "knockback": 3},
+        {"level": 2, "knockback": 5},
+        {"level": 3, "knockback": 7}
+      ]
+    },
+    {
+      "id": "enchrevolution:sea_flakes",
+      "name": "Sea Flakes",
+      "max_level": 3,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "durability_regen_interval_min": 4},
+        {"level": 2, "durability_regen_interval_min": 2},
+        {"level": 3, "durability_regen_interval_min": 1.33}
+      ]
+    },
+    {
+      "id": "enchrevolution:seeker_blessing",
+      "name": "Seeker Blessing",
+      "max_level": 5,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "item_glow_radius": 2},
+        {"level": 2, "item_glow_radius": 4},
+        {"level": 3, "item_glow_radius": 6},
+        {"level": 4, "item_glow_radius": 8},
+        {"level": 5, "item_glow_radius": 10}
+      ]
+    },
+    {
+      "id": "enchrevolution:sickened_of_hell",
+      "name": "Sickened of Hell",
+      "max_level": 1,
+      "applicable_to": [
+        "hoe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "Hell"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "harvested_crops_cooked": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:siphon",
+      "name": "Siphon",
+      "max_level": 1,
+      "applicable_to": [
+        "shulker"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "auto_stack_transfer": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:smelting",
+      "name": "Smelting",
+      "max_level": 1,
+      "applicable_to": [
+        "pickaxe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "drop_smelting": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:smithcrafts",
+      "name": "Smithcrafts",
+      "max_level": 3,
+      "applicable_to": [
+        "shield"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_armor_points": 1},
+        {"level": 2, "extra_armor_points": 2},
+        {"level": 3, "extra_armor_points": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:smoother",
+      "name": "Smoother",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Cubic"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:sniper",
+      "name": "Sniper",
+      "max_level": 1,
+      "applicable_to": [
+        "bow",
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage_per_block": 0.1}
+      ]
+    },
+    {
+      "id": "enchrevolution:snowshoeing",
+      "name": "Snowshoeing",
+      "max_level": 1,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "walk_on_powder_snow": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:soft_falling",
+      "name": "Soft Falling",
+      "max_level": 1,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "negate_fall_damage": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:soil_falling",
+      "name": "Soil Falling",
+      "max_level": 1,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "prevent_crop_damage": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:soulbond",
+      "name": "Soulbond",
+      "max_level": 1,
+      "applicable_to": [
+        "all"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "keepinventory_for_item": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:spirti_cast",
+      "name": "Spirit Cast",
+      "max_level": 10,
+      "applicable_to": [
+        "netherite_hoe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "mobs_required": 15},
+        {"level": 2, "mobs_required": 14},
+        {"level": 3, "mobs_required": 13},
+        {"level": 4, "mobs_required": 12},
+        {"level": 5, "mobs_required": 11},
+        {"level": 6, "mobs_required": 10},
+        {"level": 7, "mobs_required": 9},
+        {"level": 8, "mobs_required": 8},
+        {"level": 9, "mobs_required": 7},
+        {"level": 10, "mobs_required": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:star_fate",
+      "name": "Star Fate",
+      "max_level": 9,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Magik",
+        "Arthropods",
+        "Rebel",
+        "Fungi",
+        "Cubic"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5},
+        {"level": 8, "extra_damage": 20},
+        {"level": 9, "extra_damage": 22.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:sun_blessing",
+      "name": "Sun Blessing",
+      "max_level": 5,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "xp_per_min": 10},
+        {"level": 2, "xp_per_min": 20},
+        {"level": 3, "xp_per_min": 30},
+        {"level": 4, "xp_per_min": 40},
+        {"level": 5, "xp_per_min": 50}
+      ]
+    },
+    {
+      "id": "enchrevolution:superweight",
+      "name": "Superweight",
+      "max_level": 5,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "base_damage_bonus": 1},
+        {"level": 2, "base_damage_bonus": 2},
+        {"level": 3, "base_damage_bonus": 3},
+        {"level": 4, "base_damage_bonus": 4},
+        {"level": 5, "base_damage_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:swiftness",
+      "name": "Swiftness",
+      "max_level": 5,
+      "applicable_to": [
+        "boots"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "speed_multiplier": 1.05},
+        {"level": 2, "speed_multiplier": 1.1},
+        {"level": 3, "speed_multiplier": 1.15},
+        {"level": 4, "speed_multiplier": 1.2},
+        {"level": 5, "speed_multiplier": 1.25}
+      ]
+    },
+    {
+      "id": "enchrevolution:theft",
+      "name": "Theft",
+      "max_level": 5,
+      "applicable_to": [
+        "bow",
+        "crossbow"
+      ],
+      "description": "",
+      "enc_category": [
+        "Loot"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "drop_bonus": 1},
+        {"level": 2, "drop_bonus": 2},
+        {"level": 3, "drop_bonus": 3},
+        {"level": 4, "drop_bonus": 4},
+        {"level": 5, "drop_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:triumph",
+      "name": "Triumph",
+      "max_level": 3,
+      "applicable_to": [
+        "sword"
+      ],
+      "description": "",
+      "enc_category": [
+        "Healing"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "heal_hearts": 1},
+        {"level": 2, "heal_hearts": 2},
+        {"level": 3, "heal_hearts": 3}
+      ]
+    },
+    {
+      "id": "enchrevolution:undead_slayer",
+      "name": "Undead Slayer",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Undead"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:vacuum",
+      "name": "Vacuum",
+      "max_level": 1,
+      "applicable_to": [
+        "shulker"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "auto_pickup_free_slot": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:villager_forged",
+      "name": "Villager Forged",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Durability"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "unbreaking_bonus": 1},
+        {"level": 2, "unbreaking_bonus": 2},
+        {"level": 3, "unbreaking_bonus": 3},
+        {"level": 4, "unbreaking_bonus": 4},
+        {"level": 5, "unbreaking_bonus": 5}
+      ]
+    },
+    {
+      "id": "enchrevolution:vision_blessing",
+      "name": "Vision Blessing",
+      "max_level": 1,
+      "applicable_to": [
+        "helmet"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "night_vision": true}
+      ]
+    },
+    {
+      "id": "enchrevolution:void_sweep",
+      "name": "Void Sweep",
+      "max_level": 5,
+      "applicable_to": [
+        "netherite_hoe"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Void"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "sweeping_bonus": 11,
+          "knockback": 2},
+        {"level": 2, "sweeping_bonus": 12,
+          "knockback": 3},
+        {"level": 3, "sweeping_bonus": 13,
+          "knockback": 4},
+        {"level": 4, "sweeping_bonus": 14,
+          "knockback": 5},
+        {"level": 5, "sweeping_bonus": 15,
+          "knockback": 6}
+      ]
+    },
+    {
+      "id": "enchrevolution:weapon_protection",
+      "name": "Weapon Protection",
+      "max_level": 5,
+      "applicable_to": [
+        "armor"
+      ],
+      "description": "",
+      "enc_category": [
+        "Protection"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "damage_reduction": 0.04},
+        {"level": 2, "damage_reduction": 0.08},
+        {"level": 3, "damage_reduction": 0.12},
+        {"level": 4, "damage_reduction": 0.16},
+        {"level": 5, "damage_reduction": 0.20}
+      ]
+    },
+    {
+      "id": "enchrevolution:welding",
+      "name": "Welding",
+      "max_level": 5,
+      "applicable_to": [
+        "all"
+      ],
+      "description": "",
+      "enc_category": [
+        "Utility"
+      ],
+      "mob_category": [
+        "none"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "repair_cost_reduction": 0.2},
+        {"level": 2, "repair_cost_reduction": 0.4},
+        {"level": 3, "repair_cost_reduction": 0.6},
+        {"level": 4, "repair_cost_reduction": 0.8},
+        {"level": 5, "repair_cost_reduction": 1.0}
+      ]
+    },
+    {
+      "id": "enchrevolution:witch_hunter",
+      "name": "Witch Hunter",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Magik"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    },
+    {
+      "id": "enchrevolution:wrath_of_the_abyss",
+      "name": "Wrath of the Abyss",
+      "max_level": 7,
+      "applicable_to": [
+        "weapon"
+      ],
+      "description": "",
+      "enc_category": [
+        "Damage"
+      ],
+      "mob_category": [
+        "Water"
+      ],
+      "rarity": "",
+      "levels": [
+        {"level": 1, "extra_damage": 2.5},
+        {"level": 2, "extra_damage": 5},
+        {"level": 3, "extra_damage": 7.5},
+        {"level": 4, "extra_damage": 10},
+        {"level": 5, "extra_damage": 12.5},
+        {"level": 6, "extra_damage": 15},
+        {"level": 7, "extra_damage": 17.5}
+      ]
+    }
+  ]
+}
