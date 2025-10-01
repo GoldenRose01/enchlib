@@ -6,6 +6,7 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.Identifier
@@ -15,7 +16,7 @@ import java.util.Optional
 
 object MCCompat {
 
-    // ---------- riflessione di base ----------
+    // ---------- riflessione util ----------
     private fun findMethod(
         target: Any,
         name: String,
@@ -97,10 +98,7 @@ object MCCompat {
             while (it.hasNext()) {
                 val e = it.next() as? Enchantment ?: continue
                 val rid = getIdM.invoke(reg, e)
-                val s = when (rid) {
-                    is Identifier -> rid.toString()
-                    else -> rid?.toString()
-                }
+                val s = rid?.toString()
                 if (s == id.toString()) return e
             }
             null
@@ -109,13 +107,13 @@ object MCCompat {
         }
     }
 
-    // ---------- NBT helpers (solo riflessione: niente firme generiche dirette) ----------
+    // ---------- NBT helpers ----------
     fun getOrCreateNbt(stack: ItemStack): NbtCompound {
         // getOrCreateNbt()
         try {
             val m = stack.javaClass.getMethod("getOrCreateNbt")
             (m.invoke(stack) as? NbtCompound)?.let { return it }
-        } catch (_: Throwable) {}
+        } catch (_: Throwable) { }
 
         // getNbt()
         getNbtOrNull(stack)?.let { return it }
@@ -130,8 +128,7 @@ object MCCompat {
         return try {
             val m = stack.javaClass.methods.firstOrNull { it.name == "getNbt" && it.parameterCount == 0 }
                 ?: return null
-            val r = m.invoke(stack)
-            r as? NbtCompound
+            m.invoke(stack) as? NbtCompound
         } catch (_: Throwable) { null }
     }
 
@@ -140,7 +137,7 @@ object MCCompat {
             val m = stack.javaClass.methods.firstOrNull {
                 it.name == "setNbt" && it.parameterCount == 1
             } ?: return
-            m.invoke(stack, nbt)
+            m.invoke(stack, nbt as Any)
         } catch (_: Throwable) {
             // alcune versioni non richiedono set esplicito
         }
@@ -208,13 +205,17 @@ object MCCompat {
             }
             if (m != null) { m.invoke(cmp, key, value); return }
         } catch (_: Throwable) {}
+
+        // NON usare put(String, NbtElement) con una String!
     }
 
     fun putShort(cmp: NbtCompound, key: String, value: Short) {
         // putShort(String,short)
         try {
             val m = cmp.javaClass.methods.firstOrNull {
-                it.name == "putShort" && it.parameterCount == 2 && it.parameterTypes[0] == String::class.java
+                it.name == "putShort" &&
+                        it.parameterCount == 2 &&
+                        it.parameterTypes[0] == String::class.java
             }
             if (m != null) { m.invoke(cmp, key, value); return }
         } catch (_: Throwable) {}
@@ -222,7 +223,9 @@ object MCCompat {
         // setShort(String,short)
         try {
             val m = cmp.javaClass.methods.firstOrNull {
-                it.name == "setShort" && it.parameterCount == 2 && it.parameterTypes[0] == String::class.java
+                it.name == "setShort" &&
+                        it.parameterCount == 2 &&
+                        it.parameterTypes[0] == String::class.java
             }
             if (m != null) { m.invoke(cmp, key, value); return }
         } catch (_: Throwable) {}
@@ -259,24 +262,60 @@ object MCCompat {
         return null
     }
 
-    /** Sempre e solo riflessione: niente invocazione diretta a put(String, NbtElement). */
-    fun nbtPut(cmp: NbtCompound, key: String, element: Any) {
-        // put(String, NbtElement)
+    /** Inserisce un NbtCompound in una NbtList, gestendo firme diverse (add(e) | add(index,e)). */
+    fun listAdd(list: NbtList, element: NbtCompound) {
+        // add(E)
         try {
-            val m = cmp.javaClass.methods.firstOrNull {
-                it.name == "put" && it.parameterCount == 2 && it.parameterTypes[0] == String::class.java
-            }
-            if (m != null) { m.invoke(cmp, key, element); return }
+            val m = list.javaClass.methods.firstOrNull { it.name == "add" && it.parameterCount == 1 }
+            if (m != null) { m.invoke(list, element as Any); return }
         } catch (_: Throwable) {}
 
-        // set(String, NbtElement) – in caso esista
+        // add(int, E)
+        try {
+            val m = list.javaClass.methods.firstOrNull { it.name == "add" && it.parameterCount == 2 }
+            if (m != null) {
+                val size = listSize(list)
+                m.invoke(list, size, element as Any)
+                return
+            }
+        } catch (_: Throwable) {}
+    }
+
+    /**
+     * Scrive un elemento NBT sotto chiave:
+     * - tenta prima put(String, NbtList) / put(String, NbtCompound)
+     * - poi put(String, NbtElement) (passando SEMPRE un NbtElement)
+     * Mai passare String/Short qui: usa putString/putShort sopra.
+     */
+    fun nbtPut(cmp: NbtCompound, key: String, element: Any) {
+        // se non è un NbtElement riconosciuto, non rischiare overload generici
+        val elem = when (element) {
+            is NbtList, is NbtCompound -> element
+            is NbtElement -> element
+            else -> return // ignoriamo: niente String/Short qui
+        }
+
+        // put(String, NbtList) / put(String, NbtCompound)
         try {
             val m = cmp.javaClass.methods.firstOrNull {
-                it.name == "set" && it.parameterCount == 2 && it.parameterTypes[0] == String::class.java
+                it.name == "put" &&
+                        it.parameterCount == 2 &&
+                        it.parameterTypes[0] == String::class.java &&
+                        NbtElement::class.java.isAssignableFrom(it.parameterTypes[1])
             }
-            if (m != null) { m.invoke(cmp, key, element); return }
+            if (m != null) { m.invoke(cmp, key, elem as Any); return }
         } catch (_: Throwable) {}
-        // se non troviamo nulla… pazienza: molte versioni aggiornano il reference della lista direttamente
+
+        // set(String, NbtElement)
+        try {
+            val m = cmp.javaClass.methods.firstOrNull {
+                it.name == "set" &&
+                        it.parameterCount == 2 &&
+                        it.parameterTypes[0] == String::class.java &&
+                        NbtElement::class.java.isAssignableFrom(it.parameterTypes[1])
+            }
+            if (m != null) { m.invoke(cmp, key, elem as Any); return }
+        } catch (_: Throwable) {}
     }
 
     // ---------- utilities ----------
@@ -285,7 +324,6 @@ object MCCompat {
         val out = ArrayList<String>(ids.size * 2)
         for (id in ids) {
             out.add(id.toString())
-            // id.getPath() | getPath()
             val mPath = id.javaClass.methods.firstOrNull { it.name == "getPath" && it.parameterCount == 0 }
             val path = try { mPath?.invoke(id) as? String } catch (_: Throwable) { null }
             if (path != null) out.add(path)
