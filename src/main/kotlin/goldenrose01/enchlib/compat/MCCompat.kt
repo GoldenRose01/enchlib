@@ -176,12 +176,13 @@ object MCCompat {
                 it.name == "getString" && it.parameterCount == 1 && it.parameterTypes[0] == String::class.java
             } ?: return ""
             when (val r = m.invoke(cmp, key)) {
-                is Optional<*> -> (r.orElse("") as? String) ?: ""
+                is Optional<*> -> if (r.isPresent) (r.get() as? String) ?: "" else ""
                 is String -> r
                 else -> ""
             }
         } catch (_: Throwable) { "" }
     }
+
 
     fun putString(cmp: NbtCompound, key: String, value: String) {
         // putString(String,String)
@@ -333,4 +334,126 @@ object MCCompat {
 
     fun storedOrRegularKey(stack: ItemStack): String =
         if (stack.item == Items.ENCHANTED_BOOK) "StoredEnchantments" else "Enchantments"
+
+
+    /** Converte "ns:path" o "path" (aggiunge "minecraft:" se manca). Ritorna null se invalido. */
+    fun parseEnchantmentId(input: String): Identifier? {
+        val s = input.trim()
+        val id = if (":" in s) s else "minecraft:$s"
+        return Identifier.tryParse(id)
+    }
+
+    /** Determina la chiave NBT corretta per l'item (Libro: StoredEnchantments, altrimenti Enchantments). */
+    fun resolveEnchantmentListKey(stack: ItemStack): String = storedOrRegularKey(stack)
+
+    /** Restituisce tripletta (nbt, list, key) assicurando che la lista esista (creandola se necessario). */
+    fun ensureEnchantmentsList(stack: ItemStack): Triple<NbtCompound, NbtList, String> {
+        val key = resolveEnchantmentListKey(stack)
+        val nbt = getOrCreateNbt(stack)
+        var list = getOrCreateList(nbt, key)
+        // se la lista non è ancora realmente collegata al compound, agganciala
+        runCatching {
+            // evitiamo overload sbagliati usando nbtPut (accetta solo NbtElement)
+            nbtPut(nbt, key, list)
+        }.onFailure { _ ->
+            // estremo fallback: se la put non è andata, creiamo una nuova lista e ritentiamo
+            list = NbtList()
+            nbtPut(nbt, key, list)
+        }
+        return Triple(nbt, list, key)
+    }
+
+    /** Trova l'indice di un enchant nella lista confrontando la stringa 'id'. Ritorna -1 se non trovato. */
+    fun findEnchantmentIndexById(list: NbtList, id: Identifier): Int {
+        val target = id.toString()
+        val size = listSize(list)
+        for (i in 0 until size) {
+            val cmp = listGetCompound(list, i) ?: continue
+            val cur = getString(cmp, "id")
+            if (cur == target) return i
+        }
+        return -1
+    }
+
+    /** Inserisce/aggiorna un enchantment nella lista dell'item. Restituisce true se ha modificato qualcosa. */
+    fun upsertEnchantment(stack: ItemStack, id: Identifier, level: Int): Boolean {
+        if (level <= 0) return false
+        val (nbt, list, _) = ensureEnchantmentsList(stack)
+        val idx = findEnchantmentIndexById(list, id)
+        if (idx >= 0) {
+            // aggiorna
+            val cmp = listGetCompound(list, idx) ?: return false
+            putShort(cmp, "lvl", level.toShort())
+            // ri-aggancia nbt (alcune versioni non servono, ma è harmless)
+            nbtPut(nbt, resolveEnchantmentListKey(stack), list)
+            setNbt(stack, nbt)
+            return true
+        } else {
+            // crea nuovo compound {id:"ns:path", lvl:S}
+            val ench = NbtCompound()
+            putString(ench, "id", id.toString())
+            putShort(ench, "lvl", level.toShort())
+            listAdd(list, ench)
+            nbtPut(nbt, resolveEnchantmentListKey(stack), list)
+            setNbt(stack, nbt)
+            return true
+        }
+    }
+
+    /** Rimuove un enchantment dalla lista dell'item. Restituisce true se lo ha rimosso. */
+    fun removeEnchantment(stack: ItemStack, id: Identifier): Boolean {
+        val (nbt, list, key) = ensureEnchantmentsList(stack)
+        val idx = findEnchantmentIndexById(list, id)
+        if (idx < 0) return false
+
+        // rimozione compat: proviamo removeAt, poi riflessione generica
+        runCatching {
+            list.removeAt(idx)
+        }.onFailure {
+            // fallback generico: metodi 'remove(int)' o 'remove(Object)'
+            val mIdx = list.javaClass.methods.firstOrNull { it.name == "remove" && it.parameterCount == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType }
+            if (mIdx != null) {
+                mIdx.invoke(list, idx)
+            } else {
+                val mGet = list.javaClass.methods.firstOrNull { it.name == "get" && it.parameterCount == 1 }
+                val el = mGet?.invoke(list, idx)
+                val mRemObj = list.javaClass.methods.firstOrNull { it.name == "remove" && it.parameterCount == 1 }
+                if (el != null && mRemObj != null) {
+                    mRemObj.invoke(list, el)
+                }
+            }
+        }
+
+        nbtPut(nbt, key, list)
+        setNbt(stack, nbt)
+        return true
+    }
+
+    /** Restituisce elenco (id,lvl) degli enchant presenti nell'item. */
+    fun readEnchantments(stack: ItemStack): List<Pair<String, Int>> {
+        val (_, list, _) = ensureEnchantmentsList(stack)
+        val out = ArrayList<Pair<String, Int>>(listSize(list))
+        val size = listSize(list)
+        for (i in 0 until size) {
+            val cmp = listGetCompound(list, i) ?: continue
+            val id = getString(cmp, "id")
+            // lvl può essere short → via riflessione: getShort(String) oppure get(String) as number
+            var lvl = 0
+            runCatching {
+                val m = cmp.javaClass.methods.firstOrNull {
+                    it.name == "getShort" && it.parameterCount == 1 && it.parameterTypes[0] == String::class.java
+                }
+                if (m != null) {
+                    lvl = (m.invoke(cmp, "lvl") as? Short)?.toInt() ?: 0
+                } else {
+                    val mGet = cmp.javaClass.methods.firstOrNull { it.name == "get" && it.parameterCount == 1 }
+                    val any = mGet?.invoke(cmp, "lvl")
+                    if (any is Number) lvl = any.toInt()
+                }
+            }
+            if (id.isNotEmpty()) out.add(id to lvl)
+        }
+        return out
+    }
+
 }
