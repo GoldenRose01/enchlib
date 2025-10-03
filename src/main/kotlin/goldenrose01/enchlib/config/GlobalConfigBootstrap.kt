@@ -6,14 +6,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 
+/**
+ * Copia i template da resources/config/ → ~/.minecraft/config/enchlib/ se mancanti.
+ * Chiama questa in Enchlib.onInitialize().
+ */
 object GlobalConfigBootstrap {
 
     private val targetDir: Path = FabricLoader.getInstance().configDir.resolve("enchlib")
 
-    /**
-     * Chiama questa in Enchlib.onInitialize().
-     * Copia i template se non esistono già in ~/.minecraft/config/enchlib/
-     */
     fun ensureDefaultsInstalled() {
         Files.createDirectories(targetDir)
         copyIfAbsent("config/AviableEnch.json5", targetDir.resolve("AviableEnch.json5"))
@@ -23,8 +23,6 @@ object GlobalConfigBootstrap {
     private fun copyIfAbsent(resourcePath: String, dst: Path) {
         if (Files.exists(dst)) return
         val ins: InputStream? = GlobalConfigBootstrap::class.java.classLoader.getResourceAsStream(resourcePath)
-        ins?.use {
-            Files.copy(it, dst, StandardCopyOption.REPLACE_EXISTING)
-        }
+        ins?.use { Files.copy(it, dst, StandardCopyOption.REPLACE_EXISTING) }
     }
 }

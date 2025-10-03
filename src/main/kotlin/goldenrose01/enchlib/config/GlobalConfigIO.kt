@@ -1,6 +1,8 @@
 package goldenrose01.enchlib.config
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.ExperimentalSerializationApi
 import net.fabricmc.loader.api.FabricLoader
@@ -8,6 +10,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
+/**
+ * I/O della configurazione GLOBALE: ~/.minecraft/config/enchlib/
+ * File:
+ *  - AviableEnch.json5 : [{ id, enabled }]
+ *  - EnchantmentsDetails.json5 : { enchantments: [{ id, max_level, enc_category[], mob_category[] }] }
+ */
 @OptIn(ExperimentalSerializationApi::class)
 object GlobalConfigIO {
 
@@ -19,6 +27,7 @@ object GlobalConfigIO {
         encodeDefaults = true
     }
 
+    // ---- Modelli ----
     @Serializable
     data class AvailableEnch(val id: String, val enabled: Boolean = true)
 
@@ -35,10 +44,12 @@ object GlobalConfigIO {
         var mob_category: MutableList<String> = mutableListOf()
     )
 
+    // ---- Path ----
     fun baseDir(): Path = FabricLoader.getInstance().configDir.resolve("enchlib")
     private fun availableFile(): Path = baseDir().resolve("AviableEnch.json5")
     private fun detailsFile(): Path = baseDir().resolve("EnchantmentsDetails.json5")
 
+    // ---- R/W ----
     fun readAvailable(): MutableList<AvailableEnch> {
         val p = availableFile()
         if (!Files.exists(p)) return mutableListOf()

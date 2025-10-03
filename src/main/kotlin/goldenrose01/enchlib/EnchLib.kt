@@ -21,12 +21,10 @@ object Enchlib : ModInitializer {
         LOGGER.info("[$MOD_ID] Initializing...")
 
         // World configuration
-        GlobalConfigBootstrap.register()
+        GlobalConfigBootstrap.ensureDefaultsInstalled()
 
-        // Comandi (solo dispatcher: le versioni attuali di EnchLibCommands/DebugCommands
-        // espongono register(dispatcher) senza registryAccess)
-        CommandRegistrationCallback.EVENT.register { dispatcher: CommandDispatcher<ServerCommandSource>, _, _ ->
-            EnchLibCommands.register(dispatcher)
+        // Registrazione comandi (Fabric API v2)
+        CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             DebugCommands.register(dispatcher)
         }
     }
