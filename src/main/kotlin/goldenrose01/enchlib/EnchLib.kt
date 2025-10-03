@@ -9,8 +9,7 @@ import com.mojang.brigadier.CommandDispatcher
 
 import goldenrose01.enchlib.commands.DebugCommands
 import goldenrose01.enchlib.commands.EnchLibCommands
-import goldenrose01.enchlib.config.WorldConfigBootstrap
-import goldenrose01.enchlib.utils.EnchLogger
+import goldenrose01.enchlib.config.GlobalConfigBootstrap
 
 import org.slf4j.LoggerFactory
 
@@ -22,7 +21,7 @@ object Enchlib : ModInitializer {
         LOGGER.info("[$MOD_ID] Initializing...")
 
         // World configuration
-        WorldConfigBootstrap.register()
+        GlobalConfigBootstrap.register()
 
         // Comandi (solo dispatcher: le versioni attuali di EnchLibCommands/DebugCommands
         // espongono register(dispatcher) senza registryAccess)

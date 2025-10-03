@@ -23,6 +23,14 @@ repositories {
         // See https://docs.gradle.org/current/userguide/declaring_repositories.html
         // for more information about repositories.
     }
+    // TerraformersMC (Mod Menu)
+    maven {
+        url = uri("https://maven.terraformersmc.com/")
+    }
+    // Shedaniel (Cloth Config)
+    maven {
+        url = uri("https://maven.shedaniel.me/")
+    }
 }
 
 loom {
@@ -58,6 +66,14 @@ dependencies {
 
     // Serializzazione JSON
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")// Per ops I/O asincrone (opt)
+
+    // --- Mod Menu (opzionale, solo per compilare l'integrazione; nessun hard-dep a runtime del tuo mod)
+    modCompileOnly("com.terraformersmc:modmenu:15.+") // <-- usa la versione compatibile con 1.21.8
+    modRuntimeOnly("com.terraformersmc:modmenu:15.+")
+
+    // --- Cloth Config (opzionale per la GUI; si degrada con fallback se assente)
+    modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:19.+") // 1.21.8
+    modRuntimeOnly("me.shedaniel.cloth:cloth-config-fabric:19.+")
 }
 
 processResources {
@@ -100,6 +116,7 @@ jar {
         rename { "${it}_${inputs.properties.archivesName}"}
     }
 }
+
 
 // configure the maven publication
 publishing {
