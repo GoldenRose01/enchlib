@@ -37,6 +37,23 @@ loom {
     // Abilita split source sets per client/common
     splitEnvironmentSourceSets()
 
+    runs {
+        client {
+            client()
+            // Minimo 4 GB
+            vmArgs "-Xms4G", "-Xmx4G"
+        }
+        server {
+            server()
+            vmArgs "-Xms4G", "-Xmx4G"
+        }
+        // (opzionale) datagen
+        data {
+            data()
+            vmArgs "-Xms2G", "-Xmx4G"
+        }
+    }
+
     mods {
         "enchlib" {
             sourceSet sourceSets.main
