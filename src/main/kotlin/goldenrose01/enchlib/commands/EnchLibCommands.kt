@@ -111,6 +111,34 @@ object EnchLibCommands {
                             1
                         }
                 )
+
+                // /plusec clear
+                .then(
+                    literal("clear")
+                        .executes { ctx ->
+                            val source = ctx.source
+                            val player = currentPlayer(source)
+                                ?: return@executes err(source, "Devi essere un giocatore.")
+
+                            val stack = mainHand(player)
+                                ?: return@executes err(source, "Mano vuota.")
+
+                            // Logica di rimozione totale
+                            val (nbt, list, key) = MCCompat.ensureEnchantmentsList(stack)
+                            if (MCCompat.listSize(list) == 0) {
+                                return@executes err(source, "L'oggetto non ha incantesimi.")
+                            }
+
+                            // Svuota la lista
+                            // Creiamo una nuova lista vuota e sovrascriviamo
+                            MCCompat.nbtPut(nbt, key, net.minecraft.nbt.NbtList())
+                            MCCompat.setNbt(stack, nbt)
+
+                            try { player.inventory.markDirty() } catch (_: Throwable) {}
+                            source.sendFeedback({ Text.literal("✨ Rimossi tutti gli incantesimi.") }, false)
+                            1
+                        }
+                )
         )
     }
 
