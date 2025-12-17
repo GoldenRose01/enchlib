@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.EnchantedBookItem
 import net.minecraft.enchantment.EnchantmentLevelEntry
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.text.Text
@@ -26,10 +27,10 @@ object EnchItemGroup {
             // l'accesso ai registry dinamici (come gli Enchantments) è cambiato.
             // Qui iteriamo sul registry di base se possibile.
 
-            val registry = context.lookup().getOptionalWrapper(net.minecraft.registry.RegistryKeys.ENCHANTMENT)
+            val registry = context.lookup().getOptionalEntryList(RegistryKeys.ENCHANTMENT)
 
             if (registry.isPresent) {
-                registry.get().streamEntries().forEach { ref ->
+                registry.get().stream().forEach { ref ->
                     val enchant = ref.value()
                     // Aggiunge il libro al livello 1
                     entries.add(EnchantedBookItem.forEnchantment(EnchantmentLevelEntry(ref, 1)))
