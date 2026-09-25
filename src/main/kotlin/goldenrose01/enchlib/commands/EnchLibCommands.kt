@@ -12,10 +12,12 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.util.Identifier
 import java.util.concurrent.CompletableFuture
 
 import goldenrose01.enchlib.compat.MCCompat
+import goldenrose01.enchlib.config.GlobalConfigIO
 
 object EnchLibCommands {
 
@@ -123,21 +125,59 @@ object EnchLibCommands {
                             val stack = mainHand(player)
                                 ?: return@executes err(source, "Mano vuota.")
 
-                            // Logica di rimozione totale
-                            val (nbt, list, key) = MCCompat.ensureEnchantmentsList(stack)
-                            if (MCCompat.listSize(list) == 0) {
+                            val componentType = if (stack.item == net.minecraft.item.Items.ENCHANTED_BOOK) {
+                                DataComponentTypes.STORED_ENCHANTMENTS
+                            } else {
+                                DataComponentTypes.ENCHANTMENTS
+                            }
+                            val hadEnchantments = stack.get(componentType) != null
+                            if (!hadEnchantments) {
                                 return@executes err(source, "L'oggetto non ha incantesimi.")
                             }
 
-                            // Svuota la lista
-                            // Creiamo una nuova lista vuota e sovrascriviamo
-                            MCCompat.nbtPut(nbt, key, net.minecraft.nbt.NbtList())
-                            MCCompat.setNbt(stack, nbt)
+                            stack.remove(componentType)
 
                             try { player.inventory.markDirty() } catch (_: Throwable) {}
                             source.sendFeedback({ Text.literal("✨ Rimossi tutti gli incantesimi.") }, false)
                             1
                         }
+                )
+
+                // /plusec info <id>: stato runtime e dettagli salvati in config.
+                .then(
+                    literal("info")
+                        .then(
+                            argument("id", StringArgumentType.string())
+                                .suggests(ENCH_SUGGEST)
+                                .executes { ctx ->
+                                    val source = ctx.source
+                                    val rawId = StringArgumentType.getString(ctx, "id")
+                                    val id = MCCompat.parseEnchantmentId(rawId)
+                                        ?: return@executes err(source, "ID incantesimo non valido: $rawId")
+                                    val runtimeEnchantment = MCCompat.getEnchantment(source.server, id)
+                                    val configured = try {
+                                        val idString = id.toString()
+                                        val available = GlobalConfigIO.readAvailable()
+                                            .firstOrNull { it.id == idString }
+                                        val details = GlobalConfigIO.readDetails()
+                                            .enchantments.firstOrNull { it.id == idString }
+                                        available to details
+                                    } catch (_: Throwable) { null to null }
+                                    val enabled = configured.first?.enabled ?: false
+                                    val configuredDetails = configured.second
+
+                                    source.sendFeedback({
+                                        Text.literal(
+                                            "$id — runtime=${if (runtimeEnchantment != null) "presente" else "assente"}, " +
+                                        "config=${if (configured.first != null || configuredDetails != null) "presente" else "assente"}, " +
+                                                "abilitato=$enabled, max_level=${configuredDetails?.max_level ?: "non impostato"}, " +
+                                                "categorie=${configuredDetails?.enc_category?.joinToString().orEmpty().ifBlank { "nessuna" }}, " +
+                                                "mob=${configuredDetails?.mob_category?.joinToString().orEmpty().ifBlank { "nessuna" }}"
+                                        )
+                                    }, false)
+                                    1
+                                }
+                        )
                 )
         )
     }

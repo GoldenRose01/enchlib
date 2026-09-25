@@ -1,8 +1,8 @@
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
-    id "org.jetbrains.kotlin.jvm" version "2.2.20"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
+    id "org.jetbrains.kotlin.jvm" version "${kotlin_version}"
+    id("org.jetbrains.kotlin.plugin.serialization") version "${kotlin_version}"
 }
 
 version = project.mod_version
@@ -23,42 +23,11 @@ repositories {
         // See https://docs.gradle.org/current/userguide/declaring_repositories.html
         // for more information about repositories.
     }
-    // TerraformersMC (Mod Menu)
-    maven {
-        url = uri("https://maven.terraformersmc.com/")
-    }
-    // Shedaniel (Cloth Config)
-    maven {
-        url = uri("https://maven.shedaniel.me/")
-    }
 }
 
 loom {
     // Abilita split source sets per client/common
     splitEnvironmentSourceSets()
-
-    runs {
-        client {
-            client()
-            // Minimo 4 GB
-            vmArgs "-Xms4G", "-Xmx4G"
-        }
-        server {
-            server()
-            vmArgs "-Xms4G", "-Xmx4G"
-        }
-        // Configurazione DataGen (corretta per Loom 1.0+)
-        data {
-            runDir("build/datagen")
-            programArgs(
-                    "--output",
-                    file("src/main/generated").absolutePath,
-                    "--existing",
-                    file("src/main/resources").absolutePath
-            )
-            vmArgs "-Xms2G", "-Xmx4G"
-        }
-    }
 
     mods {
         "enchlib" {
@@ -77,26 +46,17 @@ fabricApi {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    implementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     // Kotlinx Serialization
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${project.kotlinx_serialization_version}"
 
     // Serializzazione JSON
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")// Per ops I/O asincrone (opt)
-
-    // --- Mod Menu (opzionale, solo per compilare l'integrazione; nessun hard-dep a runtime del tuo mod)
-    modCompileOnly("com.terraformersmc:modmenu:16.+")
-    modRuntimeOnly("com.terraformersmc:modmenu:16.+")
-
-    // --- Cloth Config (opzionale per la GUI; si degrada con fallback se assente)
-    modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:20.+")
-    modRuntimeOnly("me.shedaniel.cloth:cloth-config-fabric:20.+")
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${project.kotlinx_coroutines_version}" // Per ops I/O asincrone (opt)
 }
 
 processResources {
@@ -107,16 +67,14 @@ processResources {
     }
 }
 
-// Configurazione per Java 24
+// Configurazione per Java 25 (richiesta da Minecraft 26.2)
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 24
+    it.options.release = 25
 }
 
-// Configurazione per Kotlin 24
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
-        // Target JVM 24
-        jvmTarget = 24
+        jvmTarget = "25"
     }
 }
 
@@ -124,15 +82,14 @@ tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     // if it is present.
     // If you remove this line, sources will not be generated.
     withSourcesJar()
 
-    sourceCompatibility = JavaVersion.VERSION_24
-    targetCompatibility = JavaVersion.VERSION_24
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {
@@ -142,7 +99,6 @@ jar {
         rename { "${it}_${inputs.properties.archivesName}"}
     }
 }
-
 
 // configure the maven publication
 publishing {
@@ -160,4 +116,3 @@ publishing {
         // The repositories here will be used for publishing your artifact, not for
         // retrieving dependencies.
     }
-}

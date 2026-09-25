@@ -1,208 +1,120 @@
-# EnchLib – Libreria per Incantesimi Minecraft
+# EnchLib - Libreria dinamica per incantesimi Minecraft
 
-![Minecraft Version](https://img.shields.io/badge/Minecraft-1.21.8-brightgreen)
-![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.17.2%2B-blue)
-![Java Version](https://img.shields.io/badge/Java-22-orange)
+![Minecraft Version](https://img.shields.io/badge/Minecraft-26.2-brightgreen)
+![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.2+-blue)
+![Java Version](https://img.shields.io/badge/Java-25-orange)
 ![License](https://img.shields.io/badge/License-CC0--1.0-lightgrey)
 
-EnchLib è una libreria Fabric che offre un sistema **completo** e **configurabile** per la gestione degli incantesimi (vanilla e di altre mod), con comandi server-side e config **per-mondo**.
+EnchLib è una libreria Fabric scritta in Kotlin che sostituisce gli incantesimi hardcoded con un sistema **file-based e runtime**. Gli enchantments possono essere abilitati, configurati e controllati interamente da file `.json5` generati nel mondo e tramite comandi dedicati.
 
-```text
-Up-to-date:
-Questa documentazione riflette lo stato corrente dopo l’integrazione di:
-- nuovo comando /plusec (add/remove/list) che applica realmente NBT all’oggetto
-- suggerimenti dinamici (autocomplete) per gli ID incantesimo
-- layer di compatibilità riflessiva (MCCompat) per Yarn/Fabric 1.21.8
-```
+## 🌟 Caratteristiche Principali
 
-## 🌟 Novità principali (questa build)
-
-* **/plusec “senza protezioni”**: `add` replica l’effetto di `/enchant` **senza** i check di compatibilità di Minecraft.
-* **Autocomplete robusto**: suggerisce sia `namespace:id` che il solo `id` (es. `sharpness` → `minecraft:sharpness`) leggendo **il registry runtime** (anche incantesimi di altre mod).
-* **Applicazione NBT affidabile**: supporto sia a `Enchantments` che a `StoredEnchantments` (libro incantato).
-* **Compat layer (MCCompat)**: astrae accesso a Registry/Identifier/NBT (metodi come `getOrCreateNbt`, `getOrCreateList`, `listAdd`, `nbtPut`, ecc.) per evitare rotture con cambi mapping / firme nuove.
+- **Config per mondo** – I file vengono creati in `saves/<mondo>/config/enchlib/` e possono essere versionati o modificati server-side.
+- **JSON5 support** – I file di configurazione accettano commenti e trailing comma grazie a un parser dedicato.
+- **Comandi potenti** – `/plusec` e `/plusec-debug` consentono di gestire incantesimi sugli item, diagnosticare problemi e aggiornare i file.
+- **Sync dinamico** – Gli incantesimi vengono aggiunti ai file di configurazione solo quando utilizzati, evitando conflitti con mod che registrano enchant a runtime.
+- **Compatibile con Fabric Kotlin** – Il progetto utilizza Kotlin, `kotlinx.serialization` e riflessione per lavorare con le API 26.2.
 
 ## 📋 Requisiti
 
-* **Minecraft**: 1.21.8
-* **Fabric Loader**: 0.17.2+
-* **Fabric API**: compatibile con 1.21.8
-* **Java**: 22
-* **Fabric Kotlin**: abilitato
+- **Minecraft**: 26.2 o superiore
+- **Fabric Loader**: 0.19.2 o superiore
+- **Fabric API**: compatibile con 26.2
+- **Java**: 25 o superiore
+- **Fabric Kotlin**: richiesto
 
-## 🚀 Installazione rapida
+### Toolchain aggiornata
 
-```bash
-git clone https://github.com/GoldenRose01/enchlib.git
-cd enchlib
-./gradlew build
-```
+| Componente | Versione |
+| --- | --- |
+| Minecraft | `26.2` |
+| Fabric Loader | `0.19.2` |
+| Fabric API | `0.148.0+26.2` |
+| Fabric Loom | `1.16-SNAPSHOT` (`net.fabricmc.fabric-loom`) |
+| Fabric Language Kotlin | `1.13.11+kotlin.2.3.21` |
+| Kotlin Gradle Plugin | `2.3.21` |
+| kotlinx.serialization | `1.10.0` |
+| kotlinx.coroutines | `1.10.2` |
+| Gradle Wrapper | `9.4.0` |
+| Java | `25` |
 
-Metti il `.jar` in `mods/`. Avvia un mondo/server: verranno create le cartelle di config **nel mondo**.
+> Nota 26.2: Fabric usa il nuovo Loom non-remapping (`net.fabricmc.fabric-loom`) e non richiede più Yarn mappings nel build script.
 
-## 📁 Struttura del progetto
+## 🚀 Installazione Rapida
+
+1. **Clona il repository**:
+   ```bash
+   git clone https://github.com/GoldenRose01/enchlib.git
+   cd enchlib
+   ```
+
+2. **Compila la mod**:
+   ```bash
+   ./gradlew build
+   ```
+
+3. **Installa** il file `.jar` risultante nella cartella `mods` di Minecraft.
+
+## 📁 Struttura del Progetto
 
 ```
 enchlib/
-├─ src/main/kotlin/goldenrose01/enchlib/
-│  ├─ EnchLib.kt                # Mod initializer
-│  ├─ commands/
-│  │  └─ EnchLibCommands.kt     # /plusec add|remove|list (nuovo)
-│  ├─ compat/
-│  │  └─ MCCompat.kt            # Layer compat riflessivo (nuovo/esteso)
-│  ├─ config/                   # gestione config per-mondo
-│  └─ utils/                    # logger & helper
-├─ src/main/resources/
-│  ├─ config/                   # template base copiati nel mondo (nuovo flusso)
-│  └─ assets|data|...           # risorse standard
-└─ build.gradle / gradle.properties
+├─ src/
+│  ├─ main/
+│  │  ├─ kotlin/goldenrose01/enchlib/
+│  │  │  ├─ EnchLib.kt                 # Classe principale
+│  │  │  ├─ commands/                  # Implementazione comandi /plusec
+│  │  │  ├─ config/                    # Gestione JSON5 per incantesimi
+│  │  │  ├─ registry/                  # Registrazioni runtime
+│  │  │  └─ utils/                     # Helper e logger
+│  │  ├─ resources/
+│  │  │  ├─ assets/enchlib/            # Asset grafici e lingue
+│  │  │  ├─ data/enchlib/              # Datapack e tag generati
+│  │  │  └─ fabric.mod.json            # Metadata mod
+│  └─ client/                          # Codice client-side dedicato
+├─ build.gradle                        # Configurazione Gradle
+└─ gradle.properties                   # Versioni dipendenze
 ```
 
-## ⚙️ Config per-mondo
+## ⚙️ Configurazione JSON5
 
-Percorso:
+I file di configurazione vengono creati (se mancanti) nella cartella del mondo `saves/<mondo>/config/enchlib/`:
 
-```
-.minecraft/saves/<nome-mondo>/config/enchlib/
-```
+- `AvailableEnch.json5` – Abilita o disabilita gli incantesimi.
+- `EnchantmentDetails.json5` – Definisce livelli massimi, rarity, categorie e moltiplicatori.
+- `Uncompatibility.json5` – Regole di incompatibilità tra enchant.
+- `Mob_category.json5` – Categorizzazione di mob per effetti mirati.
 
-* All’avvio del **mondo**, EnchLib copia **dinamicamente** i file base da `src/main/resources/config/` se non esistono e/o li **autopopola** dal registry runtime.
-* Formato preferito: **JSON5** (commenti supportati).
-  Esempio minimale:
+Tutti i file nascono con lo scheletro `{ "enchantments": [] }`. Gli incantesimi vengono aggiunti gradualmente quando vengono usati nei comandi o interrogati.
 
-  ```json5
-  {
-    "enchantments": [
-      { "id": "minecraft:sharpness", "level": 1 },
-      { "id": "minecraft:unbreaking", "level": 1 }
-    ]
-  }
-  ```
-* File/concetti già previsti:
-
-    * `AviableEnch.json5` – quali incantesimi sono abilitati
-    * `EnchantmentsDetails.json5` – metadati (max level, categorie, rarità, ecc.)
-    * `Uncompatibility.json5` – incompatibilità tra incantesimi
-    * (Migration dalle vecchie `.config` globali in corso: i template vengono presi da **resources/config**)
-
-> Nota: i comandi lavorano **sull’oggetto in mano**; i file JSON5 regolano la policy globale/per-mondo.
-
-## 🎮 Comandi
+## 🎮 Comandi Principali
 
 ### `/plusec`
 
-Gestione diretta, **applica realmente** NBT sull’oggetto in mano:
+Gestione diretta degli incantesimi su un item:
 
-```
-/plusec add <enchantment_id> <level>
-/plusec remove <enchantment_id>
-/plusec list
-```
+- `add <enchantment> <level>` – Aggiunge l'incantesimo (usa l'autocomplete Brigadier).
+- `addid <namespace:id> <level>` – Aggiunge l'incantesimo solo nei JSON.
+- `remove <enchantment>` – Rimuove l'incantesimo selezionato.
+- `clear` – Svuota tutti gli incantesimi dell'item corrente (incluse le liste dei libri incantati).
+- `list` – Elenca gli incantesimi applicati sull'item.
+- `info <enchantment>` – Mostra stato runtime, abilitazione e dettagli configurati.
 
-**Esempi**
+### `/plusec-debug`
 
-```
-/plusec add minecraft:unbreaking 3
-/plusec add sharpness 5                  # namespace implicito (=minecraft)
-/plusec remove minecraft:looting
-/plusec list
-```
+Strumenti diagnostici dedicati:
 
-Caratteristiche:
+- `show-path` – Mostra il percorso dei file di configurazione globale.
+- `reload` – Ricarica le configurazioni.
+- `validate` – Confronta gli ID configurati con il registry runtime.
+- `list-enabled` – Elenca gli incantesimi abilitati.
+- `toggle <id> <true|false>` e `setmax <id> <livello>` – Scrivono i valori nei JSON5 globali.
+- `config read <id>` – Legge abilitazione e livello massimo configurati.
+- `config write enabled <id> <true|false>` – Scrive lo stato di abilitazione.
+- `config write max-level <id> <livello>` – Scrive il livello massimo.
 
-* **Autocomplete**: propone sia `namespace:id` che `id` (anche da altre mod).
-* **Item detection**: se l’oggetto in mano è un **libro incantato**, usa `StoredEnchantments`; altrimenti `Enchantments`.
-* **No “protezioni”**: non esegue i check vanilla di compatibilità; applica ciò che chiedi.
+Le scritture vengono salvate subito in `AviableEnch.json5` o `EnchantmentsDetails.json5`.
 
-Messaggi d’errore comuni:
+## 🆕 Note di Rilascio
 
-* “Devi essere un giocatore…” → comando eseguito dalla console senza target player.
-* “Tieni un oggetto nella mano principale.” → mano vuota.
-* “ID incantesimo non valido…” → ID malformato o inesistente nel registry corrente.
-
-> `/plusec-debug` e altri comandi amministrativi/diagnostici restano disponibili se già presenti nel tuo build; non sono stati modificati in questa iterazione.
-
-## 🧩 MCCompat (nuovo layer di compatibilità)
-
-Per rendere stabile la mod su 1.21.8 (mappings/firmware aggiornati) **senza** dipendere da costrutti instabili (es. `Registries.ENCHANTMENT`), è stato introdotto `compat/MCCompat.kt`, che fornisce:
-
-* **Registry (riflessivo)**:
-
-    * `listEnchantmentIds(server): List<Identifier>`
-    * `getEnchantment(server, id: Identifier): Enchantment?`
-    * `parseEnchantmentId(input: String): Identifier?` (`sharpness` → `minecraft:sharpness`)
-* **NBT helpers** (tolleranti a firme/metodi differenti):
-
-    * `getOrCreateNbt(stack)`, `getNbtOrNull(stack)`, `setNbt(stack, nbt)`
-    * `getOrCreateList(nbt, key)`, `listAdd(list, element)`, `listGetCompound(list, i)`, `listSize(list)`
-    * `nbtPut(cmp, key, element)`, `putString(cmp, key, value)`, `putShort(cmp, key, value)`
-    * `storedOrRegularKey(stack)` → `"StoredEnchantments"` o `"Enchantments"`
-* **Operazioni alto livello**:
-
-    * `upsertEnchantment(stack, id, level): Boolean`
-    * `removeEnchantment(stack, id): Boolean`
-    * `readEnchantments(stack): List<Pair<String, Int>>`
-* **Suggerimenti**:
-
-    * `suggestStringsForEnchantments(server): List<String>` (namespace + id “short”)
-
-Questo consente di:
-
-* evitare crash dovuti a cambi di firma/metodo tra versioni,
-* supportare sia oggetti normali sia libri incantati senza boilerplate,
-* restare compatibili con il registry di **qualsiasi** mod caricata.
-
-## 🛠️ Build & Dev
-
-```bash
-./gradlew genSources
-./gradlew build clean
-./gradlew runClient
-```
-
-* **Java 22**
-* **Fabric Loom 1.11.8**
-* **Kotlin** come linguaggio principale
-* Niente serializzazione diretta di classi Mojang su disco: si usano DTO/JSON5
-
-## 🐛 Troubleshooting
-
-* **Il file config non si crea**
-  Verifica che `resources/config/` contenga i template. All’avvio mondo EnchLib li copia in `saves/<world>/config/enchlib/`. Controlla `logs/latest.log`.
-* **Autocomplete non propone ID attesi**
-  Il registry viene letto **a runtime**: assicurati che la mod che aggiunge incantesimi sia caricata.
-* **L’incantesimo non appare**
-  Verifica di avere un item valido in mano. Su **libri incantati** viene usata la lista `StoredEnchantments`.
-
-## 🔄 Roadmap (prossimi step)
-
-* **Policy livelli iniziali**: `MAX` vs `ONE` in autopopolamento (configurabile).
-* **Report validazione avanzata**: diff tra config e runtime, conflitti, merge regole.
-* **Altri comandi di qualità**:
-
-    * `clear` (rimuovi tutti gli incantesimi dall’item)
-    * `info <id>` (ispezione dettagli)
-    * opzioni per leggere/scrivere direttamente su file config via comando.
-
-## 🗓️ Changelog sintetico
-
-* **Questa build**
-
-    * `/plusec add/remove/list` operativi **sull’oggetto in mano** (no protezioni).
-    * **Autocomplete nativo** (vanilla + mod) via registry runtime.
-    * **MCCompat**: strato di compatibilità riflessivo per Registry/NBT e utility di alto livello.
-    * Flusso config per-mondo: copia template da `resources/config/` → `saves/<world>/config/enchlib/`.
-
-## 📄 Licenza
-
-Rilasciato sotto **CC0-1.0**.
-
-## 🙏 Grazie
-
-* Fabric & Yarn Teams
-* Kotlin Team
-* Community (feedback & testing)
-
----
-
-*Developed with ❤️ by GoldenRose01 — Minecraft Fabric community*
+Le novità dell'ultima versione sono disponibili in [docs/releases/v1.0.1.md](docs/releases/v1.0.1.md).

@@ -100,6 +100,30 @@ object DebugCommands {
         val cmdSetMax: LiteralArgumentBuilder<ServerCommandSource> =
             literal("setmax").then(argEnchMax.then(argLevel))
 
+        // config read <id>: legge i valori effettivi dai file JSON5 globali.
+        val configReadId = argument("enchantment", StringArgumentType.string())
+            .suggests(SUGGEST_ENCHANTMENTS)
+            .executes { readConfigEntry(it) }
+        val configRead = literal("read").then(configReadId)
+
+        // config write enabled <id> <true|false>
+        val configWriteEnabledId = argument("enchantment", StringArgumentType.string())
+            .suggests(SUGGEST_ENCHANTMENTS)
+        val configWriteEnabledValue = argument("enabled", BoolArgumentType.bool())
+            .executes { writeConfigEnabled(it) }
+        val configWriteEnabled = literal("enabled").then(configWriteEnabledId.then(configWriteEnabledValue))
+
+        // config write max-level <id> <level>
+        val configWriteMaxId = argument("enchantment", StringArgumentType.string())
+            .suggests(SUGGEST_ENCHANTMENTS)
+        val configWriteMaxValue = argument("level", IntegerArgumentType.integer(1))
+            .executes { writeConfigMaxLevel(it) }
+        val configWriteMax = literal("max-level").then(configWriteMaxId.then(configWriteMaxValue))
+
+        val config = literal("config")
+            .then(configRead)
+            .then(literal("write").then(configWriteEnabled).then(configWriteMax))
+
         // root
         val root: LiteralArgumentBuilder<ServerCommandSource> =
             literal("plusec-debug")
@@ -112,6 +136,7 @@ object DebugCommands {
         root.then(cmdListEnabled)
         root.then(cmdToggle)
         root.then(cmdSetMax)
+        root.then(config)
 
         dispatcher.register(root)
     }
@@ -181,6 +206,47 @@ object DebugCommands {
         EnchantLibAPI.setMaxLevel(id, lvl)
         ctx.source.sendFeedback({ Text.literal("Impostato $id -> max_level=$lvl (config globale)") }, true)
         return Command.SINGLE_SUCCESS
+    }
+
+    private fun readConfigEntry(ctx: CommandContext<ServerCommandSource>): Int {
+        val raw = StringArgumentType.getString(ctx, "enchantment")
+        val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
+        val enabled = EnchantLibAPI.isEnabled(id)
+        val maxLevel = EnchantLibAPI.getMaxLevel(id)
+        ctx.source.sendFeedback({
+            Text.literal(
+                "$id: enabled=$enabled, max_level=${maxLevel ?: "non impostato"} " +
+                    "(file: ${GlobalConfigIO.baseDir()})"
+            )
+        }, false)
+        return Command.SINGLE_SUCCESS
+    }
+
+    private fun writeConfigEnabled(ctx: CommandContext<ServerCommandSource>): Int {
+        val raw = StringArgumentType.getString(ctx, "enchantment")
+        val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
+        val enabled = BoolArgumentType.getBool(ctx, "enabled")
+        return runCatching {
+            EnchantLibAPI.setEnabled(id, enabled)
+            ctx.source.sendFeedback({ Text.literal("Salvato $id: enabled=$enabled") }, true)
+            Command.SINGLE_SUCCESS
+        }.getOrElse { commandError(ctx, "Impossibile scrivere la configurazione: ${it.message ?: "errore I/O"}") }
+    }
+
+    private fun writeConfigMaxLevel(ctx: CommandContext<ServerCommandSource>): Int {
+        val raw = StringArgumentType.getString(ctx, "enchantment")
+        val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
+        val level = IntegerArgumentType.getInteger(ctx, "level")
+        return runCatching {
+            EnchantLibAPI.setMaxLevel(id, level)
+            ctx.source.sendFeedback({ Text.literal("Salvato $id: max_level=$level") }, true)
+            Command.SINGLE_SUCCESS
+        }.getOrElse { commandError(ctx, "Impossibile scrivere la configurazione: ${it.message ?: "errore I/O"}") }
+    }
+
+    private fun commandError(ctx: CommandContext<ServerCommandSource>, message: String): Int {
+        ctx.source.sendError(Text.literal(message))
+        return 0
     }
 
     // ----- helpers -----

@@ -25,6 +25,7 @@ object Enchlib : ModInitializer {
 
         // Registrazione comandi (Fabric API v2)
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
+            EnchLibCommands.register(dispatcher)
             DebugCommands.register(dispatcher)
         }
     }

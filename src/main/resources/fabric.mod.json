@@ -1,3 +1,4 @@
+<<<<<<< ours
 {
   "schemaVersion": 1,
   "id": "enchlib",
@@ -54,3 +55,57 @@
     "cloth-config": "*"
   }
 }
+=======
+{
+	"schemaVersion": 1,
+	"id": "enchlib",
+	"version": "${version}",
+	"name": "EnchLib",
+	"description": "Libreria di base per enchantments personalizzati",
+	"authors": ["GoldenRose01"],
+	"contact": {
+		"homepage": "https://github.com/GoldenRose01/enchlib",
+		"sources": "https://github.com/GoldenRose01/enchlib"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/enchlib/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "goldenrose01.enchlib.Enchlib",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "goldenrose01.enchlib.EnchlibClient",
+				"adapter": "kotlin"
+			}
+		],
+		"fabric-datagen": [
+			{
+				"value": "goldenrose01.enchlib.EnchlibDataGenerator",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"enchlib.mixins.json",
+		{
+			"config": "enchlib.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
+>>>>>>> theirs
