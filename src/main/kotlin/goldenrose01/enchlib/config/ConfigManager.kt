@@ -5,7 +5,7 @@ import net.fabricmc.loader.api.FabricLoader
 import goldenrose01.enchlib.utils.EnchLogger
 
 import net.minecraft.server.MinecraftServer
-import net.minecraft.util.WorldSavePath
+import net.minecraft.world.level.storage.LevelResource
 
 import java.util.concurrent.ConcurrentHashMap
 import java.io.InputStream
@@ -70,7 +70,7 @@ object ConfigManager {
 
     // ==== Percorso cartella mondo ====
     fun worldConfigDir(server: MinecraftServer): Path =
-        server.getSavePath(WorldSavePath.ROOT).resolve("config").resolve("enchlib")
+        server.getWorldPath(LevelResource.ROOT).resolve("config").resolve("enchlib")
 
     // ==== API ====
     fun loadAll(server: MinecraftServer) {
@@ -301,17 +301,12 @@ object ConfigManager {
     // ==== Max level runtime dal registry ====
     private fun resolveRuntimeMaxLevel(id: String, server: MinecraftServer): Int? {
         return try {
-            val reg = server.registryManager.getOrThrow(net.minecraft.registry.RegistryKeys.ENCHANTMENT)
-            val identifier = net.minecraft.util.Identifier.tryParse(id) ?: return null
-            val opt = reg.getEntry(identifier)
+            val reg = server.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT)
+            val identifier = net.minecraft.resources.Identifier.tryParse(id) ?: return null
+            val key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.ENCHANTMENT, identifier)
+            val opt = reg.get(key)
             if (!opt.isPresent) return null
-            val ref = opt.get()
-            val ench = try {
-                val mValue = ref.javaClass.getMethod("value")
-                mValue.invoke(ref) as net.minecraft.enchantment.Enchantment
-            } catch (_: Throwable) {
-                return 1
-            }
+            val ench = opt.get().value()
             val mGetMax = ench.javaClass.methods.firstOrNull { it.name.equals("getMaxLevel", true) && it.parameterCount == 0 }
             if (mGetMax != null) {
                 (mGetMax.invoke(ench) as? Int) ?: 1

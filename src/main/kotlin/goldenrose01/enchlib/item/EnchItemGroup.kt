@@ -1,51 +1,37 @@
 package goldenrose01.enchlib.item
 
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
-import net.minecraft.item.ItemGroup
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.EnchantedBookItem
-import net.minecraft.enchantment.EnchantmentLevelEntry
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import goldenrose01.enchlib.utils.EnchLogger
-import goldenrose01.enchlib.compat.MCCompat
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab
+import net.minecraft.core.Registry
+import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.enchantment.ItemEnchantments
 
 object EnchItemGroup {
-    // Inizializza la tab
-    private val ENCHLIB_GROUP: ItemGroup = FabricItemGroup.builder()
+    private val ENCHLIB_GROUP = FabricCreativeModeTab.builder()
         .icon { ItemStack(Items.ENCHANTED_BOOK) }
-        .displayName(Text.translatable("itemgroup.enchlib.main"))
-        .entries { context, entries ->
-            // Ottieni il server o il registry manager dal contesto se disponibile,
-            // altrimenti usa i registri client-side per la visualizzazione.
-
-            // Nota: In un contesto ItemGroup puramente client side 1.21+,
-            // l'accesso ai registry dinamici (come gli Enchantments) è cambiato.
-            // Qui iteriamo sul registry di base se possibile.
-
-            val registry = context.lookup().getOptionalEntryList(RegistryKeys.ENCHANTMENT)
-
-            if (registry.isPresent) {
-                registry.get().stream().forEach { ref ->
-                    val enchant = ref.value()
-                    // Aggiunge il libro al livello 1
-                    entries.add(EnchantedBookItem.forEnchantment(EnchantmentLevelEntry(ref, 1)))
-
-                    // Opzionale: Se vuoi aggiungere anche il livello massimo:
-                    // val maxLevel = enchant.maxLevel
-                    // if (maxLevel > 1) {
-                    //    entries.add(EnchantedBookItem.forEnchantment(EnchantmentLevelEntry(ref, maxLevel)))
-                    // }
-                }
+        .title(Component.translatable("itemgroup.enchlib.main"))
+        .displayItems { parameters, output ->
+            val enchantments = parameters.holders().lookupOrThrow(Registries.ENCHANTMENT)
+            enchantments.listElements().forEach { enchantment ->
+                val contents = ItemEnchantments.Mutable(ItemEnchantments.EMPTY)
+                contents.set(enchantment, 1)
+                val book = ItemStack(Items.ENCHANTED_BOOK)
+                book.set(DataComponents.STORED_ENCHANTMENTS, contents.toImmutable())
+                output.accept(book)
             }
-        }.build()
+        }
+        .build()
 
     fun register() {
-        Registry.register(Registries.ITEM_GROUP, Identifier.of("enchlib", "main"), ENCHLIB_GROUP)
-        EnchLogger.info("📋 Tab creativa EnchLib registrata")
+        Registry.register(
+            BuiltInRegistries.CREATIVE_MODE_TAB,
+            Identifier.fromNamespaceAndPath("enchlib", "main"),
+            ENCHLIB_GROUP
+        )
     }
 }

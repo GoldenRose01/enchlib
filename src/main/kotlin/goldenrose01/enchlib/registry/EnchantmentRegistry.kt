@@ -1,6 +1,6 @@
 package goldenrose01.enchlib.registry
 
-import net.minecraft.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantment
 
 /**
  * Registry locale “no-op” per 1.21.x: non interroga il registry di gioco,

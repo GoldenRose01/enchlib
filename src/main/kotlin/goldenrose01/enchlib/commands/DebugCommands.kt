@@ -14,16 +14,16 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.RequiredArgumentBuilder
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 
-import net.minecraft.server.command.CommandManager.literal
-import net.minecraft.server.command.CommandManager.argument
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.command.argument.IdentifierArgumentType
-import net.minecraft.text.Text
-import net.minecraft.util.WorldSavePath
-import net.minecraft.util.Identifier
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.component.DataComponentTypes
+import net.minecraft.commands.Commands.literal
+import net.minecraft.commands.Commands.argument
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.commands.arguments.IdentifierArgument
+import net.minecraft.network.chat.Component
+import net.minecraft.world.level.storage.LevelResource
+import net.minecraft.resources.Identifier
+import net.minecraft.core.registries.Registries
+import net.minecraft.core.component.DataComponents
 
 import goldenrose01.enchlib.Enchlib
 import goldenrose01.enchlib.api.EnchantLibAPI
@@ -53,51 +53,51 @@ import java.util.concurrent.CompletableFuture
 
 object DebugCommands {
 
-    private val GENERIC_ERROR = SimpleCommandExceptionType(Text.literal("Operazione fallita."))
+    private val GENERIC_ERROR = SimpleCommandExceptionType(Component.literal("Operazione fallita."))
 
     // Provider suggerimenti ID incantesimi dal registry runtime (inclusi modded)
-    private val SUGGEST_ENCHANTMENTS: SuggestionProvider<ServerCommandSource> =
+    private val SUGGEST_ENCHANTMENTS: SuggestionProvider<CommandSourceStack> =
         SuggestionProvider { ctx, builder -> suggestEnchantments(ctx, builder) }
 
-    fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
+    fun register(dispatcher: CommandDispatcher<CommandSourceStack>) {
         // Costruisco builders separati per evitare ambiguità Kotlin su .then/argument
 
-        val cmdReload: LiteralArgumentBuilder<ServerCommandSource> =
+        val cmdReload: LiteralArgumentBuilder<CommandSourceStack> =
             literal("reload").executes { reload(it) }
 
-        val cmdValidate: LiteralArgumentBuilder<ServerCommandSource> =
+        val cmdValidate: LiteralArgumentBuilder<CommandSourceStack> =
             literal("validate").executes { validate(it) }
 
-        val cmdShowPath: LiteralArgumentBuilder<ServerCommandSource> =
+        val cmdShowPath: LiteralArgumentBuilder<CommandSourceStack> =
             literal("show-path").executes { showPath(it) }
 
-        val cmdListEnabled: LiteralArgumentBuilder<ServerCommandSource> =
+        val cmdListEnabled: LiteralArgumentBuilder<CommandSourceStack> =
             literal("list-enabled").executes { listEnabled(it) }
 
         // toggle <enchantment> <enabled>
         @Suppress("UNCHECKED_CAST")
-        val argEnchToggle: RequiredArgumentBuilder<ServerCommandSource, String> =
-            argument("enchantment", StringArgumentType.string()) as RequiredArgumentBuilder<ServerCommandSource, String>
+        val argEnchToggle: RequiredArgumentBuilder<CommandSourceStack, String> =
+            argument("enchantment", StringArgumentType.string()) as RequiredArgumentBuilder<CommandSourceStack, String>
         argEnchToggle.suggests(SUGGEST_ENCHANTMENTS)
 
-        val argEnabled: RequiredArgumentBuilder<ServerCommandSource, Boolean> =
+        val argEnabled: RequiredArgumentBuilder<CommandSourceStack, Boolean> =
             argument("enabled", BoolArgumentType.bool())
                 .executes { setToggle(it) }
 
-        val cmdToggle: LiteralArgumentBuilder<ServerCommandSource> =
+        val cmdToggle: LiteralArgumentBuilder<CommandSourceStack> =
             literal("toggle").then(argEnchToggle.then(argEnabled))
 
         // setmax <enchantment> <level>
         @Suppress("UNCHECKED_CAST")
-        val argEnchMax: RequiredArgumentBuilder<ServerCommandSource, String> =
-            argument("enchantment", StringArgumentType.string()) as RequiredArgumentBuilder<ServerCommandSource, String>
+        val argEnchMax: RequiredArgumentBuilder<CommandSourceStack, String> =
+            argument("enchantment", StringArgumentType.string()) as RequiredArgumentBuilder<CommandSourceStack, String>
         argEnchMax.suggests(SUGGEST_ENCHANTMENTS)
 
-        val argLevel: RequiredArgumentBuilder<ServerCommandSource, Int> =
+        val argLevel: RequiredArgumentBuilder<CommandSourceStack, Int> =
             argument("level", IntegerArgumentType.integer(1))
                 .executes { setMax(it) }
 
-        val cmdSetMax: LiteralArgumentBuilder<ServerCommandSource> =
+        val cmdSetMax: LiteralArgumentBuilder<CommandSourceStack> =
             literal("setmax").then(argEnchMax.then(argLevel))
 
         // config read <id>: legge i valori effettivi dai file JSON5 globali.
@@ -125,9 +125,9 @@ object DebugCommands {
             .then(literal("write").then(configWriteEnabled).then(configWriteMax))
 
         // root
-        val root: LiteralArgumentBuilder<ServerCommandSource> =
+        val root: LiteralArgumentBuilder<CommandSourceStack> =
             literal("plusec-debug")
-                .requires { it.hasPermissionLevel(2) }
+                .requires { it.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER) }
 
         // attach children
         root.then(cmdReload)
@@ -144,77 +144,77 @@ object DebugCommands {
     // ----- subcommands -----
 
     // NB: in base al tuo errore più recente, assumo reloadConfigs() SENZA parametri.
-    private fun reload(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun reload(ctx: CommandContext<CommandSourceStack>): Int {
         return try {
             GlobalConfigManager.reloadConfigs()
-            ctx.source.sendFeedback({ Text.literal("Config globale ricaricata da ${GlobalConfigIO.baseDir()}") }, true)
+            ctx.source.sendSuccess({ Component.literal("Config globale ricaricata da ${GlobalConfigIO.baseDir()}") }, true)
             Command.SINGLE_SUCCESS
         } catch (_: Throwable) {
             throw GENERIC_ERROR.create()
         }
     }
 
-    private fun validate(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun validate(ctx: CommandContext<CommandSourceStack>): Int {
         val server = ctx.source.server
         val issues = GlobalConfigManager.validateAgainstRegistry(server)
         if (issues.isEmpty()) {
-            ctx.source.sendFeedback({ Text.literal("Validazione OK: tutti gli ID in config sono presenti nel registry.") }, false)
+            ctx.source.sendSuccess({ Component.literal("Validazione OK: tutti gli ID in config sono presenti nel registry.") }, false)
         } else {
-            ctx.source.sendFeedback({ Text.literal("Problemi di validazione: ${issues.size}") }, false)
-            issues.forEach { line -> ctx.source.sendFeedback({ Text.literal(line) }, false) }
+            ctx.source.sendSuccess({ Component.literal("Problemi di validazione: ${issues.size}") }, false)
+            issues.forEach { line -> ctx.source.sendSuccess({ Component.literal(line) }, false) }
         }
         return Command.SINGLE_SUCCESS
     }
 
-    private fun showPath(ctx: CommandContext<ServerCommandSource>): Int {
-        ctx.source.sendFeedback({ Text.literal("Percorso config globale: ${GlobalConfigIO.baseDir()}") }, false)
+    private fun showPath(ctx: CommandContext<CommandSourceStack>): Int {
+        ctx.source.sendSuccess({ Component.literal("Percorso config globale: ${GlobalConfigIO.baseDir()}") }, false)
         return Command.SINGLE_SUCCESS
     }
 
-    private fun listEnabled(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun listEnabled(ctx: CommandContext<CommandSourceStack>): Int {
         val list = EnchantLibAPI.getEnabledEnchantments()
         if (list.isEmpty()) {
-            ctx.source.sendFeedback({ Text.literal("Nessun incantesimo abilitato in config globale.") }, false)
+            ctx.source.sendSuccess({ Component.literal("Nessun incantesimo abilitato in config globale.") }, false)
         } else {
-            ctx.source.sendFeedback({ Text.literal("Incantesimi abilitati (${list.size}):") }, false)
-            list.forEach { id -> ctx.source.sendFeedback({ Text.literal(" - $id") }, false) }
+            ctx.source.sendSuccess({ Component.literal("Incantesimi abilitati (${list.size}):") }, false)
+            list.forEach { id -> ctx.source.sendSuccess({ Component.literal(" - $id") }, false) }
         }
         return Command.SINGLE_SUCCESS
     }
 
     // toggle handler
-    private fun setToggle(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun setToggle(ctx: CommandContext<CommandSourceStack>): Int {
         val idRaw = StringArgumentType.getString(ctx, "enchantment")
         val id = normalizeId(idRaw) ?: run {
-            ctx.source.sendError(Text.literal("ID incantesimo non valido: '$idRaw'"))
+            ctx.source.sendFailure(Component.literal("ID incantesimo non valido: '$idRaw'"))
             return 0
         }
         val enabled = BoolArgumentType.getBool(ctx, "enabled")
         EnchantLibAPI.setEnabled(id, enabled)
-        ctx.source.sendFeedback({ Text.literal("Impostato $id -> enabled=$enabled (config globale)") }, true)
+        ctx.source.sendSuccess({ Component.literal("Impostato $id -> enabled=$enabled (config globale)") }, true)
         return Command.SINGLE_SUCCESS
     }
 
     // setmax handler
-    private fun setMax(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun setMax(ctx: CommandContext<CommandSourceStack>): Int {
         val idRaw = StringArgumentType.getString(ctx, "enchantment")
         val id = normalizeId(idRaw) ?: run {
-            ctx.source.sendError(Text.literal("ID incantesimo non valido: '$idRaw'"))
+            ctx.source.sendFailure(Component.literal("ID incantesimo non valido: '$idRaw'"))
             return 0
         }
         val lvl = IntegerArgumentType.getInteger(ctx, "level")
         EnchantLibAPI.setMaxLevel(id, lvl)
-        ctx.source.sendFeedback({ Text.literal("Impostato $id -> max_level=$lvl (config globale)") }, true)
+        ctx.source.sendSuccess({ Component.literal("Impostato $id -> max_level=$lvl (config globale)") }, true)
         return Command.SINGLE_SUCCESS
     }
 
-    private fun readConfigEntry(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun readConfigEntry(ctx: CommandContext<CommandSourceStack>): Int {
         val raw = StringArgumentType.getString(ctx, "enchantment")
         val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
         val enabled = EnchantLibAPI.isEnabled(id)
         val maxLevel = EnchantLibAPI.getMaxLevel(id)
-        ctx.source.sendFeedback({
-            Text.literal(
+        ctx.source.sendSuccess({
+            Component.literal(
                 "$id: enabled=$enabled, max_level=${maxLevel ?: "non impostato"} " +
                     "(file: ${GlobalConfigIO.baseDir()})"
             )
@@ -222,30 +222,30 @@ object DebugCommands {
         return Command.SINGLE_SUCCESS
     }
 
-    private fun writeConfigEnabled(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun writeConfigEnabled(ctx: CommandContext<CommandSourceStack>): Int {
         val raw = StringArgumentType.getString(ctx, "enchantment")
         val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
         val enabled = BoolArgumentType.getBool(ctx, "enabled")
         return runCatching {
             EnchantLibAPI.setEnabled(id, enabled)
-            ctx.source.sendFeedback({ Text.literal("Salvato $id: enabled=$enabled") }, true)
+            ctx.source.sendSuccess({ Component.literal("Salvato $id: enabled=$enabled") }, true)
             Command.SINGLE_SUCCESS
         }.getOrElse { commandError(ctx, "Impossibile scrivere la configurazione: ${it.message ?: "errore I/O"}") }
     }
 
-    private fun writeConfigMaxLevel(ctx: CommandContext<ServerCommandSource>): Int {
+    private fun writeConfigMaxLevel(ctx: CommandContext<CommandSourceStack>): Int {
         val raw = StringArgumentType.getString(ctx, "enchantment")
         val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
         val level = IntegerArgumentType.getInteger(ctx, "level")
         return runCatching {
             EnchantLibAPI.setMaxLevel(id, level)
-            ctx.source.sendFeedback({ Text.literal("Salvato $id: max_level=$level") }, true)
+            ctx.source.sendSuccess({ Component.literal("Salvato $id: max_level=$level") }, true)
             Command.SINGLE_SUCCESS
         }.getOrElse { commandError(ctx, "Impossibile scrivere la configurazione: ${it.message ?: "errore I/O"}") }
     }
 
-    private fun commandError(ctx: CommandContext<ServerCommandSource>, message: String): Int {
-        ctx.source.sendError(Text.literal(message))
+    private fun commandError(ctx: CommandContext<CommandSourceStack>, message: String): Int {
+        ctx.source.sendFailure(Component.literal(message))
         return 0
     }
 
@@ -263,7 +263,7 @@ object DebugCommands {
 
     /** Suggerimenti dinamici dagli enchant registrati a runtime (anche di altre mod). */
     private fun suggestEnchantments(
-        ctx: CommandContext<ServerCommandSource>,
+        ctx: CommandContext<CommandSourceStack>,
         builder: com.mojang.brigadier.suggestion.SuggestionsBuilder
     ): CompletableFuture<Suggestions> {
         val server = ctx.source.server

@@ -1,7 +1,7 @@
 # EnchLib - Libreria dinamica per incantesimi Minecraft
 
-![Minecraft Version](https://img.shields.io/badge/Minecraft-26.2-brightgreen)
-![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.2+-blue)
+![Minecraft Version](https://img.shields.io/badge/Minecraft-26.3-brightgreen)
+![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.5+-blue)
 ![Java Version](https://img.shields.io/badge/Java-25-orange)
 ![License](https://img.shields.io/badge/License-CC0--1.0-lightgrey)
 
@@ -13,13 +13,13 @@ EnchLib è una libreria Fabric scritta in Kotlin che sostituisce gli incantesimi
 - **JSON5 support** – I file di configurazione accettano commenti e trailing comma grazie a un parser dedicato.
 - **Comandi potenti** – `/plusec` e `/plusec-debug` consentono di gestire incantesimi sugli item, diagnosticare problemi e aggiornare i file.
 - **Sync dinamico** – Gli incantesimi vengono aggiunti ai file di configurazione solo quando utilizzati, evitando conflitti con mod che registrano enchant a runtime.
-- **Compatibile con Fabric Kotlin** – Il progetto utilizza Kotlin, `kotlinx.serialization` e riflessione per lavorare con le API 26.2.
+- **Compatibile con Fabric Kotlin** – Il progetto utilizza Kotlin, `kotlinx.serialization` e riflessione per lavorare con le API 26.3.
 
 ## 📋 Requisiti
 
-- **Minecraft**: 26.2 o superiore
-- **Fabric Loader**: 0.19.2 o superiore
-- **Fabric API**: compatibile con 26.2
+- **Minecraft**: 26.3
+- **Fabric Loader**: 0.19.5 o superiore
+- **Fabric API**: compatibile con 26.3
 - **Java**: 25 o superiore
 - **Fabric Kotlin**: richiesto
 
@@ -27,18 +27,18 @@ EnchLib è una libreria Fabric scritta in Kotlin che sostituisce gli incantesimi
 
 | Componente | Versione |
 | --- | --- |
-| Minecraft | `26.2` |
-| Fabric Loader | `0.19.2` |
-| Fabric API | `0.148.0+26.2` |
-| Fabric Loom | `1.16-SNAPSHOT` (`net.fabricmc.fabric-loom`) |
+| Minecraft | `26.3` |
+| Fabric Loader | `0.19.5` |
+| Fabric API | `0.161.0+26.3` |
+| Fabric Loom | `1.17.21` (`net.fabricmc.fabric-loom`) |
 | Fabric Language Kotlin | `1.13.11+kotlin.2.3.21` |
 | Kotlin Gradle Plugin | `2.3.21` |
 | kotlinx.serialization | `1.10.0` |
 | kotlinx.coroutines | `1.10.2` |
-| Gradle Wrapper | `9.4.0` |
+| Gradle Wrapper | `9.6.0` |
 | Java | `25` |
 
-> Nota 26.2: Fabric usa il nuovo Loom non-remapping (`net.fabricmc.fabric-loom`) e non richiede più Yarn mappings nel build script.
+> Nota 26.3: Fabric usa il flusso Loom non-remapping (`net.fabricmc.fabric-loom`) e non richiede Yarn mappings nel build script.
 
 ## 🚀 Installazione Rapida
 
@@ -117,4 +117,4 @@ Le scritture vengono salvate subito in `AviableEnch.json5` o `EnchantmentsDetail
 
 ## 🆕 Note di Rilascio
 
-Le novità dell'ultima versione sono disponibili in [docs/releases/v1.0.1.md](docs/releases/v1.0.1.md).
+Le novità dell'ultima versione sono disponibili in [docs/releases/minecraft-26.3.md](docs/releases/minecraft-26.3.md).

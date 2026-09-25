@@ -2,15 +2,16 @@ package goldenrose01.enchlib
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.Registries
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.HolderLookup
+import net.minecraft.tags.ItemTags
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.Identifier
 import java.util.concurrent.CompletableFuture
 
 object EnchlibDataGenerator : DataGeneratorEntrypoint {
@@ -21,62 +22,64 @@ object EnchlibDataGenerator : DataGeneratorEntrypoint {
 }
 
 class EnchlibItemTagProvider(
-    output: FabricDataOutput,
-    future: CompletableFuture<RegistryWrapper.WrapperLookup>
-) : FabricTagProvider.ItemTagProvider(output, future) {
+    output: FabricPackOutput,
+    future: CompletableFuture<HolderLookup.Provider>
+) : FabricTagsProvider.ItemTagsProvider(output, future) {
 
     // Wrapper compatibile con 1.21.x: sostituisce il vecchio getOrCreateTagBuilder
     // Restituisce direttamente il builder di ValueLookupTagProvider senza tipizzarlo,
     // così i metodi .add/.addTag/.forceAddTag sono visibili correttamente.
-    private fun getOrCreateTagBuilder(tag: TagKey<Item>) = valueLookupBuilder(tag)
+    private fun getOrCreateTagBuilder(tag: TagKey<Item>) = builder(tag)
 
-    override fun configure(wrapper: RegistryWrapper.WrapperLookup) {
-        val PICKAXES = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "pickaxes"))
-        val AXES     = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "axes"))
-        val SHOVELS  = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "shovels"))
-        val HOES     = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "hoes"))
-        val SWORDS   = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "swords"))
-        val TOOLS    = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "tools"))
-        val ARMOR    = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "armor"))
-        val WEAPONS  = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "weapons"))
-        val BOWS     = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "bows"))
-        val WEIGHTED = TagKey.of(RegistryKeys.ITEM, Identifier.of("enchlib", "weighted"))
+    private fun itemKey(item: Item) = BuiltInRegistries.ITEM.getResourceKey(item).orElseThrow()
+
+    override fun addTags(wrapper: HolderLookup.Provider) {
+        val PICKAXES = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "pickaxes"))
+        val AXES     = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "axes"))
+        val SHOVELS  = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "shovels"))
+        val HOES     = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "hoes"))
+        val SWORDS   = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "swords"))
+        val TOOLS    = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "tools"))
+        val ARMOR    = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "armor"))
+        val WEAPONS  = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "weapons"))
+        val BOWS     = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "bows"))
+        val WEIGHTED = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("enchlib", "weighted"))
 
 
 
         // pickaxes
         getOrCreateTagBuilder(PICKAXES)
             .add(
-                Items.WOODEN_PICKAXE, Items.STONE_PICKAXE, Items.IRON_PICKAXE,
-                Items.GOLDEN_PICKAXE, Items.DIAMOND_PICKAXE, Items.NETHERITE_PICKAXE
+                itemKey(Items.WOODEN_PICKAXE), itemKey(Items.STONE_PICKAXE), itemKey(Items.IRON_PICKAXE),
+                itemKey(Items.GOLDEN_PICKAXE), itemKey(Items.DIAMOND_PICKAXE), itemKey(Items.NETHERITE_PICKAXE)
             )
 
         // axes
         getOrCreateTagBuilder(AXES)
             .add(
-                Items.WOODEN_AXE, Items.STONE_AXE, Items.IRON_AXE,
-                Items.GOLDEN_AXE, Items.DIAMOND_AXE, Items.NETHERITE_AXE
+                itemKey(Items.WOODEN_AXE), itemKey(Items.STONE_AXE), itemKey(Items.IRON_AXE),
+                itemKey(Items.GOLDEN_AXE), itemKey(Items.DIAMOND_AXE), itemKey(Items.NETHERITE_AXE)
             )
 
         // shovels
         getOrCreateTagBuilder(SHOVELS)
             .add(
-                Items.WOODEN_SHOVEL, Items.STONE_SHOVEL, Items.IRON_SHOVEL,
-                Items.GOLDEN_SHOVEL, Items.DIAMOND_SHOVEL, Items.NETHERITE_SHOVEL
+                itemKey(Items.WOODEN_SHOVEL), itemKey(Items.STONE_SHOVEL), itemKey(Items.IRON_SHOVEL),
+                itemKey(Items.GOLDEN_SHOVEL), itemKey(Items.DIAMOND_SHOVEL), itemKey(Items.NETHERITE_SHOVEL)
             )
 
         // hoes
         getOrCreateTagBuilder(HOES)
             .add(
-                Items.WOODEN_HOE, Items.STONE_HOE, Items.IRON_HOE,
-                Items.GOLDEN_HOE, Items.DIAMOND_HOE, Items.NETHERITE_HOE
+                itemKey(Items.WOODEN_HOE), itemKey(Items.STONE_HOE), itemKey(Items.IRON_HOE),
+                itemKey(Items.GOLDEN_HOE), itemKey(Items.DIAMOND_HOE), itemKey(Items.NETHERITE_HOE)
             )
 
         // swords
         getOrCreateTagBuilder(SWORDS)
             .add(
-                Items.WOODEN_SWORD, Items.STONE_SWORD, Items.IRON_SWORD,
-                Items.GOLDEN_SWORD, Items.DIAMOND_SWORD, Items.NETHERITE_SWORD
+                itemKey(Items.WOODEN_SWORD), itemKey(Items.STONE_SWORD), itemKey(Items.IRON_SWORD),
+                itemKey(Items.GOLDEN_SWORD), itemKey(Items.DIAMOND_SWORD), itemKey(Items.NETHERITE_SWORD)
             )
 
         // tools -> include gruppi figli
@@ -93,20 +96,20 @@ class EnchlibItemTagProvider(
             .forceAddTag(ItemTags.CHEST_ARMOR)
             .forceAddTag(ItemTags.LEG_ARMOR)
             .forceAddTag(ItemTags.FOOT_ARMOR)
-            .add(Items.ELYTRA)
+            .add(itemKey(Items.ELYTRA))
 
         // weapons -> swords + archi/balestre/tridente
         getOrCreateTagBuilder(WEAPONS)
             .forceAddTag(SWORDS)
-            .add(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.MACE)
+            .add(itemKey(Items.BOW), itemKey(Items.CROSSBOW), itemKey(Items.TRIDENT), itemKey(Items.MACE))
 
         // bows -> bow + cross
         getOrCreateTagBuilder(BOWS)
-            .add(Items.BOW, Items.CROSSBOW)
+            .add(itemKey(Items.BOW), itemKey(Items.CROSSBOW))
 
         // weighted -> Mace + shovel
         getOrCreateTagBuilder(WEIGHTED)
             .forceAddTag(SHOVELS)
-            .add(Items.MACE)
+            .add(itemKey(Items.MACE))
     }
 }

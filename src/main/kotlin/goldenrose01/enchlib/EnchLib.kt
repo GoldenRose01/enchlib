@@ -3,7 +3,7 @@ package goldenrose01.enchlib
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 
-import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.commands.CommandSourceStack
 
 import com.mojang.brigadier.CommandDispatcher
 

@@ -1,7 +1,7 @@
 package goldenrose01.enchlib.config
 
 import goldenrose01.enchlib.utils.EnchLogger
-import net.minecraft.registry.RegistryKeys
+import net.minecraft.core.registries.Registries
 import net.minecraft.server.MinecraftServer
 
 /**
@@ -40,8 +40,8 @@ object GlobalConfigManager {
             .map { it.id }
             .toSet()
 
-        val reg = server.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-        val registryIds: Set<String> = reg.ids.map { it.toString() }.toSet()
+        val reg = server.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+        val registryIds: Set<String> = reg.keySet().map { it.toString() }.toSet()
 
         val missingInRegistry = cfgIds - registryIds
         val notConfigured = registryIds - cfgIds

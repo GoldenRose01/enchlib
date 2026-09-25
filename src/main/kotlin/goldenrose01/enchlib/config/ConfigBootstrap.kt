@@ -2,12 +2,12 @@ package goldenrose01.enchlib.config
 
 import goldenrose01.enchlib.utils.EnchLogger
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.registry.Registry
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.core.Registry
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.Registries
 import net.minecraft.server.MinecraftServer
-import net.minecraft.util.Identifier
+import net.minecraft.resources.Identifier
 
 /**
  * Aggancia il bootstrap di configurazione al ciclo vita del server.
@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier
 object ConfigBootstrap {
 
     // Chiave del registry enchantments
-    private val ENCH_REGISTRY_KEY: RegistryKey<Registry<Enchantment>> = RegistryKeys.ENCHANTMENT
+    private val ENCH_REGISTRY_KEY: ResourceKey<Registry<Enchantment>> = Registries.ENCHANTMENT
 
     /** Registra l’hook SERVER_STARTED una sola volta. */
     fun registerServerHooks() {
@@ -35,8 +35,8 @@ object ConfigBootstrap {
         // Assicura che i file nel mondo esistano (copiandoli da /resources/config se mancano)
         ConfigManager.reloadCoreFilesIfNeeded(server)
 
-        val registry = server.registryManager.getOrThrow(ENCH_REGISTRY_KEY)
-        val allIds: List<Identifier> = registry.ids.toList()
+        val registry = server.registryAccess().lookupOrThrow(ENCH_REGISTRY_KEY)
+        val allIds: List<Identifier> = registry.keySet().toList()
 
         var added = 0
         for (id in allIds) {
