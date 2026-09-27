@@ -10,6 +10,8 @@ import com.mojang.brigadier.CommandDispatcher
 import goldenrose01.enchlib.commands.DebugCommands
 import goldenrose01.enchlib.commands.EnchLibCommands
 import goldenrose01.enchlib.config.GlobalConfigBootstrap
+import goldenrose01.enchlib.config.MobCategoryManager
+import goldenrose01.enchlib.api.EnchantLibAPI
 
 import org.slf4j.LoggerFactory
 
@@ -22,11 +24,36 @@ object Enchlib : ModInitializer {
 
         // World configuration
         GlobalConfigBootstrap.ensureDefaultsInstalled()
+        EnchantLibAPI.registerMaxLevelDefaults(loadIntegerDefaults("config/EnchLVLmax.config"))
+        EnchantLibAPI.registerRarityDefaults(loadRarityDefaults())
+        MobCategoryManager.registerHooks()
 
         // Registrazione comandi (Fabric API v2)
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             EnchLibCommands.register(dispatcher)
             DebugCommands.register(dispatcher)
+        }
+    }
+
+    private fun loadRarityDefaults(): Map<String, String> {
+        val input = Enchlib::class.java.classLoader.getResourceAsStream("config/EnchRarity.config") ?: return emptyMap()
+        return input.bufferedReader().useLines { lines ->
+            lines.map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
+                .mapNotNull { line ->
+                    val split = line.indexOf('=')
+                    if (split <= 0) null else line.substring(0, split).trim() to line.substring(split + 1).trim()
+                }.toMap()
+        }
+    }
+
+    private fun loadIntegerDefaults(resource: String): Map<String, Int> {
+        val input = Enchlib::class.java.classLoader.getResourceAsStream(resource) ?: return emptyMap()
+        return input.bufferedReader().useLines { lines ->
+            lines.map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
+                .mapNotNull { line ->
+                    val split = line.indexOf('=')
+                    if (split <= 0) null else line.substring(0, split).trim() to line.substring(split + 1).trim().toIntOrNull()
+                }.filter { it.second != null }.associate { it.first to it.second!! }
         }
     }
 }

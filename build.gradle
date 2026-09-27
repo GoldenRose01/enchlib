@@ -9,7 +9,7 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-    archivesName = project.archives_base_name
+    archivesName = "${project.archives_base_name}-mc${project.minecraft_version}"
 }
 
 repositories {
@@ -55,6 +55,18 @@ dependencies {
     // Kotlinx Serialization
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${project.kotlinx_serialization_version}"
 
+    // Optional UI APIs supplied in External_mod; compile-time only, never bundled in EnchLib.
+    compileOnly fileTree(dir: "External_mod", include: [
+        "modmenu-*.jar",
+        "yet_another_config_lib_v3-*.jar"
+    ])
+
+    // Load the optional UI mods in runClient for in-game verification; they remain separate at release time.
+    runtimeOnly fileTree(dir: "External_mod", include: [
+        "modmenu-*.jar",
+        "yet_another_config_lib_v3-*.jar"
+    ])
+
     // Serializzazione JSON
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:${project.kotlinx_coroutines_version}" // Per ops I/O asincrone (opt)
 }
@@ -67,6 +79,15 @@ processResources {
         expand "version": inputs.properties.version,
             "minecraft_version": inputs.properties.minecraft_version
     }
+
+    doLast {
+        if (project.minecraft_version != "26.3") {
+            def metadataFile = new File(destinationDir, "fabric.mod.json")
+            def metadata = new groovy.json.JsonSlurper().parse(metadataFile) as Map
+            (metadata["entrypoints"] as Map).remove("fabric-datagen")
+            metadataFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(metadata)) + "\n"
+        }
+    }
 }
 
 // Configurazione per Java 25 (richiesta da Minecraft 26.3)
@@ -78,10 +99,14 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
         jvmTarget = "25"
     }
+    if (project.minecraft_version != "26.3") {
+        exclude("**/EnchlibDataGenerator.kt")
+    }
 }
 
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    destinationDirectory = layout.projectDirectory.dir("jar")
 }
 
 java {

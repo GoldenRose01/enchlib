@@ -1,6 +1,7 @@
 # EnchLib - Libreria dinamica per incantesimi Minecraft
 
 ![Minecraft Version](https://img.shields.io/badge/Minecraft-26.3-brightgreen)
+![EnchLib Version](https://img.shields.io/badge/EnchLib-1.4.0-blue)
 ![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.5+-blue)
 ![Java Version](https://img.shields.io/badge/Java-25-orange)
 ![License](https://img.shields.io/badge/License-CC0--1.0-lightgrey)
@@ -12,6 +13,7 @@ EnchLib è una libreria Fabric scritta in Kotlin che sostituisce gli incantesimi
 - **Config per mondo** – I file vengono creati in `saves/<mondo>/config/enchlib/` e possono essere versionati o modificati server-side.
 - **JSON5 support** – I file di configurazione accettano commenti e trailing comma grazie a un parser dedicato.
 - **Comandi potenti** – `/plusec` e `/plusec-debug` consentono di gestire incantesimi sugli item, diagnosticare problemi e aggiornare i file.
+- **Categorie mob estendibili** – Le categorie sono associate agli ID del registry e possono includere mob aggiunti da altre mod.
 - **Sync dinamico** – Gli incantesimi vengono aggiunti ai file di configurazione solo quando utilizzati, evitando conflitti con mod che registrano enchant a runtime.
 - **Compatibile con Fabric Kotlin** – Il progetto utilizza Kotlin, `kotlinx.serialization` e riflessione per lavorare con le API 26.3.
 
@@ -78,12 +80,25 @@ enchlib/
 
 ## ⚙️ Configurazione JSON5
 
-I file di configurazione vengono creati (se mancanti) nella cartella del mondo `saves/<mondo>/config/enchlib/`:
+Le impostazioni globali degli incantesimi si trovano in `.minecraft/config/enchlib/`; le categorie dei mob si salvano nella configurazione del mondo:
 
-- `AvailableEnch.json5` – Abilita o disabilita gli incantesimi.
+- `AviableEnch.json5` – Abilita o disabilita gli incantesimi.
 - `EnchantmentDetails.json5` – Definisce livelli massimi, rarity, categorie e moltiplicatori.
-- `Uncompatibility.json5` – Regole di incompatibilità tra enchant.
-- `Mob_category.json5` – Categorizzazione di mob per effetti mirati.
+- `MobCategory.json` – Associa categorie ai mob vanilla e modded tramite ID del registry; ha priorità sul formato `.config` storico.
+- `MobCategory.config` – Formato properties mantenuto per retrocompatibilità.
+
+Per associare categorie ai mob, modifica `MobCategory.json` oppure `MobCategory.config` nella cartella di configurazione del mondo. Usa gli ID del registry per supportare sia Minecraft sia le altre mod:
+
+```properties
+minecraft:zombie=undead,hostile
+othermod:crystal_beast=magical,boss
+```
+
+Le assegnazioni sono disponibili al server e alle mod tramite `MobCategoryManager`. Gli ID registrati possono essere suggeriti dai comandi debug.
+
+Il catalogo editabile in Excel, l'esportatore JSON e le istruzioni per caricare i dati in un mondo sono in [`doc/`](doc/README.md). Con Mod Menu e Yet Another Config Lib installati, EnchLib offre tre macro menu: disponibilità degli incantesimi, dettagli degli incantesimi e categorie dei mob. I dettagli contengono incompatibilità, rarità, livello massimo e categorie di oggetti; le modifiche vengono salvate nella configurazione globale. I mob sono elencati per ID e le categorie possono essere cambiate una voce alla volta. In multiplayer il salvataggio dei mob passa dal comando `/plusec-debug mob set` e richiede i relativi permessi.
+
+Le regole degli oggetti accettano gruppi, ID specifici e esclusioni. Le regole positive si uniscono; quelle con `!` escludono gli oggetti corrispondenti. `!all` limita l'incantesimo ai libri. Gli ID specifici si inseriscono nel campo dedicato, separati da virgola. Nei tavoli gestiti dall'integrazione Eldritch Surge la rarità applica un peso alla probabilità del tavolo: comune 100, non comune 60, rara 30, molto rara 5; la percentuale del tavolo viene moltiplicata per questo peso.
 
 Tutti i file nascono con lo scheletro `{ "enchantments": [] }`. Gli incantesimi vengono aggiunti gradualmente quando vengono usati nei comandi o interrogati.
 
@@ -99,6 +114,7 @@ Gestione diretta degli incantesimi su un item:
 - `clear` – Svuota tutti gli incantesimi dell'item corrente (incluse le liste dei libri incantati).
 - `list` – Elenca gli incantesimi applicati sull'item.
 - `info <enchantment>` – Mostra stato runtime, abilitazione e dettagli configurati.
+- `repair`, `setdurability <percentuale>` e `damage <+/-punti>` – Riparano o modificano la durabilità dell'oggetto tenuto.
 
 ### `/plusec-debug`
 
@@ -112,9 +128,17 @@ Strumenti diagnostici dedicati:
 - `config read <id>` – Legge abilitazione e livello massimo configurati.
 - `config write enabled <id> <true|false>` – Scrive lo stato di abilitazione.
 - `config write max-level <id> <livello>` – Scrive il livello massimo.
+- `mob get <entity-id>` – Mostra le categorie assegnate a un mob.
+- `mob set <entity-id> <cat1,cat2>` – Imposta categorie per un mob vanilla o di un'altra mod; usa `none` per rimuoverle.
 
 Le scritture vengono salvate subito in `AviableEnch.json5` o `EnchantmentsDetails.json5`.
 
 ## 🆕 Note di Rilascio
 
-Le novità dell'ultima versione sono disponibili in [docs/releases/minecraft-26.3.md](docs/releases/minecraft-26.3.md).
+Le novità dell'ultima versione sono disponibili nelle [note EnchLib 1.4.0](docs/releases/v1.4.0.md) e nella [matrice Minecraft 26.x](docs/releases/minecraft-26.3.md).
+
+## Integrazione per altre mod
+
+Le mod possono usare `goldenrose01.enchlib.api.EnchantLibAPI.registerEnchantments(maxLevels, categories)` per rendere i propri incantesimi visibili nella configurazione globale di EnchLib. Gli ID vanno passati completi (`namespace:path`); `maxLevels` è una mappa ID/livello massimo e `categories` una mappa ID/categorie di oggetti. Per integrare un tavolo personalizzato, registrare ID e nome con `registerEnchantingTable(id, displayName)` oppure con `registerEnchantingTableDefaults(id, displayName, enabledDefaults, chanceDefaults)`. EnchLib espone anche i getter e setter dei valori per tavolo, rarità e incompatibilità. La probabilità configurata per tavolo viene scalata con i pesi della classe di rarità (100/60/30/5).
+
+Le nuove voci vengono abilitate per impostazione predefinita. La sincronizzazione aggiunge i valori mancanti e conserva le abilitazioni, i livelli e le categorie già scelti dall'utente. EnchLib rimane una mod autonoma: le mod che la integrano devono distribuirla come JAR separato e possono trattarla come dipendenza opzionale.

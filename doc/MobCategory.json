@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": 1,
+  "minecraftVersion": "26.3",
+  "mobs": [
+    {
+      "id": "minecraft:allay",
+      "name": "Allay",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "magik",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:armadillo",
+      "name": "Armadillo",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:axolotl",
+      "name": "Axolotl",
+      "type": "Pet",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals",
+        "water",
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:bat",
+      "name": "Bat",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:bee",
+      "name": "Bee",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:blaze",
+      "name": "Blaze",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "hell",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:bogged",
+      "name": "Bogged",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "fungi"
+      ]
+    },
+    {
+      "id": "minecraft:breeze",
+      "name": "Breeze",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:camel",
+      "name": "Camel",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": true,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:camel_husk",
+      "name": "Camel Husk",
+      "type": "Passive (undead)",
+      "tameable": false,
+      "rideable": true,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:cat",
+      "name": "Cat",
+      "type": "Pet",
+      "tameable": true,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:cave_spider",
+      "name": "Cave spider",
+      "type": "H-Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:chicken",
+      "name": "Chicken",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:cod",
+      "name": "Cod",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:copper_golem",
+      "name": "Copper Golem",
+      "type": "Golem",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:cow",
+      "name": "Cow",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:creaking",
+      "name": "Creaking",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "fungi",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:creeper",
+      "name": "Creeper",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "fungi",
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:dolphin",
+      "name": "Dolphin",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:donkey",
+      "name": "Donkey",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": true,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:drowned",
+      "name": "Drowned",
+      "type": "H-Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:elder_guardian",
+      "name": "Elder Guardian",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:ender_dragon",
+      "name": "Ender Dragon",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "void",
+        "arthropods",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:enderman",
+      "name": "Enderman",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "void"
+      ]
+    },
+    {
+      "id": "minecraft:endermite",
+      "name": "Endermite",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "void"
+      ]
+    },
+    {
+      "id": "minecraft:evoker",
+      "name": "Evoker",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "rebel"
+      ]
+    },
+    {
+      "id": "minecraft:fox",
+      "name": "Fox",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:frog",
+      "name": "Frog",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:ghast",
+      "name": "Ghast",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "hell",
+        "arthropods",
+        "cubic",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:giant",
+      "name": "Giant (unused)",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:glow_squid",
+      "name": "Glow Squid",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "magik",
+        "water",
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:goat",
+      "name": "Goat",
+      "type": "R-Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:guardian",
+      "name": "Guardian",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:happy_ghast",
+      "name": "Happy Ghast (includes Ghastling)",
+      "type": "Pet",
+      "tameable": false,
+      "rideable": true,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "cubic",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:hoglin",
+      "name": "Hoglin",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:horse",
+      "name": "Horse",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": true,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:husk",
+      "name": "Husk",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:illusioner",
+      "name": "Illusioner",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "rebel",
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:iron_golem",
+      "name": "Iron Golem",
+      "type": "Golem",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:llama",
+      "name": "Llama",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:magma_cube",
+      "name": "Magma Cube",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "hell",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:mooshroom",
+      "name": "Mooshroom",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:mule",
+      "name": "Mule",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": true,
+      "breedable": false,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:nautilus",
+      "name": "Nautilus",
+      "type": "Neutral",
+      "tameable": true,
+      "rideable": true,
+      "breedable": true,
+      "categories": [
+        "animals",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:ocelot",
+      "name": "Ocelot",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:panda",
+      "name": "Panda",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:parched",
+      "name": "Parched",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:parrot",
+      "name": "Parrot",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:phantom",
+      "name": "Phantom",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:pig",
+      "name": "Pig",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": true,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:piglin",
+      "name": "Piglin",
+      "type": "H-Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "hell"
+      ]
+    },
+    {
+      "id": "minecraft:piglin_brute",
+      "name": "Piglin Brute",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "rebel",
+        "hell"
+      ]
+    },
+    {
+      "id": "minecraft:pillager",
+      "name": "Pillager",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "rebel"
+      ]
+    },
+    {
+      "id": "minecraft:polar_bear",
+      "name": "Polar Bear",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:pufferfish",
+      "name": "Pufferfish",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:rabbit",
+      "name": "Rabbit",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:ravager",
+      "name": "Ravager",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "rebel"
+      ]
+    },
+    {
+      "id": "minecraft:salmon",
+      "name": "Salmon",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:sheep",
+      "name": "Sheep",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:shulker",
+      "name": "Shulker",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "cubic",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:silverfish",
+      "name": "Silverfish",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:skeleton",
+      "name": "Skeleton",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:skeleton_horse",
+      "name": "Skeleton Horse",
+      "type": "Passive",
+      "tameable": true,
+      "rideable": true,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:slime",
+      "name": "Slime",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "water",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:sniffer",
+      "name": "Sniffer",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals",
+        "arthropods",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:snow_golem",
+      "name": "Snow Golem",
+      "type": "Golem",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:spider",
+      "name": "Spider",
+      "type": "H-Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:squid",
+      "name": "Squid",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "water",
+        "arthropods"
+      ]
+    },
+    {
+      "id": "minecraft:stray",
+      "name": "Stray",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:strider",
+      "name": "Strider",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": true,
+      "breedable": true,
+      "categories": [
+        "undead",
+        "hell"
+      ]
+    },
+    {
+      "id": "minecraft:sulfur_cube",
+      "name": "Sulfur Cube",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:tadpole",
+      "name": "Tadpole",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "animals",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:turtle",
+      "name": "Turtle",
+      "type": "Passive",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals",
+        "water",
+        "cubic"
+      ]
+    },
+    {
+      "id": "minecraft:vex",
+      "name": "Vex",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "undead",
+        "rebel",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:villager",
+      "name": "Villager",
+      "type": "NPC",
+      "tameable": false,
+      "rideable": false,
+      "breedable": true,
+      "categories": []
+    },
+    {
+      "id": "minecraft:vindicator",
+      "name": "Vindicator",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "rebel"
+      ]
+    },
+    {
+      "id": "minecraft:wandering_trader",
+      "name": "Wandering Trader",
+      "type": "NPC",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik"
+      ]
+    },
+    {
+      "id": "minecraft:warden",
+      "name": "Warden",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "fungi"
+      ]
+    },
+    {
+      "id": "minecraft:witch",
+      "name": "Witch",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik"
+      ]
+    },
+    {
+      "id": "minecraft:wither",
+      "name": "Wither",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "magik",
+        "hell",
+        "flying"
+      ]
+    },
+    {
+      "id": "minecraft:wither_skeleton",
+      "name": "Wither Skeleton",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "hell"
+      ]
+    },
+    {
+      "id": "minecraft:wolf",
+      "name": "Wolf (includes tamed dog)",
+      "type": "Neutral",
+      "tameable": true,
+      "rideable": false,
+      "breedable": true,
+      "categories": [
+        "animals"
+      ]
+    },
+    {
+      "id": "minecraft:zoglin",
+      "name": "Zoglin",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "hell"
+      ]
+    },
+    {
+      "id": "minecraft:zombie",
+      "name": "Zombie",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:zombie_horse",
+      "name": "Zombie Horse",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:zombie_nautilus",
+      "name": "Zombie Nautilus",
+      "type": "Neutral",
+      "tameable": true,
+      "rideable": true,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "water"
+      ]
+    },
+    {
+      "id": "minecraft:zombie_villager",
+      "name": "Zombie Villager",
+      "type": "Hostile",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead"
+      ]
+    },
+    {
+      "id": "minecraft:zombified_piglin",
+      "name": "Zombified Piglin",
+      "type": "Neutral",
+      "tameable": false,
+      "rideable": false,
+      "breedable": false,
+      "categories": [
+        "undead",
+        "hell"
+      ]
+    }
+  ]
+}

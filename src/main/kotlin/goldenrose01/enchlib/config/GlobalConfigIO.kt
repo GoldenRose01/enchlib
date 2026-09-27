@@ -41,8 +41,17 @@ object GlobalConfigIO {
         val id: String,
         var max_level: Int = 1,
         var enc_category: MutableList<String> = mutableListOf(),
-        var mob_category: MutableList<String> = mutableListOf()
+        var mob_category: MutableList<String> = mutableListOf(),
+        var rarity: String? = null,
+        var incompatible_enchantments: MutableList<String> = mutableListOf(),
+        var table_rules: MutableMap<String, EnchantingTableRule> = mutableMapOf(),
+        var preset_max_level: Int? = null,
+        var preset_enc_category: MutableList<String>? = null,
+        var preset_rarity: String? = null
     )
+
+    @Serializable
+    data class EnchantingTableRule(var enabled: Boolean = true, var chance: Int = 100)
 
     // ---- Path ----
     fun baseDir(): Path = FabricLoader.getInstance().configDir.resolve("enchlib")

@@ -25,6 +25,9 @@
 				"adapter": "kotlin"
 			}
 		],
+		"modmenu": [
+			"goldenrose01.enchlib.modmenu.ModMenuIntegration"
+		],
 		"fabric-datagen": [
 			{
 				"value": "goldenrose01.enchlib.EnchlibDataGenerator",
@@ -47,6 +50,8 @@
 		"fabric-language-kotlin": "*"
 	},
 	"suggests": {
-		"another-mod": "*"
+		"eldritch-surge": "*",
+		"modmenu": "*",
+		"yet_another_config_lib_v3": "*"
 	}
 }

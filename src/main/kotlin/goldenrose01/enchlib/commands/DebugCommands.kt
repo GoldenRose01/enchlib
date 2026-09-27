@@ -30,6 +30,7 @@ import goldenrose01.enchlib.api.EnchantLibAPI
 import goldenrose01.enchlib.config.GlobalConfigManager
 import goldenrose01.enchlib.config.GlobalConfigIO
 import goldenrose01.enchlib.config.ConfigManager
+import goldenrose01.enchlib.config.MobCategoryManager
 import goldenrose01.enchlib.utils.msg
 import goldenrose01.enchlib.utils.err
 import goldenrose01.enchlib.utils.noop
@@ -58,6 +59,12 @@ object DebugCommands {
     // Provider suggerimenti ID incantesimi dal registry runtime (inclusi modded)
     private val SUGGEST_ENCHANTMENTS: SuggestionProvider<CommandSourceStack> =
         SuggestionProvider { ctx, builder -> suggestEnchantments(ctx, builder) }
+
+    private val SUGGEST_ENTITY_IDS: SuggestionProvider<CommandSourceStack> =
+        SuggestionProvider { ctx, builder ->
+            MobCategoryManager.registeredEntityIds(ctx.source.server).forEach(builder::suggest)
+            builder.buildFuture()
+        }
 
     fun register(dispatcher: CommandDispatcher<CommandSourceStack>) {
         // Costruisco builders separati per evitare ambiguità Kotlin su .then/argument
@@ -124,6 +131,42 @@ object DebugCommands {
             .then(configRead)
             .then(literal("write").then(configWriteEnabled).then(configWriteMax))
 
+        val mobGet = literal("get")
+            .then(argument("entity", StringArgumentType.string())
+                .suggests(SUGGEST_ENTITY_IDS)
+                .executes { ctx ->
+                    val entityId = StringArgumentType.getString(ctx, "entity")
+                    val categories = MobCategoryManager.getCategories(entityId)
+                    val value = categories.joinToString(", ").ifEmpty { "nessuna" }
+                    ctx.source.sendSuccess({ Component.literal("$entityId: $value") }, false)
+                    Command.SINGLE_SUCCESS
+                })
+
+        val mobSet = literal("set")
+            .then(argument("entity", StringArgumentType.string())
+                .suggests(SUGGEST_ENTITY_IDS)
+                .then(argument("categories", StringArgumentType.greedyString())
+                    .executes { ctx ->
+                        val entityId = StringArgumentType.getString(ctx, "entity")
+                        val rawCategories = StringArgumentType.getString(ctx, "categories")
+                        val categories = if (rawCategories.equals("none", ignoreCase = true)) {
+                            emptyList()
+                        } else {
+                            rawCategories.split(',').map(String::trim).filter(String::isNotEmpty)
+                        }
+                        runCatching {
+                            MobCategoryManager.setCategories(ctx.source.server, entityId, categories)
+                            ctx.source.sendSuccess({
+                                Component.literal("Categorie mob salvate per $entityId: ${categories.joinToString(", ").ifEmpty { "nessuna" }}")
+                            }, true)
+                            Command.SINGLE_SUCCESS
+                        }.getOrElse { commandError(ctx, it.message ?: "Impossibile salvare le categorie del mob.") }
+                    }))
+
+        val mobCategories = literal("mob")
+            .then(mobGet)
+            .then(mobSet)
+
         // root
         val root: LiteralArgumentBuilder<CommandSourceStack> =
             literal("plusec-debug")
@@ -137,6 +180,7 @@ object DebugCommands {
         root.then(cmdToggle)
         root.then(cmdSetMax)
         root.then(config)
+        root.then(mobCategories)
 
         dispatcher.register(root)
     }
@@ -147,6 +191,7 @@ object DebugCommands {
     private fun reload(ctx: CommandContext<CommandSourceStack>): Int {
         return try {
             GlobalConfigManager.reloadConfigs()
+            MobCategoryManager.reload(ctx.source.server)
             ctx.source.sendSuccess({ Component.literal("Config globale ricaricata da ${GlobalConfigIO.baseDir()}") }, true)
             Command.SINGLE_SUCCESS
         } catch (_: Throwable) {
