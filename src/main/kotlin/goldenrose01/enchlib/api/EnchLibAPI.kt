@@ -195,6 +195,25 @@ object EnchantLibAPI {
     @JvmStatic
     fun getMobCategories(): List<String> = MobCategoryManager.categoryNames()
 
+    /** Registers default categories for modded mob types; existing per-world assignments win. */
+    @JvmStatic
+    fun registerMobCategories(defaults: Map<String, List<String>>): Int =
+        MobCategoryManager.registerDefaults(defaults)
+
+    /** Returns the categories configured for a mob registry ID, e.g. `othermod:crystal_beast`. */
+    @JvmStatic
+    fun getMobCategories(entityId: String): List<String> = MobCategoryManager.getCategories(entityId)
+
+    /** Returns the categories configured for an entity instance in this world. */
+    @JvmStatic
+    fun getMobCategories(server: MinecraftServer, entity: Entity): List<String> =
+        MobCategoryManager.getCategories(server, entity)
+
+    /** Writes a per-world mob assignment and applies it immediately. */
+    @JvmStatic
+    fun setMobCategories(server: MinecraftServer, entityId: String, categories: List<String>) =
+        MobCategoryManager.setCategories(server, entityId, categories)
+
     private fun detail(id: String) = GlobalConfigIO.readDetails().enchantments.firstOrNull { it.id == id }
 
     private fun upsertDetail(root: GlobalConfigIO.EnchantmentsDetailsRoot, id: String): GlobalConfigIO.EnchantmentDetails {

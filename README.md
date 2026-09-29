@@ -1,7 +1,7 @@
 # EnchLib - Libreria dinamica per incantesimi Minecraft
 
 ![Minecraft Version](https://img.shields.io/badge/Minecraft-26.3-brightgreen)
-![EnchLib Version](https://img.shields.io/badge/EnchLib-1.4.0-blue)
+![EnchLib Version](https://img.shields.io/badge/EnchLib-1.4.1-blue)
 ![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.5+-blue)
 ![Java Version](https://img.shields.io/badge/Java-25-orange)
 ![License](https://img.shields.io/badge/License-CC0--1.0-lightgrey)
@@ -135,10 +135,8 @@ Le scritture vengono salvate subito in `AviableEnch.json5` o `EnchantmentsDetail
 
 ## 🆕 Note di Rilascio
 
-Le novità dell'ultima versione sono disponibili nelle [note EnchLib 1.4.0](docs/releases/v1.4.0.md) e nella [matrice Minecraft 26.x](docs/releases/minecraft-26.3.md).
+Le novità dell'ultima versione sono disponibili nelle [note EnchLib 1.4.1](docs/releases/v1.4.1.md) e nella [matrice Minecraft 26.x](docs/releases/minecraft-26.3.md).
 
 ## Integrazione per altre mod
 
-Le mod possono usare `goldenrose01.enchlib.api.EnchantLibAPI.registerEnchantments(maxLevels, categories)` per rendere i propri incantesimi visibili nella configurazione globale di EnchLib. Gli ID vanno passati completi (`namespace:path`); `maxLevels` è una mappa ID/livello massimo e `categories` una mappa ID/categorie di oggetti. Per integrare un tavolo personalizzato, registrare ID e nome con `registerEnchantingTable(id, displayName)` oppure con `registerEnchantingTableDefaults(id, displayName, enabledDefaults, chanceDefaults)`. EnchLib espone anche i getter e setter dei valori per tavolo, rarità e incompatibilità. La probabilità configurata per tavolo viene scalata con i pesi della classe di rarità (100/60/30/5).
-
-Le nuove voci vengono abilitate per impostazione predefinita. La sincronizzazione aggiunge i valori mancanti e conserva le abilitazioni, i livelli e le categorie già scelti dall'utente. EnchLib rimane una mod autonoma: le mod che la integrano devono distribuirla come JAR separato e possono trattarla come dipendenza opzionale.
+Per integrare una mod in modo modulare consulta la [guida API per sviluppatori](docs/API_INTEGRATION.md). EnchLib rileva gli enchantment presenti nel registry e consente di modificarne i metadati; l'API permette inoltre di fornire preset, collegare le regole dei tavoli e condividere categorie mob. Le modifiche alle regole runtime (cap, disponibilità e probabilità dei tavoli) hanno effetto nei sistemi che consultano l'API EnchLib. La guida mostra sia l'integrazione opzionale, sia le chiamate Java/Kotlin per chi vuole un comportamento coordinato come quello di Eldritch Surge.

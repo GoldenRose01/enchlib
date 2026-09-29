@@ -1,6 +1,7 @@
 package goldenrose01.enchlib.config
 
 import goldenrose01.enchlib.utils.EnchLogger
+import goldenrose01.enchlib.network.ConfigSyncNetworking
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
@@ -16,6 +17,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 
 /** Loads category assignments for vanilla and modded entity types from MobCategory.config. */
 object MobCategoryManager {
@@ -47,6 +49,8 @@ object MobCategoryManager {
 
     @Volatile
     private var categoriesByMob: Map<String, List<String>> = emptyMap()
+    /** Defaults contributed by optional integrations. World-specific choices always take precedence. */
+    private val registeredDefaults = ConcurrentHashMap<String, List<String>>()
 
     fun registerHooks() {
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
@@ -100,8 +104,28 @@ object MobCategoryManager {
                 }
             }
         }
+        registeredDefaults.forEach { (id, categories) -> loaded.putIfAbsent(id, categories) }
         categoriesByMob = loaded.toMap()
         EnchLogger.info("Caricate categorie per ${loaded.size} tipi di entità da $file")
+    }
+
+    /** Adds mod-provided mob defaults without replacing user assignments in a world config. */
+    fun registerDefaults(defaults: Map<String, List<String>>): Int {
+        var registered = 0
+        defaults.toSortedMap().forEach { (rawId, categories) ->
+            val id = normalizeMobId(rawId)
+            if (id == null) {
+                EnchLogger.warn("API: ignorato ID mob non valido: $rawId")
+                return@forEach
+            }
+            registeredDefaults.putIfAbsent(id, normalizeCategories(categories))
+            registered++
+        }
+        // Makes registrations visible immediately for the active world while preserving its overrides.
+        val merged = categoriesByMob.toMutableMap()
+        registeredDefaults.forEach { (id, categories) -> merged.putIfAbsent(id, categories) }
+        categoriesByMob = merged.toMap()
+        return registered
     }
 
     /** Categories assigned to a namespaced entity ID, e.g. `othermod:crystal_beast`. */
@@ -109,7 +133,26 @@ object MobCategoryManager {
         normalizeMobId(entityId)?.let { categoriesByMob[it] }.orEmpty()
 
     /** Category keys currently present in the loaded mob catalog. */
-    fun categoryNames(): List<String> = categoriesByMob.values.flatten().distinct().sorted()
+    fun categoryNames(): List<String> = (categoriesByMob.values.flatten() + registeredDefaults.values.flatten()).distinct().sorted()
+
+    /** Encodes this world's category catalog for clients joined to the authoritative server. */
+    fun encodeSnapshot(): String = jsonFormat.encodeToString(
+        JsonDocument(mobs = categoriesByMob.toSortedMap().map { (id, categories) -> JsonMob(id = id, categories = categories) })
+    )
+
+    /** Applies a server-sent world snapshot on a client without touching client disk. */
+    fun applyClientSnapshot(snapshot: String) {
+        require(snapshot.length <= 1_000_000) { "Mob category snapshot is too large" }
+        val document = jsonFormat.decodeFromString<JsonDocument>(snapshot)
+        categoriesByMob = document.mobs.associate { mob ->
+            val id = normalizeMobId(mob.id) ?: throw IllegalArgumentException("Invalid mob ID: ${mob.id}")
+            id to normalizeCategories(mob.categories)
+        }
+    }
+
+    fun clearLoadedWorld() {
+        categoriesByMob = emptyMap()
+    }
 
     /** Categories assigned to an entity instance, including entity types from other mods. */
     fun getCategories(server: MinecraftServer, entity: Entity): List<String> =
@@ -176,6 +219,7 @@ object MobCategoryManager {
         }
 
         categoriesByMob = categoriesByMob + (normalizedId to normalizedCategories)
+        ConfigSyncNetworking.broadcastCurrent()
     }
 
     private fun entityRegistry(server: MinecraftServer) =

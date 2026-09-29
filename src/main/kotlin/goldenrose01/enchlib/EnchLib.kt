@@ -11,7 +11,10 @@ import goldenrose01.enchlib.commands.DebugCommands
 import goldenrose01.enchlib.commands.EnchLibCommands
 import goldenrose01.enchlib.config.GlobalConfigBootstrap
 import goldenrose01.enchlib.config.MobCategoryManager
+import goldenrose01.enchlib.config.GlobalConfigIO
+import goldenrose01.enchlib.network.ConfigSyncNetworking
 import goldenrose01.enchlib.api.EnchantLibAPI
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 
 import org.slf4j.LoggerFactory
 
@@ -22,11 +25,20 @@ object Enchlib : ModInitializer {
     override fun onInitialize() {
         LOGGER.info("[$MOD_ID] Initializing...")
 
-        // World configuration
-        GlobalConfigBootstrap.ensureDefaultsInstalled()
+        // Default registrations are staged here, then applied to the selected world's files.
         EnchantLibAPI.registerMaxLevelDefaults(loadIntegerDefaults("config/EnchLVLmax.config"))
         EnchantLibAPI.registerRarityDefaults(loadRarityDefaults())
-        MobCategoryManager.registerHooks()
+        ConfigSyncNetworking.register()
+        ServerLifecycleEvents.SERVER_STARTED.register { server ->
+            GlobalConfigIO.openWorld(server)
+            MobCategoryManager.reload(server)
+            ConfigSyncNetworking.serverStarted(server)
+        }
+        ServerLifecycleEvents.SERVER_STOPPING.register { server ->
+            ConfigSyncNetworking.serverStopping(server)
+            GlobalConfigIO.closeWorld(server)
+            MobCategoryManager.clearLoadedWorld()
+        }
 
         // Registrazione comandi (Fabric API v2)
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
