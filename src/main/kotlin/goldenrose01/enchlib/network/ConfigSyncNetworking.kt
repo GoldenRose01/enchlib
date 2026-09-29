@@ -3,6 +3,8 @@ package goldenrose01.enchlib.network
 import goldenrose01.enchlib.config.GlobalConfigIO
 import goldenrose01.enchlib.config.MobCategoryManager
 import goldenrose01.enchlib.utils.EnchLogger
+import goldenrose01.enchlib.network.WorldConfigSyncPayload
+import goldenrose01.enchlib.network.WorldConfigUpdatePayload
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
@@ -14,8 +16,8 @@ object ConfigSyncNetworking {
     @Volatile private var server: MinecraftServer? = null
 
     fun register() {
-        PayloadTypeRegistry.playS2C().register(WorldConfigSyncPayload.TYPE, WorldConfigSyncPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(WorldConfigUpdatePayload.TYPE, WorldConfigUpdatePayload.CODEC)
+        PayloadTypeRegistry.clientboundPlay().register(WorldConfigSyncPayload.TYPE, WorldConfigSyncPayload.CODEC)
+        PayloadTypeRegistry.serverboundPlay().register(WorldConfigUpdatePayload.TYPE, WorldConfigUpdatePayload.CODEC)
 
         ServerPlayConnectionEvents.JOIN.register { handler, _, runningServer ->
             sendSnapshot(runningServer, handler.player)

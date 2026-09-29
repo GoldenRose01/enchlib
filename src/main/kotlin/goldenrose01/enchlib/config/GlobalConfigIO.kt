@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.fabricmc.loader.api.EnvType
+import goldenrose01.enchlib.network.ConfigSyncNetworking
+import net.fabricmc.api.EnvType
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.level.storage.LevelResource
