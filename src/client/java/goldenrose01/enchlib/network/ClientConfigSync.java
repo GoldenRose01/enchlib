@@ -16,6 +16,7 @@ public final class ClientConfigSync {
                     try {
                         GlobalConfigIO.INSTANCE.applyClientSnapshot(payload.getAvailable(), payload.getDetails());
                         MobCategoryManager.INSTANCE.applyClientSnapshot(payload.getMobs());
+                        GlobalConfigIO.INSTANCE.applyClientPresetsSnapshot(payload.getPresets());
                     } catch (RuntimeException exception) {
                         EnchLogger.INSTANCE.warn("Ricevuta configurazione EnchLib non valida dal server: " + exception.getMessage());
                     }
@@ -26,5 +27,9 @@ public final class ClientConfigSync {
         if (Minecraft.getInstance().getConnection() == null) return;
         var snapshot = GlobalConfigIO.INSTANCE.encodeSnapshot();
         ClientPlayNetworking.send(new WorldConfigUpdatePayload(snapshot.getFirst(), snapshot.getSecond()));
+    }
+
+    public static boolean isConnected() {
+        return Minecraft.getInstance().getConnection() != null;
     }
 }

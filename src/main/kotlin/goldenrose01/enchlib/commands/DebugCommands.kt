@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture
 /**
  * /plusec-debug
  *
- * Comandi di diagnostica e gestione config **globale**.
+ * Comandi di diagnostica e gestione della config del mondo attivo.
  * - /plusec-debug reload
  * - /plusec-debug validate
  * - /plusec-debug show-path
@@ -107,7 +107,7 @@ object DebugCommands {
         val cmdSetMax: LiteralArgumentBuilder<CommandSourceStack> =
             literal("setmax").then(argEnchMax.then(argLevel))
 
-        // config read <id>: legge i valori effettivi dai file JSON5 globali.
+        // config read <id>: legge i valori effettivi dai file JSON5 del mondo.
         val configReadId = argument("enchantment", StringArgumentType.string())
             .suggests(SUGGEST_ENCHANTMENTS)
             .executes { readConfigEntry(it) }
@@ -187,12 +187,11 @@ object DebugCommands {
 
     // ----- subcommands -----
 
-    // NB: in base al tuo errore più recente, assumo reloadConfigs() SENZA parametri.
     private fun reload(ctx: CommandContext<CommandSourceStack>): Int {
         return try {
-            GlobalConfigManager.reloadConfigs()
+            GlobalConfigManager.reloadConfigs(ctx.source.server)
             MobCategoryManager.reload(ctx.source.server)
-            ctx.source.sendSuccess({ Component.literal("Config globale ricaricata da ${GlobalConfigIO.baseDir()}") }, true)
+            ctx.source.sendSuccess({ Component.literal("Config del mondo ricaricata da ${GlobalConfigIO.baseDir()}") }, true)
             Command.SINGLE_SUCCESS
         } catch (_: Throwable) {
             throw GENERIC_ERROR.create()
@@ -212,14 +211,14 @@ object DebugCommands {
     }
 
     private fun showPath(ctx: CommandContext<CommandSourceStack>): Int {
-        ctx.source.sendSuccess({ Component.literal("Percorso config globale: ${GlobalConfigIO.baseDir()}") }, false)
+        ctx.source.sendSuccess({ Component.literal("Percorso config del mondo: ${GlobalConfigIO.baseDir()}") }, false)
         return Command.SINGLE_SUCCESS
     }
 
     private fun listEnabled(ctx: CommandContext<CommandSourceStack>): Int {
         val list = EnchantLibAPI.getEnabledEnchantments()
         if (list.isEmpty()) {
-            ctx.source.sendSuccess({ Component.literal("Nessun incantesimo abilitato in config globale.") }, false)
+            ctx.source.sendSuccess({ Component.literal("Nessun incantesimo abilitato nella config del mondo.") }, false)
         } else {
             ctx.source.sendSuccess({ Component.literal("Incantesimi abilitati (${list.size}):") }, false)
             list.forEach { id -> ctx.source.sendSuccess({ Component.literal(" - $id") }, false) }
@@ -236,7 +235,7 @@ object DebugCommands {
         }
         val enabled = BoolArgumentType.getBool(ctx, "enabled")
         EnchantLibAPI.setEnabled(id, enabled)
-        ctx.source.sendSuccess({ Component.literal("Impostato $id -> enabled=$enabled (config globale)") }, true)
+        ctx.source.sendSuccess({ Component.literal("Impostato $id -> enabled=$enabled (config del mondo)") }, true)
         return Command.SINGLE_SUCCESS
     }
 
@@ -249,7 +248,7 @@ object DebugCommands {
         }
         val lvl = IntegerArgumentType.getInteger(ctx, "level")
         EnchantLibAPI.setMaxLevel(id, lvl)
-        ctx.source.sendSuccess({ Component.literal("Impostato $id -> max_level=$lvl (config globale)") }, true)
+        ctx.source.sendSuccess({ Component.literal("Impostato $id -> max_level=$lvl (config del mondo)") }, true)
         return Command.SINGLE_SUCCESS
     }
 

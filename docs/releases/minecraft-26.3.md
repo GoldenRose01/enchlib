@@ -1,6 +1,6 @@
-# EnchLib 1.4.0 – Matrice Minecraft 26.x
+# Matrice JAR Minecraft 26.x
 
-La release 1.4.0 fornisce un JAR dedicato a ciascuna versione Minecraft supportata. Ogni JAR dichiara nel metadata la versione esatta e la relativa Fabric API.
+I file elencati per Minecraft 26.1–26.2 sono della release 1.4.0. La versione corrente 1.5.0 è compilata per Minecraft 26.3. Ogni JAR dichiara nel metadata la versione esatta e la relativa Fabric API.
 
 | Minecraft | Fabric API | JAR |
 | --- | --- | --- |
@@ -8,9 +8,9 @@ La release 1.4.0 fornisce un JAR dedicato a ciascuna versione Minecraft supporta
 | 26.1.1 | `0.145.4+26.1.1` | [`enchlib-mc26.1.1-1.4.0.jar`](../../jar/enchlib-mc26.1.1-1.4.0.jar) |
 | 26.1.2 | `0.155.3+26.1.2` | [`enchlib-mc26.1.2-1.4.0.jar`](../../jar/enchlib-mc26.1.2-1.4.0.jar) |
 | 26.2 | `0.161.0+26.2` | [`enchlib-mc26.2-1.4.0.jar`](../../jar/enchlib-mc26.2-1.4.0.jar) |
-| 26.3 | `0.161.0+26.3` | [`enchlib-mc26.3-1.4.0.jar`](../../jar/enchlib-mc26.3-1.4.0.jar) |
+| 26.3 | `0.161.0+26.3` | [`enchlib-mc26.3-1.5.0.jar`](../../jar/enchlib-mc26.3-1.5.0.jar) |
 
-## Modifiche
+## Modifiche della release 1.4.0
 
 - Versione EnchLib aggiornata a `1.4.0`.
 - Categorie mob configurabili tramite ID namespaced, inclusi quelli registrati da altre mod.

@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * EnchantLibAPI
  *
- * API minimale e stabile per accedere/modificare la configurazione **globale**
- * (cartella: ~/.minecraft/config/enchlib).
+ * API minimale e stabile per accedere/modificare la configurazione del mondo attivo
+ * (cartella: <mondo>/config/enchlib).
  *
  * - getEnabledEnchantments(): List<String>
  * - isEnabled(id): Boolean

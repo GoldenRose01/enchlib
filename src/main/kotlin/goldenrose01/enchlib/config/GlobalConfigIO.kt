@@ -1,9 +1,11 @@
 package goldenrose01.enchlib.config
 
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import goldenrose01.enchlib.network.ConfigSyncNetworking
 import net.fabricmc.api.EnvType
@@ -51,6 +53,7 @@ object GlobalConfigIO {
     @Volatile private var activeWorldDir: Path? = null
     @Volatile private var clientAvailable: MutableList<AvailableEnch>? = null
     @Volatile private var clientDetails: EnchantmentsDetailsRoot? = null
+    @Volatile private var clientPresets: Map<String, String>? = null
     private val stagedAvailable = linkedMapOf<String, AvailableEnch>()
     private val stagedDetails = linkedMapOf<String, EnchantmentDetails>()
 
@@ -61,6 +64,7 @@ object GlobalConfigIO {
         val dir = server.getWorldPath(LevelResource.ROOT).resolve("config").resolve("enchlib")
         activeWorldDir = dir
         GlobalConfigBootstrap.ensureDefaultsInstalled(server)
+        clientPresets = null
         val available = readAvailableFromDisk().associateBy { it.id }.toMutableMap()
         synchronized(stagedAvailable) {
             stagedAvailable.forEach { (id, value) -> available.putIfAbsent(id, value) }
@@ -103,7 +107,7 @@ object GlobalConfigIO {
                 writeAvailableToDisk(normalized)
                 ConfigSyncNetworking.broadcastCurrent()
             }
-            FabricLoader.getInstance().environmentType == EnvType.CLIENT -> {
+            FabricLoader.getInstance().environmentType == EnvType.CLIENT && ConfigSyncNetworking.clientConnected() -> {
                 clientAvailable = normalized.toMutableList()
                 ConfigSyncNetworking.sendClientUpdate()
             }
@@ -119,6 +123,16 @@ object GlobalConfigIO {
         return readDetailsFromDisk()
     }
 
+    /** Reads one allowlisted preset file from the active world's config or the server-sent client snapshot. */
+    fun readPresetFile(fileName: String): String {
+        require(fileName in GlobalConfigBootstrap.presetFiles) { "Unsupported preset file: $fileName" }
+        clientPresets?.get(fileName)?.let { return it }
+        val path = baseDir().resolve(fileName)
+        if (Files.exists(path)) return Files.readString(path)
+        return GlobalConfigIO::class.java.classLoader.getResourceAsStream("config/$fileName")
+            ?.bufferedReader()?.use { it.readText() }.orEmpty()
+    }
+
     fun writeDetails(root: EnchantmentsDetailsRoot) {
         val normalized = copyDetails(root)
         when {
@@ -126,7 +140,7 @@ object GlobalConfigIO {
                 writeDetailsToDisk(normalized)
                 ConfigSyncNetworking.broadcastCurrent()
             }
-            FabricLoader.getInstance().environmentType == EnvType.CLIENT -> {
+            FabricLoader.getInstance().environmentType == EnvType.CLIENT && ConfigSyncNetworking.clientConnected() -> {
                 clientDetails = normalized
                 ConfigSyncNetworking.sendClientUpdate()
             }
@@ -137,6 +151,11 @@ object GlobalConfigIO {
     }
 
     fun encodeSnapshot(): Pair<String, String> = json.encodeToString(readAvailable()) to json.encodeToString(readDetails())
+
+    fun encodePresetSnapshot(): String {
+        val presets = GlobalConfigBootstrap.presetFiles.associateWith(::readPresetFile)
+        return json.encodeToString(MapSerializer(String.serializer(), String.serializer()), presets)
+    }
 
     fun applyServerSnapshot(availableJson: String, detailsJson: String) {
         require(availableJson.length <= 1_000_000 && detailsJson.length <= 2_000_000) { "EnchLib configuration packet is too large" }
@@ -151,6 +170,12 @@ object GlobalConfigIO {
         require(availableJson.length <= 1_000_000 && detailsJson.length <= 2_000_000) { "EnchLib configuration packet is too large" }
         clientAvailable = json.decodeFromString<List<AvailableEnch>>(availableJson).toMutableList()
         clientDetails = json.decodeFromString(detailsJson)
+    }
+
+    fun applyClientPresetsSnapshot(snapshot: String) {
+        require(snapshot.length <= 1_000_000) { "EnchLib preset snapshot is too large" }
+        val decoded = json.decodeFromString(MapSerializer(String.serializer(), String.serializer()), snapshot)
+        clientPresets = decoded.filterKeys { it in GlobalConfigBootstrap.presetFiles }
     }
 
     private fun readAvailableFromDisk(): MutableList<AvailableEnch> {
@@ -185,8 +210,10 @@ object GlobalConfigIO {
         if (target.preset_max_level == null) target.preset_max_level = source.preset_max_level
         if (target.preset_enc_category == null) target.preset_enc_category = source.preset_enc_category?.toMutableList()
         if (target.preset_rarity == null) target.preset_rarity = source.preset_rarity
+        if (target.rarity == null) target.rarity = source.rarity
         if (target.enc_category.isEmpty() && source.enc_category.isNotEmpty()) target.enc_category = source.enc_category.toMutableList()
         if (target.mob_category.isEmpty() && source.mob_category.isNotEmpty()) target.mob_category = source.mob_category.toMutableList()
+        source.table_rules.forEach { (tableId, rule) -> target.table_rules.putIfAbsent(tableId, rule.copy()) }
     }
 
     private fun copyDetails(source: EnchantmentsDetailsRoot) = EnchantmentsDetailsRoot(source.enchantments.map(::copyDetail).toMutableList())

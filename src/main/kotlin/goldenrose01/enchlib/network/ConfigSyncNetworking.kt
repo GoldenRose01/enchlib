@@ -16,8 +16,8 @@ object ConfigSyncNetworking {
     @Volatile private var server: MinecraftServer? = null
 
     fun register() {
-        PayloadTypeRegistry.clientboundPlay().register(WorldConfigSyncPayload.TYPE, WorldConfigSyncPayload.CODEC)
-        PayloadTypeRegistry.serverboundPlay().register(WorldConfigUpdatePayload.TYPE, WorldConfigUpdatePayload.CODEC)
+        PayloadTypeRegistry.clientboundPlay().registerLarge(WorldConfigSyncPayload.TYPE, WorldConfigSyncPayload.CODEC, 5_000_000)
+        PayloadTypeRegistry.serverboundPlay().registerLarge(WorldConfigUpdatePayload.TYPE, WorldConfigUpdatePayload.CODEC, 3_000_000)
 
         ServerPlayConnectionEvents.JOIN.register { handler, _, runningServer ->
             sendSnapshot(runningServer, handler.player)
@@ -47,7 +47,10 @@ object ConfigSyncNetworking {
 
     fun broadcastCurrent() {
         val runningServer = server ?: return
-        runningServer.playerList.players.forEach { sendSnapshot(runningServer, it) }
+        runningServer.execute {
+            if (server !== runningServer) return@execute
+            runningServer.playerList.players.toList().forEach { sendSnapshot(runningServer, it) }
+        }
     }
 
     fun sendClientUpdate() {
@@ -58,8 +61,15 @@ object ConfigSyncNetworking {
         }.onFailure { EnchLogger.debug("Configurazione locale in attesa della connessione al server") }
     }
 
+    fun clientConnected(): Boolean = runCatching {
+        Class.forName("goldenrose01.enchlib.network.ClientConfigSync")
+            .getMethod("isConnected")
+            .invoke(null) as Boolean
+    }.getOrDefault(false)
+
     private fun sendSnapshot(server: MinecraftServer, player: net.minecraft.server.level.ServerPlayer) {
+        if (!ServerPlayNetworking.canSend(player, WorldConfigSyncPayload.TYPE)) return
         val (available, details) = GlobalConfigIO.encodeSnapshot()
-        ServerPlayNetworking.send(player, WorldConfigSyncPayload(available, details, MobCategoryManager.encodeSnapshot()))
+        ServerPlayNetworking.send(player, WorldConfigSyncPayload(available, details, MobCategoryManager.encodeSnapshot(), GlobalConfigIO.encodePresetSnapshot()))
     }
 }

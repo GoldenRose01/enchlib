@@ -4,11 +4,14 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.loader.api.FabricLoader;
 
-/** Adds an optional YACL settings screen to EnchLib's Mod Menu entry. */
+/** Adds an optional Cloth Config or YACL settings screen to EnchLib's Mod Menu entry. */
 public final class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         return parent -> {
+            if (FabricLoader.getInstance().isModLoaded("cloth-config")) {
+                return ClothConfigScreen.create(parent);
+            }
             if (!FabricLoader.getInstance().isModLoaded("yet_another_config_lib_v3")) {
                 return null;
             }

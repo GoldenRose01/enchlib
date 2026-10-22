@@ -260,9 +260,8 @@ public final class MobCategoryScreen {
 
     private static List<String> defaultMobCategories(String id) {
         Properties defaults = new Properties();
-        try (var in = MobCategoryScreen.class.getClassLoader().getResourceAsStream("config/MobCategory.config")) {
-            if (in == null) return List.of();
-            for (String line : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\\R")) {
+        try {
+            for (String line : GlobalConfigIO.INSTANCE.readPresetFile("MobCategory.defaults.config").split("\\R")) {
                 String trimmed = line.trim(); int sep = trimmed.indexOf('=');
                 if (sep > 0 && !trimmed.startsWith("#")) defaults.setProperty(trimmed.substring(0, sep).trim(), trimmed.substring(sep + 1).trim());
             }
@@ -302,16 +301,15 @@ public final class MobCategoryScreen {
     private static int parseInt(String value, int fallback) { try { return Integer.parseInt(value); } catch (Exception ignored) { return fallback; } }
     private static Properties loadPresets() {
         Properties result = new Properties();
-        loadPreset(result, "level", "config/EnchLVLmax.config");
-        loadPreset(result, "rarity", "config/EnchRarity.config");
-        loadPreset(result, "compat", "config/EnchCompatibility.config");
-        loadPreset(result, "incompat", "config/EnchUNcompatibility.config");
+        loadPreset(result, "level", "EnchLVLmax.config");
+        loadPreset(result, "rarity", "EnchRarity.config");
+        loadPreset(result, "compat", "EnchCompatibility.config");
+        loadPreset(result, "incompat", "EnchUNcompatibility.config");
         return result;
     }
-    private static void loadPreset(Properties target, String prefix, String resource) {
-        try (var in = MobCategoryScreen.class.getClassLoader().getResourceAsStream(resource)) {
-            if (in == null) return;
-            for (String line : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\\R")) {
+    private static void loadPreset(Properties target, String prefix, String fileName) {
+        try {
+            for (String line : GlobalConfigIO.INSTANCE.readPresetFile(fileName).split("\\R")) {
                 String trimmed = line.trim(); int separator = trimmed.indexOf('=');
                 if (separator <= 0 || trimmed.startsWith("#")) continue;
                 target.setProperty(prefix + ":" + trimmed.substring(0, separator).trim(), trimmed.substring(separator + 1).trim());

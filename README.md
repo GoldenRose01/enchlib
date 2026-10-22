@@ -1,7 +1,7 @@
 # EnchLib - Libreria dinamica per incantesimi Minecraft
 
 ![Minecraft Version](https://img.shields.io/badge/Minecraft-26.3-brightgreen)
-![EnchLib Version](https://img.shields.io/badge/EnchLib-1.4.1-blue)
+![EnchLib Version](https://img.shields.io/badge/EnchLib-1.5.0-blue)
 ![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.5+-blue)
 ![Java Version](https://img.shields.io/badge/Java-25-orange)
 ![License](https://img.shields.io/badge/License-CC0--1.0-lightgrey)
@@ -10,7 +10,8 @@ EnchLib è una libreria Fabric scritta in Kotlin che sostituisce gli incantesimi
 
 ## 🌟 Caratteristiche Principali
 
-- **Config per mondo** – I file vengono creati in `saves/<mondo>/config/enchlib/` e possono essere versionati o modificati server-side.
+- **Config per mondo** – Impostazioni e preset vengono creati in `<cartella-mondo>/config/enchlib/`; ogni mondo mantiene i propri valori.
+- **Client/server sincronizzati** – Il server possiede e invia la configurazione del mondo ai client con EnchLib; solo gli operatori di livello 2 o superiore possono inviare modifiche.
 - **JSON5 support** – I file di configurazione accettano commenti e trailing comma grazie a un parser dedicato.
 - **Comandi potenti** – `/plusec` e `/plusec-debug` consentono di gestire incantesimi sugli item, diagnosticare problemi e aggiornare i file.
 - **Categorie mob estendibili** – Le categorie sono associate agli ID del registry e possono includere mob aggiunti da altre mod.
@@ -80,12 +81,14 @@ enchlib/
 
 ## ⚙️ Configurazione JSON5
 
-Le impostazioni globali degli incantesimi si trovano in `.minecraft/config/enchlib/`; le categorie dei mob si salvano nella configurazione del mondo:
+Impostazioni e preset sono specifici del mondo e si trovano in `<cartella-mondo>/config/enchlib/` (ad esempio `saves/<mondo>/config/enchlib/` in singleplayer):
 
-- `AviableEnch.json5` – Abilita o disabilita gli incantesimi.
-- `EnchantmentDetails.json5` – Definisce livelli massimi, rarity, categorie e moltiplicatori.
+- `AviableEnch.json5` – Abilita o disabilita gli incantesimi in quel mondo.
+- `EnchantmentsDetails.json5` – Definisce cap, rarità, categorie, incompatibilità e regole dei tavoli in quel mondo.
+- `EnchLVLmax.config`, `EnchRarity.config`, `EnchCompatibility.config`, `EnchUNcompatibility.config` – Preset modificabili specifici del mondo; vengono copiati all'avvio e usati per i valori iniziali e i comandi di ripristino.
+- `MobCategory.defaults.config` – Preset delle categorie mob da usare per ripristinare i valori iniziali.
 - `MobCategory.json` – Associa categorie ai mob vanilla e modded tramite ID del registry; ha priorità sul formato `.config` storico.
-- `MobCategory.config` – Formato properties mantenuto per retrocompatibilità.
+- `MobCategory.config` – Configurazione categorie mob in formato properties, mantenuta per retrocompatibilità.
 
 Per associare categorie ai mob, modifica `MobCategory.json` oppure `MobCategory.config` nella cartella di configurazione del mondo. Usa gli ID del registry per supportare sia Minecraft sia le altre mod:
 
@@ -94,13 +97,15 @@ minecraft:zombie=undead,hostile
 othermod:crystal_beast=magical,boss
 ```
 
-Le assegnazioni sono disponibili al server e alle mod tramite `MobCategoryManager`. Gli ID registrati possono essere suggeriti dai comandi debug.
+Il server carica le proprie impostazioni quando apre il mondo e le sincronizza ai client EnchLib collegati. L'interfaccia Mod Menu legge i valori ricevuti dal server; le modifiche vengono accettate soltanto dagli operatori con livello 2 o superiore. In singleplayer il proprietario del mondo può modificare normalmente. I comandi debug hanno lo stesso requisito operatore. Le assegnazioni sono disponibili al server e alle mod tramite `MobCategoryManager`.
 
-Il catalogo editabile in Excel, l'esportatore JSON e le istruzioni per caricare i dati in un mondo sono in [`doc/`](doc/README.md). Con Mod Menu e Yet Another Config Lib installati, EnchLib offre tre macro menu: disponibilità degli incantesimi, dettagli degli incantesimi e categorie dei mob. I dettagli contengono incompatibilità, rarità, livello massimo e categorie di oggetti; le modifiche vengono salvate nella configurazione globale. I mob sono elencati per ID e le categorie possono essere cambiate una voce alla volta. In multiplayer il salvataggio dei mob passa dal comando `/plusec-debug mob set` e richiede i relativi permessi.
+Per usare Mod Menu e sincronizzare i valori, installa lo stesso JAR EnchLib sia sul server sia sui client che devono aprire l'interfaccia. In singleplayer basta l'installazione client, perché il server integrato usa la stessa istanza. In multiplayer la cartella `config/enchlib` del server è autorevole. Al primo avvio della 1.5.0, i vecchi file globali vengono migrati una sola volta nel primo mondo aperto; ogni altro mondo riceve una copia indipendente dei preset predefiniti.
+
+Il catalogo editabile in Excel, l'esportatore JSON e le istruzioni per caricare i dati in un mondo sono in [`doc/`](doc/README.md). Con Mod Menu e Cloth Config installati, EnchLib offre schede con ricerca, sezioni richiudibili, slider per le probabilità e ripristino dei preset. Le modifiche vengono applicate con Save & Done; senza un mondo aperto la schermata è in sola lettura. Yet Another Config Lib resta disponibile come alternativa quando Cloth Config non è installato. La schermata YACL offre tre macro menu: disponibilità degli incantesimi, dettagli degli incantesimi e categorie dei mob. I dettagli contengono incompatibilità, rarità, livello massimo e categorie di oggetti; le modifiche sono salvate nella configurazione del mondo dal server. I mob sono elencati per ID e le categorie possono essere cambiate una voce alla volta. In multiplayer, soltanto gli operatori possono salvare modifiche agli enchantment o ai mob.
 
 Le regole degli oggetti accettano gruppi, ID specifici e esclusioni. Le regole positive si uniscono; quelle con `!` escludono gli oggetti corrispondenti. `!all` limita l'incantesimo ai libri. Gli ID specifici si inseriscono nel campo dedicato, separati da virgola. Nei tavoli gestiti dall'integrazione Eldritch Surge la rarità applica un peso alla probabilità del tavolo: comune 100, non comune 60, rara 30, molto rara 5; la percentuale del tavolo viene moltiplicata per questo peso.
 
-Tutti i file nascono con lo scheletro `{ "enchantments": [] }`. Gli incantesimi vengono aggiunti gradualmente quando vengono usati nei comandi o interrogati.
+I file JSON5 vengono creati con valori validi e separati per disponibilità e dettagli. Gli enchantment registrati dalle mod vengono aggiunti alla configurazione quando EnchLib li importa o quando sono usati nei comandi.
 
 ## 🎮 Comandi Principali
 
@@ -120,11 +125,11 @@ Gestione diretta degli incantesimi su un item:
 
 Strumenti diagnostici dedicati:
 
-- `show-path` – Mostra il percorso dei file di configurazione globale.
+- `show-path` – Mostra il percorso dei file di configurazione del mondo attivo.
 - `reload` – Ricarica le configurazioni.
 - `validate` – Confronta gli ID configurati con il registry runtime.
 - `list-enabled` – Elenca gli incantesimi abilitati.
-- `toggle <id> <true|false>` e `setmax <id> <livello>` – Scrivono i valori nei JSON5 globali.
+- `toggle <id> <true|false>` e `setmax <id> <livello>` – Scrivono i valori nei JSON5 del mondo attivo.
 - `config read <id>` – Legge abilitazione e livello massimo configurati.
 - `config write enabled <id> <true|false>` – Scrive lo stato di abilitazione.
 - `config write max-level <id> <livello>` – Scrive il livello massimo.
@@ -135,7 +140,7 @@ Le scritture vengono salvate subito in `AviableEnch.json5` o `EnchantmentsDetail
 
 ## 🆕 Note di Rilascio
 
-Le novità dell'ultima versione sono disponibili nelle [note EnchLib 1.4.1](docs/releases/v1.4.1.md) e nella [matrice Minecraft 26.x](docs/releases/minecraft-26.3.md).
+Le novità dell'ultima versione sono disponibili nelle [note EnchLib 1.5.0](docs/releases/v1.5.0.md) e nella [matrice Minecraft 26.x](docs/releases/minecraft-26.3.md).
 
 ## Integrazione per altre mod
 

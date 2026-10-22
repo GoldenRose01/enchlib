@@ -7,7 +7,7 @@ import net.minecraft.server.MinecraftServer
 /**
  * GlobalConfigManager
  *
- * - Usa SOLO ~/.minecraft/config/enchlib (tramite GlobalConfigIO).
+ * - Usa la configurazione appartenente al mondo attivo (tramite GlobalConfigIO).
  * - API per comandi e runtime:
  *     - reloadConfigs()
  *     - validateAgainstRegistry(server): List<String>
@@ -23,9 +23,9 @@ object GlobalConfigManager {
     private const val FILE_CATEGORIES  = "EnchCategories.config"
     private const val FILE_UNCOMPAT    = "EnchUncompatibility.config"
 
-    /** Ricarica (assicurando la presenza dei template). */
-    fun reloadConfigs() {
-        GlobalConfigBootstrap.ensureDefaultsInstalled()
+    /** Ricarica la configurazione del mondo selezionato, assicurando i relativi template. */
+    fun reloadConfigs(server: MinecraftServer) {
+        GlobalConfigIO.openWorld(server)
         EnchLogger.info("GlobalConfigManager: ricaricate configurazioni da ${GlobalConfigIO.baseDir()}")
     }
 

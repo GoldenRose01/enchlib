@@ -9,7 +9,6 @@ import com.mojang.brigadier.CommandDispatcher
 
 import goldenrose01.enchlib.commands.DebugCommands
 import goldenrose01.enchlib.commands.EnchLibCommands
-import goldenrose01.enchlib.config.GlobalConfigBootstrap
 import goldenrose01.enchlib.config.MobCategoryManager
 import goldenrose01.enchlib.config.GlobalConfigIO
 import goldenrose01.enchlib.network.ConfigSyncNetworking
@@ -25,12 +24,11 @@ object Enchlib : ModInitializer {
     override fun onInitialize() {
         LOGGER.info("[$MOD_ID] Initializing...")
 
-        // Default registrations are staged here, then applied to the selected world's files.
-        EnchantLibAPI.registerMaxLevelDefaults(loadIntegerDefaults("config/EnchLVLmax.config"))
-        EnchantLibAPI.registerRarityDefaults(loadRarityDefaults())
         ConfigSyncNetworking.register()
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             GlobalConfigIO.openWorld(server)
+            EnchantLibAPI.registerMaxLevelDefaults(loadIntegerDefaults(GlobalConfigIO.readPresetFile("EnchLVLmax.config")))
+            EnchantLibAPI.registerRarityDefaults(loadRarityDefaults(GlobalConfigIO.readPresetFile("EnchRarity.config")))
             MobCategoryManager.reload(server)
             ConfigSyncNetworking.serverStarted(server)
         }
@@ -47,25 +45,15 @@ object Enchlib : ModInitializer {
         }
     }
 
-    private fun loadRarityDefaults(): Map<String, String> {
-        val input = Enchlib::class.java.classLoader.getResourceAsStream("config/EnchRarity.config") ?: return emptyMap()
-        return input.bufferedReader().useLines { lines ->
-            lines.map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
-                .mapNotNull { line ->
-                    val split = line.indexOf('=')
-                    if (split <= 0) null else line.substring(0, split).trim() to line.substring(split + 1).trim()
-                }.toMap()
-        }
-    }
+    private fun loadRarityDefaults(contents: String): Map<String, String> = parseProperties(contents)
 
-    private fun loadIntegerDefaults(resource: String): Map<String, Int> {
-        val input = Enchlib::class.java.classLoader.getResourceAsStream(resource) ?: return emptyMap()
-        return input.bufferedReader().useLines { lines ->
-            lines.map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
-                .mapNotNull { line ->
-                    val split = line.indexOf('=')
-                    if (split <= 0) null else line.substring(0, split).trim() to line.substring(split + 1).trim().toIntOrNull()
-                }.filter { it.second != null }.associate { it.first to it.second!! }
-        }
-    }
+    private fun loadIntegerDefaults(contents: String): Map<String, Int> = parseProperties(contents)
+        .mapNotNull { (id, value) -> value.toIntOrNull()?.let { id to it } }.toMap()
+
+    private fun parseProperties(contents: String): Map<String, String> = contents.lineSequence()
+        .map(String::trim).filter { it.isNotEmpty() && !it.startsWith("#") }
+        .mapNotNull { line ->
+            val split = line.indexOf('=')
+            if (split <= 0) null else line.substring(0, split).trim() to line.substring(split + 1).trim()
+        }.toMap()
 }

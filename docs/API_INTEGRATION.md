@@ -6,6 +6,8 @@ This guide is for Fabric mod developers who want their enchantments, enchanting 
 
 EnchLib reads enchantments from Minecraft's active registry, including entries added by other mods, and exposes them in its configuration UI and config files. Modded entity types can be assigned categories in the per-world mob catalog by registry ID. This lets players manage third-party content without a hard dependency or a patch in every target mod.
 
+All editable files and preset files belong to the selected world's `<world>/config/enchlib/` directory. On a dedicated server this path is on the server. The server loads it when the world starts and sends a snapshot to connected EnchLib clients; client UI changes are requests, never direct client-side file writes. The server accepts those requests only from players with the `COMMANDS_GAMEMASTER` permission (operator level 2 or higher). Other players receive the authoritative snapshot again and their requested values are discarded. Singleplayer host changes are permitted.
+
 An EnchLib setting affects gameplay only where EnchLib owns that operation or the feature reads the EnchLib API. For example, a modded enchanting screen must consult EnchLib to enforce its per-table availability and chance settings. Without a bridge, EnchLib can still display and store the settings, but cannot safely replace another mod's private enchanting rules. The optional bridge below is the supported way to make those settings effective.
 
 ## Optional dependency setup
@@ -14,7 +16,7 @@ Compile against EnchLib's API, but keep it optional at runtime. The exact artifa
 
 ```groovy
 dependencies {
-    modCompileOnly files("libs/enchlib-mc26.3-1.4.1.jar")
+    modCompileOnly files("libs/enchlib-mc26.3-1.5.0.jar")
 }
 ```
 
@@ -61,7 +63,7 @@ int cap = EnchantLibAPI.getMaxLevel(id) == null
 int appliedLevel = Math.min(requestedLevel, cap);
 ```
 
-`setEnabled(id, enabled)` and `setMaxLevel(id, level)` update the global EnchLib configuration immediately. `getMaxLevel` returns `null` when no override exists, so retain your own default in that case. A registered default is a reset preset; it must not silently overwrite a value the player has already changed.
+`setEnabled(id, enabled)` and `setMaxLevel(id, level)` update the active world's EnchLib configuration immediately when called on the server. `getMaxLevel` returns `null` when no override exists, so retain your own default in that case. A registered default is a reset preset; it must not silently overwrite a value the player has already changed.
 
 ## Integrate an enchanting table
 
@@ -119,4 +121,4 @@ Eldritch Surge is an optional integration example. When EnchLib is installed, it
 | Read/write item rules | `getItemCategories`, `setItemCategories` |
 | Register/query/update mob categories | `registerMobCategories`, `getMobCategories`, `hasMobCategory`, `setMobCategories` |
 
-All API IDs should be stable namespaced IDs (`namespace:path`). Registration methods are safe to repeat; defaults fill missing records and preserve player choices.
+All API IDs should be stable namespaced IDs (`namespace:path`). Registration methods are safe to repeat; defaults fill missing records and preserve player choices. Bundled preset files are copied into the world directory on first open, so server owners can edit and distribute a world's settings independently.

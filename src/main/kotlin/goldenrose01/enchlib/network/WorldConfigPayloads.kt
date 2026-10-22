@@ -6,15 +6,16 @@ import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 import net.minecraft.resources.Identifier
 
-data class WorldConfigSyncPayload(val available: String, val details: String, val mobs: String) : CustomPacketPayload {
+data class WorldConfigSyncPayload(val available: String, val details: String, val mobs: String, val presets: String) : CustomPacketPayload {
     override fun type(): CustomPacketPayload.Type<WorldConfigSyncPayload> = TYPE
 
     companion object {
         val TYPE = CustomPacketPayload.Type<WorldConfigSyncPayload>(Identifier.parse("enchlib:world_config_sync"))
         val CODEC: StreamCodec<RegistryFriendlyByteBuf, WorldConfigSyncPayload> = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8, WorldConfigSyncPayload::available,
-            ByteBufCodecs.STRING_UTF8, WorldConfigSyncPayload::details,
-            ByteBufCodecs.STRING_UTF8, WorldConfigSyncPayload::mobs,
+            ByteBufCodecs.stringUtf8(1_000_000), WorldConfigSyncPayload::available,
+            ByteBufCodecs.stringUtf8(2_000_000), WorldConfigSyncPayload::details,
+            ByteBufCodecs.stringUtf8(1_000_000), WorldConfigSyncPayload::mobs,
+            ByteBufCodecs.stringUtf8(1_000_000), WorldConfigSyncPayload::presets,
             ::WorldConfigSyncPayload
         )
     }
@@ -26,8 +27,8 @@ data class WorldConfigUpdatePayload(val available: String, val details: String) 
     companion object {
         val TYPE = CustomPacketPayload.Type<WorldConfigUpdatePayload>(Identifier.parse("enchlib:world_config_update"))
         val CODEC: StreamCodec<RegistryFriendlyByteBuf, WorldConfigUpdatePayload> = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8, WorldConfigUpdatePayload::available,
-            ByteBufCodecs.STRING_UTF8, WorldConfigUpdatePayload::details,
+            ByteBufCodecs.stringUtf8(1_000_000), WorldConfigUpdatePayload::available,
+            ByteBufCodecs.stringUtf8(2_000_000), WorldConfigUpdatePayload::details,
             ::WorldConfigUpdatePayload
         )
     }

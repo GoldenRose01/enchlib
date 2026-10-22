@@ -58,12 +58,14 @@ dependencies {
     // Optional UI APIs supplied in External_mod; compile-time only, never bundled in EnchLib.
     compileOnly fileTree(dir: "External_mod", include: [
         "modmenu-*.jar",
+        "cloth-config-*.jar",
         "yet_another_config_lib_v3-*.jar"
     ])
 
     // Load the optional UI mods in runClient for in-game verification; they remain separate at release time.
     runtimeOnly fileTree(dir: "External_mod", include: [
         "modmenu-*.jar",
+        "cloth-config-*.jar",
         "yet_another_config_lib_v3-*.jar"
     ])
 

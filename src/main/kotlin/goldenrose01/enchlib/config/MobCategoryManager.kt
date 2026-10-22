@@ -104,8 +104,11 @@ object MobCategoryManager {
                 }
             }
         }
+        val missingAssignments = registeredDefaults.filterKeys { it !in loaded }
         registeredDefaults.forEach { (id, categories) -> loaded.putIfAbsent(id, categories) }
         categoriesByMob = loaded.toMap()
+        persistRegisteredPresets(server)
+        missingAssignments.forEach { (id, categories) -> setCategories(server, id, categories) }
         EnchLogger.info("Caricate categorie per ${loaded.size} tipi di entità da $file")
     }
 
@@ -207,7 +210,7 @@ object MobCategoryManager {
                 val separator = line.indexOf('=')
                 separator > 0 && normalizeMobId(line.substring(0, separator)) == normalizedId
             }.toMutableList()
-            retained += "$normalizedId=${normalizedCategories.joinToString(",")}" 
+            retained += "$normalizedId=${normalizedCategories.joinToString(",")}"
             Files.writeString(
                 file,
                 retained.joinToString(System.lineSeparator()) + System.lineSeparator(),
@@ -231,6 +234,22 @@ object MobCategoryManager {
     private fun jsonConfigFile(server: MinecraftServer): Path =
         ConfigManager.worldConfigDir(server).resolve(JSON_FILE_NAME)
 
+    private fun persistRegisteredPresets(server: MinecraftServer) {
+        val file = ConfigManager.worldConfigDir(server).resolve("MobCategory.defaults.config")
+        if (!Files.exists(file)) return
+        val lines = Files.readAllLines(file, StandardCharsets.UTF_8).toMutableList()
+        val existing = lines.mapNotNull { raw ->
+            val line = raw.trim()
+            val separator = line.indexOf('=')
+            if (line.isEmpty() || line.startsWith("#") || separator <= 0) null else normalizeMobId(line.substring(0, separator))
+        }.toMutableSet()
+        registeredDefaults.toSortedMap().forEach { (id, categories) ->
+            if (existing.add(id)) lines += "$id=${categories.joinToString(",")}"
+        }
+        Files.writeString(file, lines.joinToString(System.lineSeparator()) + System.lineSeparator(), StandardCharsets.UTF_8,
+            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
+    }
+
     private fun normalizeCategories(categories: List<String>): List<String> {
         val normalized = categories.map { it.trim().lowercase(Locale.ROOT) }
             .filter(String::isNotEmpty).distinct()
@@ -249,7 +268,7 @@ object MobCategoryManager {
         } else {
             Files.writeString(
                 file,
-                "# Entity registry ID=category1,category2\n# othermod:crystal_beast=magical,boss\n",
+                "# Entity registry ID=category1,category2${System.lineSeparator()}# othermod:crystal_beast=magical,boss${System.lineSeparator()}",
                 StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE_NEW
             )
