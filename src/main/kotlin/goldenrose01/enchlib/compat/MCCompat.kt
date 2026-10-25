@@ -36,6 +36,17 @@ object MCCompat {
         return Identifier.tryParse(if (":" in trimmed) trimmed else "minecraft:$trimmed")
     }
 
+    /** Resolve a registry ID; bare paths prefer minecraft, then a unique mod enchantment. */
+    fun resolveEnchantmentId(input: String, server: MinecraftServer): Identifier? {
+        val trimmed = input.trim()
+        val parsed = parseEnchantmentId(trimmed) ?: return null
+        val registry = enchantmentRegistry(server)
+        if (":" in trimmed) return parsed.takeIf { registry.getOptional(it).isPresent }
+        if (registry.getOptional(parsed).isPresent) return parsed
+        val matches = registry.keySet().filter { it.path == trimmed }
+        return matches.singleOrNull()
+    }
+
     fun resolveEnchantmentListKey(stack: ItemStack): String = storedOrRegularKey(stack)
 
     fun upsertEnchantment(stack: ItemStack, id: Identifier, level: Int, server: MinecraftServer): Boolean {

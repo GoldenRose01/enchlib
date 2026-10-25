@@ -18,10 +18,12 @@ import java.util.concurrent.CompletableFuture
 
 import goldenrose01.enchlib.compat.MCCompat
 import goldenrose01.enchlib.config.GlobalConfigIO
+import goldenrose01.enchlib.config.ConfigManager
 
 object EnchLibCommands {
 
     private const val PERM = 2
+    private val logger = org.slf4j.LoggerFactory.getLogger("EnchLib")
 
     fun register(dispatcher: CommandDispatcher<CommandSourceStack>) {
         dispatcher.register(
@@ -34,29 +36,19 @@ object EnchLibCommands {
                         .then(
                             argument("id", StringArgumentType.string())
                                 .suggests(ENCH_SUGGEST)
+                                .executes { ctx ->
+                                    val idRaw = StringArgumentType.getString(ctx, "id")
+                                    addEnchantment(ctx.source, idRaw, 1)
+                                }
                                 .then(
-                                    argument("level", IntegerArgumentType.integer(1))
+                                    argument("lvl", IntegerArgumentType.integer(1))
+                                        .suggests(LEVEL_SUGGEST)
                                         .executes { ctx ->
-                                            val source = ctx.source
-                                            val idRaw = StringArgumentType.getString(ctx, "id")
-                                            val level = IntegerArgumentType.getInteger(ctx, "level")
-
-                                            val player = currentPlayer(source)
-                                                ?: return@executes err(source, "Devi essere un giocatore per usare questo comando.")
-
-                                            val stack = mainHand(player)
-                                                ?: return@executes err(source, "Tieni un oggetto nella mano principale.")
-
-                                            val id: Identifier = MCCompat.parseEnchantmentId(idRaw)
-                                                ?: return@executes err(source, "ID incantesimo non valido: $idRaw")
-
-                                            val ok = try { MCCompat.upsertEnchantment(stack, id, level, source.server) } catch (_: Throwable) { false }
-                                            if (!ok) return@executes err(source, "Impossibile applicare l'incantesimo (NBT/API).")
-
-                                            try { player.inventory.setChanged() } catch (_: Throwable) {}
-
-                                            source.sendSuccess({ Component.literal("✔ Aggiunto/Aggiornato $id → livello $level") }, false)
-                                            1
+                                            addEnchantment(
+                                                ctx.source,
+                                                StringArgumentType.getString(ctx, "id"),
+                                                IntegerArgumentType.getInteger(ctx, "lvl")
+                                            )
                                         }
                                 )
                         )
@@ -78,13 +70,18 @@ object EnchLibCommands {
                                     val stack = mainHand(player)
                                         ?: return@executes err(source, "Tieni un oggetto nella mano principale.")
 
-                                    val id: Identifier = MCCompat.parseEnchantmentId(idRaw)
+                                    val id: Identifier = MCCompat.resolveEnchantmentId(idRaw, source.server)
                                         ?: return@executes err(source, "ID incantesimo non valido: $idRaw")
 
-                                    val ok = try { MCCompat.removeEnchantment(stack, id) } catch (_: Throwable) { false }
+                                    val ok = try {
+                                        MCCompat.removeEnchantment(stack, id)
+                                    } catch (error: Throwable) {
+                                        logger.error("Failed to remove enchantment {} from {}", id, stack.item, error)
+                                        false
+                                    }
                                     if (!ok) return@executes err(source, "Incantesimo non presente: $id")
 
-                                    try { player.inventory.setChanged() } catch (_: Throwable) {}
+                                    try { player.inventory.setChanged(); player.containerMenu.broadcastChanges() } catch (_: Throwable) {}
 
                                     source.sendSuccess({ Component.literal("✔ Rimosso $id dall'oggetto in mano") }, false)
                                     1
@@ -240,7 +237,7 @@ object EnchLibCommands {
                                 .executes { ctx ->
                                     val source = ctx.source
                                     val rawId = StringArgumentType.getString(ctx, "id")
-                                    val id = MCCompat.parseEnchantmentId(rawId)
+                                    val id = MCCompat.resolveEnchantmentId(rawId, source.server)
                                         ?: return@executes err(source, "ID incantesimo non valido: $rawId")
                                     val runtimeEnchantment = MCCompat.getEnchantment(source.server, id)
                                     val configured = try {
@@ -275,9 +272,53 @@ object EnchLibCommands {
         SuggestionProvider { ctx, builder: SuggestionsBuilder ->
             val server = ctx.source.server
             val items = MCCompat.suggestStringsForEnchantments(server)
-            for (s in items) builder.suggest(s)
+            for (s in items) {
+                val id = MCCompat.resolveEnchantmentId(s, server)
+                val maxLevel = id?.let { configuredMaxLevel(it.toString(), server) } ?: 1
+                val suggestion = if (":" in s) "\"$s\"" else s
+                builder.suggest(suggestion, Component.literal("Parametro successivo: <lvl ${formatLevelRange(maxLevel)}>"))
+            }
             builder.buildFuture()
         }
+
+    private val LEVEL_SUGGEST: SuggestionProvider<CommandSourceStack> =
+        SuggestionProvider { ctx, builder: SuggestionsBuilder ->
+            val idRaw = try { StringArgumentType.getString(ctx, "id") } catch (_: IllegalArgumentException) { "" }
+            val id = MCCompat.resolveEnchantmentId(idRaw, ctx.source.server)
+            val maxLevel = id?.let { configuredMaxLevel(it.toString(), ctx.source.server) } ?: 1
+            val range = "Parametro: <lvl ${formatLevelRange(maxLevel)}> — puoi inserire anche valori superiori"
+            builder.suggest("1", Component.literal(range))
+            if (maxLevel > 1) builder.suggest(maxLevel.toString(), Component.literal(range))
+            builder.buildFuture()
+        }
+
+    private fun configuredMaxLevel(id: String, server: net.minecraft.server.MinecraftServer): Int {
+        val detailsMax = GlobalConfigIO.readDetails().enchantments
+            .firstOrNull { it.id == id }?.max_level
+        return detailsMax?.takeIf { it > 0 } ?: ConfigManager.getMaxLevel(id, server).coerceAtLeast(1)
+    }
+
+    private fun formatLevelRange(maxLevel: Int): String =
+        if (maxLevel <= 1) "[1]" else "[1-$maxLevel]"
+
+    private fun addEnchantment(source: CommandSourceStack, idRaw: String, level: Int): Int {
+        val player = currentPlayer(source)
+            ?: return err(source, "Devi essere un giocatore per usare questo comando.")
+        val stack = mainHand(player)
+            ?: return err(source, "Tieni un oggetto nella mano principale.")
+        val id: Identifier = MCCompat.resolveEnchantmentId(idRaw, source.server)
+            ?: return err(source, "ID incantesimo non valido: $idRaw")
+        val ok = try {
+            MCCompat.upsertEnchantment(stack, id, level, source.server)
+        } catch (error: Throwable) {
+            logger.error("Failed to apply enchantment {} to {}", id, stack.item, error)
+            false
+        }
+        if (!ok) return err(source, "Impossibile applicare l'incantesimo (NBT/API).")
+        try { player.inventory.setChanged(); player.containerMenu.broadcastChanges() } catch (_: Throwable) {}
+        source.sendSuccess({ Component.literal("✔ Aggiunto/Aggiornato $id → livello $level") }, false)
+        return 1
+    }
 
     // ------- Helper locali -------
     private fun hasLevel(src: CommandSourceStack, level: Int): Boolean =

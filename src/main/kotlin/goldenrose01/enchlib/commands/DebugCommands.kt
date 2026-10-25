@@ -229,7 +229,7 @@ object DebugCommands {
     // toggle handler
     private fun setToggle(ctx: CommandContext<CommandSourceStack>): Int {
         val idRaw = StringArgumentType.getString(ctx, "enchantment")
-        val id = normalizeId(idRaw) ?: run {
+        val id = normalizeId(idRaw, ctx.source.server) ?: run {
             ctx.source.sendFailure(Component.literal("ID incantesimo non valido: '$idRaw'"))
             return 0
         }
@@ -242,7 +242,7 @@ object DebugCommands {
     // setmax handler
     private fun setMax(ctx: CommandContext<CommandSourceStack>): Int {
         val idRaw = StringArgumentType.getString(ctx, "enchantment")
-        val id = normalizeId(idRaw) ?: run {
+        val id = normalizeId(idRaw, ctx.source.server) ?: run {
             ctx.source.sendFailure(Component.literal("ID incantesimo non valido: '$idRaw'"))
             return 0
         }
@@ -254,7 +254,7 @@ object DebugCommands {
 
     private fun readConfigEntry(ctx: CommandContext<CommandSourceStack>): Int {
         val raw = StringArgumentType.getString(ctx, "enchantment")
-        val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
+        val id = normalizeId(raw, ctx.source.server) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
         val enabled = EnchantLibAPI.isEnabled(id)
         val maxLevel = EnchantLibAPI.getMaxLevel(id)
         ctx.source.sendSuccess({
@@ -268,7 +268,7 @@ object DebugCommands {
 
     private fun writeConfigEnabled(ctx: CommandContext<CommandSourceStack>): Int {
         val raw = StringArgumentType.getString(ctx, "enchantment")
-        val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
+        val id = normalizeId(raw, ctx.source.server) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
         val enabled = BoolArgumentType.getBool(ctx, "enabled")
         return runCatching {
             EnchantLibAPI.setEnabled(id, enabled)
@@ -279,7 +279,7 @@ object DebugCommands {
 
     private fun writeConfigMaxLevel(ctx: CommandContext<CommandSourceStack>): Int {
         val raw = StringArgumentType.getString(ctx, "enchantment")
-        val id = normalizeId(raw) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
+        val id = normalizeId(raw, ctx.source.server) ?: return commandError(ctx, "ID incantesimo non valido: '$raw'")
         val level = IntegerArgumentType.getInteger(ctx, "level")
         return runCatching {
             EnchantLibAPI.setMaxLevel(id, level)
@@ -300,8 +300,8 @@ object DebugCommands {
      * - accetta "sharpness" → "minecraft:sharpness";
      * - verifica contro il registry; se non valido, ritorna null.
      */
-    private fun normalizeId(input: String): String? {
-        val parsed = MCCompat.parseEnchantmentId(input) ?: return null
+    private fun normalizeId(input: String, server: net.minecraft.server.MinecraftServer): String? {
+        val parsed = MCCompat.resolveEnchantmentId(input, server) ?: return null
         return parsed.toString()
     }
 

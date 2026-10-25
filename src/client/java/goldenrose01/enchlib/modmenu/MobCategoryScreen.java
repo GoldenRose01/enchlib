@@ -248,7 +248,9 @@ public final class MobCategoryScreen {
 
     private static void resetSection(Kind kind, List<String> ids, Properties presets) {
         switch (kind) {
-            case MAX_LEVEL -> ids.forEach(id -> EnchantLibAPI.setMaxLevel(id, parseInt(presets.getProperty("level:" + id), 1)));
+            case MAX_LEVEL -> ids.forEach(id -> EnchantLibAPI.setMaxLevel(id,
+                    Optional.ofNullable(EnchantLibAPI.getPresetMaxLevel(id))
+                            .orElse(parseInt(presets.getProperty("level:" + id), 1))));
             case RARITY -> ids.forEach(id -> {
                 EnchantLibAPI.setRarity(id, Optional.ofNullable(EnchantLibAPI.getPresetRarity(id)).orElse(presets.getProperty("rarity:" + id, "common")));
                 EnchantLibAPI.getEnchantingTables().keySet().forEach(table -> EnchantLibAPI.resetTableRule(id, table));

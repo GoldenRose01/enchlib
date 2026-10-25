@@ -162,7 +162,11 @@ object EnchantLibAPI {
             val level = maxLevel.coerceAtLeast(1)
             val detail = root.enchantments.firstOrNull { it.id == id }
                 ?: GlobalConfigIO.EnchantmentDetails(id = id, max_level = level).also(root.enchantments::add)
-            if (detail.preset_max_level == null) detail.preset_max_level = level
+            if (detail.preset_max_level == null) {
+                // First registration establishes both the reset value and the world's initial value.
+                detail.preset_max_level = level
+                detail.max_level = level
+            }
             count++
         }
         GlobalConfigIO.writeDetails(root)
@@ -274,7 +278,11 @@ object EnchantLibAPI {
                     preset_enc_category = categories.toMutableList()
                 )
             } else {
-                if (existing.preset_max_level == null) existing.preset_max_level = maxLevel.coerceAtLeast(1)
+                if (existing.preset_max_level == null) {
+                    val presetLevel = maxLevel.coerceAtLeast(1)
+                    existing.preset_max_level = presetLevel
+                    existing.max_level = presetLevel
+                }
                 if (existing.preset_enc_category == null) existing.preset_enc_category = categories.toMutableList()
                 if (existing.enc_category.isEmpty() && categories.isNotEmpty()) {
                     existing.enc_category = categories

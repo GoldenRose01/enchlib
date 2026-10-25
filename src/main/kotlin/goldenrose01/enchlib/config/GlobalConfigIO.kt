@@ -79,6 +79,7 @@ object GlobalConfigIO {
             }
             stagedDetails.clear()
         }
+        migrateDefaultLevelOneValuesOnce(dir, details)
         writeAvailableToDisk(available.values.sortedBy { it.id })
         writeDetailsToDisk(details)
         clientAvailable = null
@@ -214,6 +215,17 @@ object GlobalConfigIO {
         if (target.enc_category.isEmpty() && source.enc_category.isNotEmpty()) target.enc_category = source.enc_category.toMutableList()
         if (target.mob_category.isEmpty() && source.mob_category.isNotEmpty()) target.mob_category = source.mob_category.toMutableList()
         source.table_rules.forEach { (tableId, rule) -> target.table_rules.putIfAbsent(tableId, rule.copy()) }
+    }
+
+    /** Repairs worlds created with the old implicit level=1 fallback while preserving future user edits. */
+    private fun migrateDefaultLevelOneValuesOnce(worldDir: Path, details: EnchantmentsDetailsRoot) {
+        val marker = worldDir.resolve("max-level-default-migration-v1.done")
+        if (Files.exists(marker)) return
+        details.enchantments.forEach { detail ->
+            val preset = detail.preset_max_level
+            if (detail.max_level == 1 && preset != null && preset > 1) detail.max_level = preset
+        }
+        Files.writeString(marker, "Migrated implicit level-one values to enchantment presets.\n")
     }
 
     private fun copyDetails(source: EnchantmentsDetailsRoot) = EnchantmentsDetailsRoot(source.enchantments.map(::copyDetail).toMutableList())

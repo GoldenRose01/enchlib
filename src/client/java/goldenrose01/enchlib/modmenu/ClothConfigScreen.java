@@ -57,7 +57,7 @@ public final class ClothConfigScreen {
                     .orElse(parseInt(presets.getProperty("level:" + id), 1));
             int level = detail == null ? presetLevel : detail.getMax_level();
             levels.addEntry(entries.startIntField(text(id), level).setMin(1).setMax(255)
-                    .setDefaultValue(presetLevel).setSaveConsumer(changed(level, v -> EnchantLibAPI.setMaxLevel(id, v))).build());
+                    .setDefaultValue(presetLevel).setSaveConsumer(v -> EnchantLibAPI.setMaxLevel(id, v)).build());
 
             String presetRarity = Optional.ofNullable(EnchantLibAPI.getPresetRarity(id)).orElse(presets.getProperty("rarity:" + id, "common"));
             String currentRarity = detail == null || detail.getRarity() == null ? presetRarity : detail.getRarity();
