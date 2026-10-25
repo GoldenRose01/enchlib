@@ -1,5 +1,7 @@
 # EnchLib - Libreria dinamica per incantesimi Minecraft
 
+📚 **[Wiki completa](https://github.com/GoldenRose01/enchlib/wiki)** — incantamenti e preset, configurazione, comandi, categorie mob e API.
+
 ![Minecraft Version](https://img.shields.io/badge/Minecraft-26.3-brightgreen)
 ![EnchLib Version](https://img.shields.io/badge/EnchLib-1.5.0-blue)
 ![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.5+-blue)

@@ -1,0 +1,26 @@
+# Bane Of Arthropods
+
+[← Catalogo preset](Incantamenti) · [Regole](Tavoli-e-rarita) · [Configurazione](Configurazione)
+
+Danno aggiuntivo e rallentamento contro gli artropodi.
+
+| Proprietà del preset | Valore |
+|---|---|
+| ID nel preset | `minecraft:bane_of_arthropods` |
+| Massimo configurato iniziale | 10 |
+| Rarità | `uncommon` |
+| Categorie oggetti nel preset | `sword,axe` |
+| Incompatibilità elencate nel preset | minecraft:smite,minecraft:sharpness |
+
+## Come si applicano queste regole
+
+Il massimo riportato è il **preset EnchLib**, non il massimo vanilla. La prima registrazione può inizializzare il valore del mondo; le scelte successive vengono conservate. La potenza dell’effetto resta quella implementata da Minecraft o dalla mod che lo modifica. I cap superiori non garantiscono una crescita lineare.
+
+Le categorie e incompatibilità riportate provengono dai file di preset inclusi: controlla la voce attiva in `EnchantmentsDetails.json5` e che il sistema interessato legga tali regole. Una categoria memorizzata non modifica da sola qualsiasi oggetto o tavolo esterno.
+
+## Fonti
+
+- [Preset livelli](https://github.com/GoldenRose01/enchlib/blob/main/src/main/resources/config/EnchLVLmax.config)
+- [Preset oggetti](https://github.com/GoldenRose01/enchlib/blob/main/src/main/resources/config/EnchCompatibility.config)
+- [Preset incompatibilità](https://github.com/GoldenRose01/enchlib/blob/main/src/main/resources/config/EnchUNcompatibility.config)
+- [Meccanica vanilla generale](https://minecraft.wiki/w/Enchantment)
