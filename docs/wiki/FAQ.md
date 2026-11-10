@@ -33,3 +33,15 @@ No: descrivono una parte dello schema. Conserva le altre voci e modifica l’ID 
 ## EnchLib richiede Eldrich Surge?
 
 No. Sono progetti separati. Per avere gli incantamenti di Eldrich Surge serve la sua mod; per configurare contenuti riconosciuti da EnchLib non occorre necessariamente installarla.
+
+## Perché una maledizione non compare più nei commerci?
+
+Dalla 1.7.0 gli incantesimi con tag `minecraft:curse` sono esclusi dalle nuove offerte per impostazione predefinita. Vale anche per mod e datapack che usano questo tag. Puoi riabilitare separatamente libri e oggetti nel menu **Villager trades**; l'incantesimo deve anche essere abilitato globalmente.
+
+## Ho disabilitato un incantesimo, ma un villager lo vende ancora
+
+Il filtro agisce alla generazione di nuove offerte. Le offerte già salvate non vengono modificate; nemmeno gli oggetti già acquistati. Inoltre un sistema di commerci personalizzato che non usa il percorso standard deve integrare esplicitamente le regole.
+
+## Perché vedo meno offerte, oppure un incantesimo abilitato non compare?
+
+Un'offerta con un incantesimo escluso viene scartata interamente: possono quindi comparire meno offerte. Abilitare un incantesimo permette di mantenerlo quando viene generato, ma non lo aggiunge ai possibili risultati del commercio. Per dettagli consulta [Commerci dei villager](Commerci-dei-villager).

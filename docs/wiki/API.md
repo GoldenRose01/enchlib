@@ -47,12 +47,27 @@ int applied = Math.min(requestedLevel, cap);
 | Categorie oggetti | `getItemCategories`, `setItemCategories`, `getPresetItemCategories` |
 | Rarità e incompatibilità | `getRarity`, `setRarity`, `getIncompatibleEnchantments`, `setIncompatibleEnchantments` |
 | Tavoli | `registerEnchantingTable`, `registerEnchantingTableDefaults`, `getTableEnabled`, `getTableChance`, relativi setter, `resetTableRule` |
+| Commerci dei villager (1.7.0) | `getVillagerEnabled`, `setVillagerEnabled` |
 | Categorie mob | `registerMobCategories`, `hasMobCategory`, `getMobCategories`, `setMobCategories` |
 | Ripristino | `resetEnchantmentDetails`, getter dei preset |
 
 ## Tavoli personalizzati
 
 Registra un ID stabile del tavolo con nome, disponibilità iniziale e probabilità. Quando generi le offerte consulta entrambe le regole, tratta l’assenza come fallback e applica il peso della rarità se vuoi rispettare il modello dell’editor. Registrare il tavolo da solo non intercetta la sua interfaccia.
+
+## Commerci dei villager
+
+```java
+String id = "minecraft:binding_curse";
+Boolean override = EnchantLibAPI.getVillagerEnabled(id, true);
+EnchantLibAPI.setVillagerEnabled(id, true, true);   // Consenti nei libri
+EnchantLibAPI.setVillagerEnabled(id, false, false); // Escludi dagli oggetti
+EnchantLibAPI.setVillagerEnabled(id, true, null);   // Ripristina il preset nei libri
+```
+
+Il parametro `books` vale `true` per i libri e `false` per gli oggetti. Il getter restituisce l'override nullable, non il risultato finale: `null` segue il tag runtime `minecraft:curse` (maledizioni escluse, altri incantesimi consentiti). La disabilitazione globale ha precedenza su un override `true`.
+
+EnchLib filtra le nuove offerte generate da `VillagerTrade.getOffer`: se il risultato contiene un incantesimo escluso, scarta l'intera offerta. Un sistema di commerci esterno che non usa questo percorso deve applicare le regole nella propria integrazione. Vedi [Commerci dei villager](Commerci-dei-villager).
 
 ## Due classificazioni differenti
 

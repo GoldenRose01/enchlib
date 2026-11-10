@@ -25,6 +25,19 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object EnchantLibAPI {
 
+    /** Null follows the runtime curse tag, including enchantments supplied by other mods. */
+    @JvmStatic
+    fun getVillagerEnabled(enchantmentId: String, books: Boolean): Boolean? =
+        detail(enchantmentId)?.let { if (books) it.villager_books else it.villager_items }
+
+    @JvmStatic
+    fun setVillagerEnabled(enchantmentId: String, books: Boolean, enabled: Boolean?) {
+        val root = GlobalConfigIO.readDetails()
+        val entry = upsertDetail(root, enchantmentId)
+        if (books) entry.villager_books = enabled else entry.villager_items = enabled
+        GlobalConfigIO.writeDetails(root)
+    }
+
     private data class TableInfo(val id: String, val name: String)
     private val enchantingTables = ConcurrentHashMap<String, TableInfo>()
 

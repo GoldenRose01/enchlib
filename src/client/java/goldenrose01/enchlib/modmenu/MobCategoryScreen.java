@@ -53,10 +53,17 @@ public final class MobCategoryScreen {
         root.category(placeholder("Rarity", parent, Kind.RARITY));
         root.category(placeholder("Max Level", parent, Kind.MAX_LEVEL));
         root.category(placeholder("Categories", parent, Kind.CATEGORIES));
+        root.category(placeholder("Villager trades", parent, Kind.VILLAGERS));
         return root.build().generateScreen(parent);
     }
 
-    private enum Kind { INCOMPATIBILITY, RARITY, MAX_LEVEL, CATEGORIES }
+    private enum Kind { INCOMPATIBILITY, RARITY, MAX_LEVEL, CATEGORIES, VILLAGERS }
+
+    static boolean villagerDefault(String id) {
+        var level = Minecraft.getInstance().level;
+        return level == null || level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                .get(Identifier.parse(id)).map(goldenrose01.enchlib.trading.VillagerEnchantmentRules::defaultEnabled).orElse(true);
+    }
     private static PlaceholderCategory placeholder(String title, Screen parent, Kind kind) {
         return PlaceholderCategory.createBuilder().name(Component.literal(title))
                 .screen((client, screen) -> enchantScreen(screen, kind)).build();
@@ -109,6 +116,20 @@ public final class MobCategoryScreen {
             GlobalConfigIO.EnchantmentDetails detail = details.getOrDefault(id, new GlobalConfigIO.EnchantmentDetails(id, 1, new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), new HashMap<>(), null, null, null));
             OptionGroupBuilder group = new OptionGroupBuilder(category, display(id), commits);
             switch (kind) {
+                case VILLAGERS -> {
+                    boolean fallback = villagerDefault(id);
+                    for (boolean books : new boolean[]{true, false}) {
+                        Boolean override = books ? detail.getVillager_books() : detail.getVillager_items();
+                        boolean initial = override == null ? fallback : override;
+                        boolean[] value = {initial};
+                        group.add(Option.<Boolean>createBuilder().name(Component.literal(books ? "Enchanted books" : "Enchanted items"))
+                                .description(OptionDescription.of(Component.literal("Allow this enchantment in new villager offers. Curses are excluded by default; existing offers are unchanged.")))
+                                .binding(fallback, () -> value[0], v -> value[0] = v)
+                                .controller(BooleanControllerBuilder::create).build());
+                        group.commit(() -> { if (value[0] != initial) EnchantLibAPI.setVillagerEnabled(id, books, value[0] == fallback ? null : value[0]); });
+                    }
+                    group.reset(() -> { EnchantLibAPI.setVillagerEnabled(id, true, null); EnchantLibAPI.setVillagerEnabled(id, false, null); });
+                }
                 case MAX_LEVEL -> {
                     int fallback = parseInt(presets.getProperty("level:" + id), detail.getMax_level());
                     fallback = Optional.ofNullable(EnchantLibAPI.getPresetMaxLevel(id)).orElse(fallback);
@@ -257,6 +278,7 @@ public final class MobCategoryScreen {
             });
             case CATEGORIES -> ids.forEach(id -> EnchantLibAPI.setItemCategories(id, csv(presets.getProperty("compat:" + id, ""))));
             case INCOMPATIBILITY -> ids.forEach(id -> EnchantLibAPI.setIncompatibleEnchantments(id, csv(presets.getProperty("incompat:" + id, ""))));
+            case VILLAGERS -> ids.forEach(id -> { EnchantLibAPI.setVillagerEnabled(id, true, null); EnchantLibAPI.setVillagerEnabled(id, false, null); });
         }
     }
 
@@ -297,7 +319,7 @@ public final class MobCategoryScreen {
         loadPresets().stringPropertyNames().forEach(key -> ids.add(key.substring(key.indexOf(':') + 1)));
         return new ArrayList<>(ids);
     }
-    private static String title(Kind kind) { return switch (kind) { case INCOMPATIBILITY -> "Uncompatibility"; case RARITY -> "Rarity"; case MAX_LEVEL -> "Max Level"; case CATEGORIES -> "Categories"; }; }
+    private static String title(Kind kind) { return switch (kind) { case INCOMPATIBILITY -> "Uncompatibility"; case RARITY -> "Rarity"; case MAX_LEVEL -> "Max Level"; case CATEGORIES -> "Categories"; case VILLAGERS -> "Villager trades"; }; }
     private static String display(String id) { return id; }
     private static List<String> csv(String value) { return Arrays.stream(value.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList(); }
     private static int parseInt(String value, int fallback) { try { return Integer.parseInt(value); } catch (Exception ignored) { return fallback; } }

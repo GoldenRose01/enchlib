@@ -13,7 +13,7 @@ All’apertura di un mondo, il bootstrap installa i file mancanti e può migrare
 | File | Contenuto |
 |---|---|
 | `AviableEnch.json5` | Elenco di ID e stato `enabled`; il nome storico «Aviable» è intenzionale nel percorso |
-| `EnchantmentsDetails.json5` | Livello, categorie, rarità, incompatibilità, regole dei tavoli e preset |
+| `EnchantmentsDetails.json5` | Livello, categorie, rarità, incompatibilità, regole dei tavoli, commerci dei villager e preset |
 | `EnchLVLmax.config` | Preset `id=livello` |
 | `EnchRarity.config` | Preset di rarità |
 | `EnchCompatibility.config` | Preset delle categorie di oggetti |
@@ -54,6 +54,16 @@ I file `.config` sono preset, non una seconda copia sempre equivalente allo stat
 ```
 
 Questi esempi spiegano lo schema: aggiungi o modifica una voce nel tuo file esistente, preservando le altre. Il parser dei file di incantamento consente commenti e virgole finali. `MobCategory.json` usa invece il proprio parser JSON: mantienilo come JSON standard.
+
+## Commerci dei villager
+
+Disponibili dalla **1.7.0**. Per esempi e istruzioni passo passo consulta [Commerci dei villager](Commerci-dei-villager).
+
+Il menu **Villager trades** (in **Enchant Detail** con YACL) contiene due interruttori per ogni incantesimo: **Enchanted books** e **Enchanted items**. Le scelte sono salvate e sincronizzate per mondo, nei campi `villager_books` e `villager_items` di `EnchantmentsDetails.json5`.
+
+Un campo assente o `null` segue il preset: tutti gli incantesimi sono consentiti tranne quelli nel tag `minecraft:curse`, inclusi quelli aggiunti da mod o datapack. `true` consente esplicitamente l'incantesimo, `false` lo esclude; la disabilitazione globale dell'incantesimo ha comunque precedenza. Il reset ripristina il preset del tag.
+
+Il filtro riguarda le nuove offerte: se il risultato contiene un incantesimo escluso, l'intera offerta viene scartata, quindi possono comparire meno offerte. Le offerte già salvate e gli oggetti già acquistati non vengono modificati. Abilitare un incantesimo non lo aggiunge alle liste di generazione dei commerci: deve già essere previsto dal gioco, dalla mod o dal datapack.
 
 ## Dopo una modifica manuale
 

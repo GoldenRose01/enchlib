@@ -29,6 +29,8 @@ public final class ClothConfigScreen {
         var availability = builder.getOrCreateCategory(text("Available Enchantments"));
         var levels = builder.getOrCreateCategory(text("Maximum levels"));
         var rarity = builder.getOrCreateCategory(text("Rarity & tables"));
+        var villagers = builder.getOrCreateCategory(text("Villager trades"));
+        villagers.addEntry(entries.startTextDescription(text("Allow enchantments in newly generated villager books and items. Curses are excluded by default. Existing offers are unchanged.")).build());
         var items = builder.getOrCreateCategory(text("Item categories"));
         var incompatibility = builder.getOrCreateCategory(text("Incompatibilities"));
         var mobs = builder.getOrCreateCategory(text("Mob categories"));
@@ -51,6 +53,18 @@ public final class ClothConfigScreen {
 
         for (String id : ids) {
             var detail = details.get(id);
+            boolean tradeDefault = client.level == null || client.level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                    .get(Identifier.parse(id)).map(goldenrose01.enchlib.trading.VillagerEnchantmentRules::defaultEnabled).orElse(true);
+            var tradeGroup = entries.startSubCategory(text(id)).setExpanded(false);
+            for (boolean books : new boolean[]{true, false}) {
+                Boolean override = detail == null ? null : books ? detail.getVillager_books() : detail.getVillager_items();
+                boolean current = override == null ? tradeDefault : override;
+                tradeGroup.add(entries.startBooleanToggle(text(books ? "Enchanted books" : "Enchanted items"), current)
+                        .setDefaultValue(tradeDefault)
+                        .setSaveConsumer(changed(current, value -> EnchantLibAPI.setVillagerEnabled(id, books,
+                                value == tradeDefault ? null : value))).build());
+            }
+            villagers.addEntry(tradeGroup.build());
             availability.addEntry(entries.startBooleanToggle(text(id), enabled.getOrDefault(id, true))
                     .setDefaultValue(true).setSaveConsumer(changed(enabled.getOrDefault(id, true), v -> EnchantLibAPI.setEnabled(id, v))).build());
             int presetLevel = Optional.ofNullable(EnchantLibAPI.getPresetMaxLevel(id))

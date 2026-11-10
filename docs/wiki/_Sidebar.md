@@ -4,6 +4,8 @@
 - [📦 Installazione](Installazione)
 - [📖 Incantamenti e preset](Incantamenti)
 - [⚙️ Configurazione](Configurazione)
+- [📗 Commerci dei villager](Commerci-dei-villager)
+- [🆕 Novità 1.7.0](Novita-1.7.0)
 - [🔮 Tavoli e rarità](Tavoli-e-rarita)
 - [🐾 Categorie mob](Categorie-mob)
 - [⌨️ Comandi](Comandi)

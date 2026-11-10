@@ -1,8 +1,10 @@
 ![EnchLib — Regole del mondo](https://raw.githubusercontent.com/wiki/GoldenRose01/enchlib/assets/banner.svg)
 
-**Minecraft 26.3 · Fabric · EnchLib 1.6.1**
+**Minecraft 26.3 e 26.4 Snapshot 7 · Fabric · EnchLib 1.7.0**
 
 Un centro di controllo per incantamenti, tavoli e categorie dei mob. Le impostazioni appartengono al mondo; il server le salva e le sincronizza ai client.
+
+La **1.7.0** aggiunge controlli separati per gli incantesimi nei libri e negli oggetti venduti dai villager. Le maledizioni con tag `minecraft:curse`, vanilla e aggiunte dalle mod, sono escluse di base dalle nuove offerte. Consulta [Commerci dei villager](Commerci-dei-villager) e [Novità della 1.7.0](Novita-1.7.0).
 
 | 🎮 Giocatori e amministratori | 🧩 Sviluppatori |
 |---|---|

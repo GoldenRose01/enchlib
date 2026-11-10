@@ -3,7 +3,7 @@
   "package": "goldenrose01.enchlib.mixin",
   "compatibilityLevel": "JAVA_22",
   "minVersion": "0.8",
-  "mixins": [],
+  "mixins": ["VillagerTradeMixin"],
   "client": [],
   "server": [],
   "injectors": { "defaultRequire": 1 }

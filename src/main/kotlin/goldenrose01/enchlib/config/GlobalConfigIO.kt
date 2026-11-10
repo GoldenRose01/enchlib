@@ -34,7 +34,7 @@ object GlobalConfigIO {
     data class EnchantmentsDetailsRoot(val enchantments: MutableList<EnchantmentDetails> = mutableListOf())
 
     @Serializable
-    data class EnchantmentDetails(
+    data class EnchantmentDetails @JvmOverloads constructor(
         val id: String,
         var max_level: Int = 1,
         var enc_category: MutableList<String> = mutableListOf(),
@@ -44,7 +44,9 @@ object GlobalConfigIO {
         var table_rules: MutableMap<String, EnchantingTableRule> = mutableMapOf(),
         var preset_max_level: Int? = null,
         var preset_enc_category: MutableList<String>? = null,
-        var preset_rarity: String? = null
+        var preset_rarity: String? = null,
+        var villager_books: Boolean? = null,
+        var villager_items: Boolean? = null
     )
 
     @Serializable
