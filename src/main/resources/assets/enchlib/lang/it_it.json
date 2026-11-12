@@ -4,5 +4,9 @@
   "enchlib.treecut.set": "Modalità taglio alberi impostata su: %s",
   "enchlib.treecut.config.title": "Taglio alberi",
   "enchlib.treecut.config.mode": "Modalità taglio alberi",
-  "enchlib.treecut.config.mode.desc": "Scegli come abbattere gli alberi mentre sei abbassato con un'ascia idonea (dal livello pietra in su). Off: disattivato. Fell: tronco per tronco con l'albero che scende. Chop: abbatte l'intero albero in un colpo. Se Eldrich Surge è presente, è gestito automaticamente (fell senza incantesimo, chop con Taglialegna)."
+  "enchlib.treecut.config.mode.desc": "Scegli come abbattere gli alberi mentre sei abbassato con un'ascia idonea (dal livello pietra in su). Off: disattivato. Fell: tronco per tronco con l'albero che scende. Chop: abbatte l'intero albero in un colpo. Se Eldrich Surge è presente, è gestito automaticamente (fell senza incantesimo, chop con Taglialegna).",
+  "enchlib.axesareweapons.enabled": "Axes as weapons abilitato: %s",
+  "enchlib.axesareweapons.set": "Axes as weapons impostato su: %s",
+  "enchlib.axesareweapons.config.title": "Asce come armi",
+  "enchlib.axesareweapons.config.desc": "Quando abilitato, le asce perdono solo 1 punto di durabilità quando attaccano (come le spade) e possono ricevere gli incantesimi delle spade sia nel tavolo degli incantesimi che tramite libri nell'incudine."
 }

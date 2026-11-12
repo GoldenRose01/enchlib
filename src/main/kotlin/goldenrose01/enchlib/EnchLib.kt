@@ -16,6 +16,7 @@ import goldenrose01.enchlib.network.ConfigSyncNetworking
 import goldenrose01.enchlib.api.EnchantLibAPI
 import goldenrose01.enchlib.tree.TreeCutConfig
 import goldenrose01.enchlib.tree.TreeCutHandler
+import goldenrose01.enchlib.weapons.AxesAreWeaponsConfig
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 
 import org.slf4j.LoggerFactory
@@ -30,9 +31,11 @@ object Enchlib : ModInitializer {
         ConfigSyncNetworking.register()
         TreeCutConfig.load()
         TreeCutHandler.register()
+        AxesAreWeaponsConfig.load()
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             GlobalConfigIO.openWorld(server)
             TreeCutConfig.load()
+            AxesAreWeaponsConfig.load()
             EnchantLibAPI.registerMaxLevelDefaults(loadIntegerDefaults(GlobalConfigIO.readPresetFile("EnchLVLmax.config")))
             EnchantLibAPI.registerRarityDefaults(loadRarityDefaults(GlobalConfigIO.readPresetFile("EnchRarity.config")))
             MobCategoryManager.reload(server)

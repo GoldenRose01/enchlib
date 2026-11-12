@@ -4,5 +4,9 @@
   "enchlib.treecut.set": "Treecut mode set to: %s",
   "enchlib.treecut.config.title": "Tree Cutting",
   "enchlib.treecut.config.mode": "Treecut Mode",
-  "enchlib.treecut.config.mode.desc": "Choose how trees are cut when sneaking with an axe (stone tier or higher). Off: vanilla break. Fell: log by log with tree falling down. Chop: whole tree breaks. If Eldrich Surge is installed, automatically managed (fell without enchantment, chop with Lumberjack)."
+  "enchlib.treecut.config.mode.desc": "Choose how trees are cut when sneaking with an axe (stone tier or higher). Off: vanilla break. Fell: log by log with tree falling down. Chop: whole tree breaks. If Eldrich Surge is installed, automatically managed (fell without enchantment, chop with Lumberjack).",
+  "enchlib.axesareweapons.enabled": "Axes as weapons enabled: %s",
+  "enchlib.axesareweapons.set": "Axes as weapons set to: %s",
+  "enchlib.axesareweapons.config.title": "Axes as Weapons",
+  "enchlib.axesareweapons.config.desc": "When enabled, axes lose only 1 durability point when attacking mobs (like swords), and can receive sword enchantments in both the enchanting table and anvil."
 }

@@ -46,6 +46,8 @@ public final class MobCategoryScreen {
                 .screen((client, screen) -> mobScreen(screen)).build());
         root.category(PlaceholderCategory.createBuilder().name(Component.literal("Tree Cutting"))
                 .screen((client, screen) -> treeCutScreen(screen)).build());
+        root.category(PlaceholderCategory.createBuilder().name(Component.literal("Axes as Weapons"))
+                .screen((client, screen) -> axesAsWeaponsScreen(screen)).build());
         return root.build().generateScreen(parent);
     }
 
@@ -71,6 +73,21 @@ public final class MobCategoryScreen {
                 .controller(opt -> DropdownStringControllerBuilder.create(opt).values(Arrays.asList(modes)))
                 .build());
         return YetAnotherConfigLib.createBuilder().title(Component.literal("Tree Cutting"))
+                .category(category.build())
+                .build().generateScreen(parent);
+    }
+
+    private static Screen axesAsWeaponsScreen(Screen parent) {
+        ConfigCategory.Builder category = ConfigCategory.createBuilder().name(Component.literal("Axes as Weapons"));
+        category.option(Option.<Boolean>createBuilder()
+                .name(Component.literal("Axes as Weapons"))
+                .description(OptionDescription.of(Component.literal("Axes lose only 1 durability point when attacking (like swords) and can receive sword enchantments in the enchanting table and anvil.")))
+                .binding(true,
+                        goldenrose01.enchlib.weapons.AxesAreWeaponsConfig::isEnabled,
+                        goldenrose01.enchlib.weapons.AxesAreWeaponsConfig::setEnabled)
+                .controller(BooleanControllerBuilder::create)
+                .build());
+        return YetAnotherConfigLib.createBuilder().title(Component.literal("Axes as Weapons"))
                 .category(category.build())
                 .build().generateScreen(parent);
     }

@@ -44,6 +44,14 @@ public final class ClothConfigScreen {
                 .setTooltip(text("off: vanilla break\nfell: tree falls log by log\nchop: breaks whole tree"))
                 .setSaveConsumer(changed(currentTreeMode, v -> goldenrose01.enchlib.tree.TreeCutConfig.INSTANCE.setMode(goldenrose01.enchlib.tree.TreeCutMode.Companion.fromString(v))))
                 .build());
+
+        var weapons = builder.getOrCreateCategory(text("Axes as Weapons"));
+        weapons.addEntry(entries.startTextDescription(text(
+                "When enabled, axes lose only 1 durability point when attacking mobs (like swords), and can receive sword enchantments in both the enchanting table and anvil.")).build());
+        weapons.addEntry(entries.startBooleanToggle(text("Axes as Weapons Enabled"), goldenrose01.enchlib.weapons.AxesAreWeaponsConfig.isEnabled())
+                .setDefaultValue(true)
+                .setSaveConsumer(goldenrose01.enchlib.weapons.AxesAreWeaponsConfig::setEnabled)
+                .build());
         availability.addEntry(entries.startTextDescription(text(
                 "World settings. Expand an enchantment to edit it; use Reset to restore its preset. Changes apply with Save & Done. Multiplayer requires operator level 2.")).build());
         // Without a world there is no authoritative configuration to edit.

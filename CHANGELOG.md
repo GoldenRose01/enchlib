@@ -2,6 +2,10 @@
 
 ## 1.8.0
 
+- Integrated Axes as Weapons feature natively (`AxesAreWeaponsConfig`):
+  - Axes lose only 1 point of durability when attacking entities (just like swords), eliminating the default mining-tool penalty of 2 durability.
+  - Axes now accept sword enchantments (e.g. Looting, Fire Aspect, Knockback, Sharpness, Smite, Bane of Arthropods, Sweeping Edge, and all modded sword enchantments) both in the Enchanting Table and in the Anvil with books.
+  - Added `/gameset axesarewepons <true|false>` (also `/gameset axesareweapons <true|false>`) command and dedicated Mod Menu configuration pages (Cloth Config and YACL) to toggle the feature on/off.
 - Added configurable tree felling and chopping system (`TreeCutHandler`):
   - Sneak with any axe above wooden tier (stone, iron, gold, diamond, netherite, modded non-wooden) on tree logs to activate.
   - Dedicated `/gameset treecut <off|fell|chop>` command and Mod Menu configuration screens (Cloth Config and YACL).
