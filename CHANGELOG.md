@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0
+
+- Complete overhaul and update of vanilla mob categorization (`MobCategory.config`) for all 90 living entities up to Minecraft snapshot 26.4 (including `creaking`, `breeze`, `bogged`, `armadillo`, `nautilus`, `zombie_nautilus`, `camel_husk`, `parched`, `happy_ghast`, `sulfur_cube`, `copper_golem`, `giant`).
+- Added support for new geographical and habitat mob categories (`surface`, `underground`, `aquatic`, `aerial`, `nether`, `end`, `arid`, `cold`).
+- Standardized mob identifiers with explicit `minecraft:<id>` registry paths for robust matching across vanilla and modded entities.
+- Synchronized default mob categories with Eldritch Surge 1.8.0.
+
 ## 1.7.0
 
 - Added per-enchantment villager trade settings, with separate controls for enchanted books and enchanted items in both Cloth Config and YACL.

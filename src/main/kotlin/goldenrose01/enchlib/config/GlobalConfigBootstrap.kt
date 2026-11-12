@@ -15,7 +15,7 @@ object GlobalConfigBootstrap {
     val presetFiles = listOf(
         "AviableEnch.config", "EnchLVLmax.config", "EnchRarity.config", "EnchCompatibility.config",
         "EnchCategory.config", "EnchMultiplier.config", "EnchUNcompatibility.config", "Rarity.config",
-        "MobCategory.config", "MobCategory.defaults.config"
+        "MobCategory.config", "MobCategory.defaults.config", "EnchCategories.config"
     )
 
     fun ensureDefaultsInstalled(server: MinecraftServer) {
@@ -25,6 +25,14 @@ object GlobalConfigBootstrap {
         (dataFiles + presetFiles).forEach { name ->
             val destination = worldDir.resolve(name)
             if (Files.exists(destination)) return@forEach
+            // Preserve the earlier mixed-case filename on case-sensitive servers.
+            if (name == "EnchUNcompatibility.config") {
+                val previous = worldDir.resolve("EnchUncompatibility.config")
+                if (Files.exists(previous)) {
+                    Files.copy(previous, destination)
+                    return@forEach
+                }
+            }
             val legacy = legacyDir.resolve(name)
             if (shouldMigrate && Files.exists(legacy)) {
                 Files.copy(legacy, destination, StandardCopyOption.REPLACE_EXISTING)

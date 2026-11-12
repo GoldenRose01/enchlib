@@ -21,7 +21,7 @@ object GlobalConfigManager {
     private const val FILE_RARITY      = "EnchRarity.config"
     private const val FILE_COMPAT      = "EnchCompatibility.config"
     private const val FILE_CATEGORIES  = "EnchCategories.config"
-    private const val FILE_UNCOMPAT    = "EnchUncompatibility.config"
+    private const val FILE_UNCOMPAT    = "EnchUNcompatibility.config"
 
     /** Ricarica la configurazione del mondo selezionato, assicurando i relativi template. */
     fun reloadConfigs(server: MinecraftServer) {

@@ -26,7 +26,7 @@ import kotlin.io.use
  * - EnchRarity.config            -> <id>=<rarity>
  * - EnchCompatibility.config     -> <id>=g1,g2
  * - EnchCategories.config        -> <id>=c1,c2
- * - EnchUncompatibility.config   -> <id>=id1,id2
+ * - EnchUNcompatibility.config   -> <id>=id1,id2
  *
  * Gestione file .config (formato properties) per EnchLib.
  * Percorso:
@@ -45,7 +45,7 @@ object ConfigManager {
     private const val FILE_RARITY      = "EnchRarity.config"
     private const val FILE_COMPAT      = "EnchCompatibility.config"
     private const val FILE_CATEGORIES  = "EnchCategories.config"
-    private const val FILE_UNCOMPAT    = "EnchUncompatibility.config"
+    private const val FILE_UNCOMPAT    = "EnchUNcompatibility.config"
 
     // ====== Stato in memoria ======
     private val availableMap:    MutableMap<String, Boolean>        = ConcurrentHashMap()
@@ -265,7 +265,7 @@ object ConfigManager {
                 FILE_RARITY      -> listOf("# EnchLib - EnchRarity.config", "# <id>=rarity", "")
                 FILE_COMPAT      -> listOf("# EnchLib - EnchCompatibility.config", "# <id>=group1,group2,...", "")
                 FILE_CATEGORIES  -> listOf("# EnchLib - EnchCategories.config", "# <id>=cat1,cat2,...", "")
-                FILE_UNCOMPAT    -> listOf("# EnchLib - EnchUncompatibility.config", "# <id>=otherId1,otherId2,...", "")
+                FILE_UNCOMPAT    -> listOf("# EnchLib - EnchUNcompatibility.config", "# <id>=otherId1,otherId2,...", "")
                 else             -> listOf("# EnchLib", "")
             }
             Files.writeString(
