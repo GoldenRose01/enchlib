@@ -34,6 +34,16 @@ public final class ClothConfigScreen {
         var items = builder.getOrCreateCategory(text("Item categories"));
         var incompatibility = builder.getOrCreateCategory(text("Incompatibilities"));
         var mobs = builder.getOrCreateCategory(text("Mob categories"));
+        var treecut = builder.getOrCreateCategory(text("Tree Cutting"));
+        treecut.addEntry(entries.startTextDescription(text(
+                "Tree felling configuration when sneaking with an axe (stone tier or higher). If Eldrich Surge is installed, automatically managed: fell without enchantment, chop with Lumberjack.")).build());
+        String[] treeModes = {"off", "fell", "chop"};
+        String currentTreeMode = goldenrose01.enchlib.tree.TreeCutConfig.INSTANCE.getMode().getId();
+        treecut.addEntry(entries.startSelector(text("Treecut Mode"), treeModes, currentTreeMode)
+                .setDefaultValue("fell")
+                .setTooltip(text("off: vanilla break\nfell: tree falls log by log\nchop: breaks whole tree"))
+                .setSaveConsumer(changed(currentTreeMode, v -> goldenrose01.enchlib.tree.TreeCutConfig.INSTANCE.setMode(goldenrose01.enchlib.tree.TreeCutMode.Companion.fromString(v))))
+                .build());
         availability.addEntry(entries.startTextDescription(text(
                 "World settings. Expand an enchantment to edit it; use Reset to restore its preset. Changes apply with Save & Done. Multiplayer requires operator level 2.")).build());
         // Without a world there is no authoritative configuration to edit.

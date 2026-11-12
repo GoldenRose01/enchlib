@@ -9,10 +9,13 @@ import com.mojang.brigadier.CommandDispatcher
 
 import goldenrose01.enchlib.commands.DebugCommands
 import goldenrose01.enchlib.commands.EnchLibCommands
+import goldenrose01.enchlib.commands.GameSetCommand
 import goldenrose01.enchlib.config.MobCategoryManager
 import goldenrose01.enchlib.config.GlobalConfigIO
 import goldenrose01.enchlib.network.ConfigSyncNetworking
 import goldenrose01.enchlib.api.EnchantLibAPI
+import goldenrose01.enchlib.tree.TreeCutConfig
+import goldenrose01.enchlib.tree.TreeCutHandler
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 
 import org.slf4j.LoggerFactory
@@ -25,8 +28,11 @@ object Enchlib : ModInitializer {
         LOGGER.info("[$MOD_ID] Initializing...")
 
         ConfigSyncNetworking.register()
+        TreeCutConfig.load()
+        TreeCutHandler.register()
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             GlobalConfigIO.openWorld(server)
+            TreeCutConfig.load()
             EnchantLibAPI.registerMaxLevelDefaults(loadIntegerDefaults(GlobalConfigIO.readPresetFile("EnchLVLmax.config")))
             EnchantLibAPI.registerRarityDefaults(loadRarityDefaults(GlobalConfigIO.readPresetFile("EnchRarity.config")))
             MobCategoryManager.reload(server)
@@ -42,6 +48,7 @@ object Enchlib : ModInitializer {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             EnchLibCommands.register(dispatcher)
             DebugCommands.register(dispatcher)
+            GameSetCommand.register(dispatcher)
         }
     }
 

@@ -1,3 +1,8 @@
 {
-  "itemgroup.enchlib.main": "Enchanting Plus"
+  "itemgroup.enchlib.main": "Enchanting Plus",
+  "enchlib.treecut.mode": "Modalità taglio alberi: %s",
+  "enchlib.treecut.set": "Modalità taglio alberi impostata su: %s",
+  "enchlib.treecut.config.title": "Taglio alberi",
+  "enchlib.treecut.config.mode": "Modalità taglio alberi",
+  "enchlib.treecut.config.mode.desc": "Scegli come abbattere gli alberi mentre sei abbassato con un'ascia idonea (dal livello pietra in su). Off: disattivato. Fell: tronco per tronco con l'albero che scende. Chop: abbatte l'intero albero in un colpo. Se Eldrich Surge è presente, è gestito automaticamente (fell senza incantesimo, chop con Taglialegna)."
 }

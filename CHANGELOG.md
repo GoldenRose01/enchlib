@@ -2,6 +2,13 @@
 
 ## 1.8.0
 
+- Added configurable tree felling and chopping system (`TreeCutHandler`):
+  - Sneak with any axe above wooden tier (stone, iron, gold, diamond, netherite, modded non-wooden) on tree logs to activate.
+  - Dedicated `/gameset treecut <off|fell|chop>` command and Mod Menu configuration screens (Cloth Config and YACL).
+  - `fell` mode: single log cut with the tree column/structure falling log by log into place.
+  - `chop` mode: breaks the whole connected tree (logs and leaves), respecting durability safeguards.
+  - Creative mode: sneaking with a valid axe always chops the whole tree.
+  - Automatic Eldritch Surge integration: when Eldritch Surge is present, sneaking with a proper axe automatically fells trees without enchantment, and seamlessly upgrades to whole-tree chop when enchanted with Lumberjack (`eldrich-surge:lumberjack`).
 - Complete overhaul and update of vanilla mob categorization (`MobCategory.config`) for all 90 living entities up to Minecraft snapshot 26.4 (including `creaking`, `breeze`, `bogged`, `armadillo`, `nautilus`, `zombie_nautilus`, `camel_husk`, `parched`, `happy_ghast`, `sulfur_cube`, `copper_golem`, `giant`).
 - Added support for new geographical and habitat mob categories (`surface`, `underground`, `aquatic`, `aerial`, `nether`, `end`, `arid`, `cold`).
 - Standardized mob identifiers with explicit `minecraft:<id>` registry paths for robust matching across vanilla and modded entities.

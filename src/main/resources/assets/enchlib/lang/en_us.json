@@ -1,3 +1,8 @@
 {
-  "itemgroup.enchlib.main": "Enchanting Plus"
+  "itemgroup.enchlib.main": "Enchanting Plus",
+  "enchlib.treecut.mode": "Treecut mode: %s",
+  "enchlib.treecut.set": "Treecut mode set to: %s",
+  "enchlib.treecut.config.title": "Tree Cutting",
+  "enchlib.treecut.config.mode": "Treecut Mode",
+  "enchlib.treecut.config.mode.desc": "Choose how trees are cut when sneaking with an axe (stone tier or higher). Off: vanilla break. Fell: log by log with tree falling down. Chop: whole tree breaks. If Eldrich Surge is installed, automatically managed (fell without enchantment, chop with Lumberjack)."
 }

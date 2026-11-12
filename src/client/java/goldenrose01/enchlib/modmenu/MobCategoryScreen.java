@@ -44,6 +44,8 @@ public final class MobCategoryScreen {
                 .screen((client, screen) -> detailMenu(screen)).build());
         root.category(PlaceholderCategory.createBuilder().name(Component.literal("Mob"))
                 .screen((client, screen) -> mobScreen(screen)).build());
+        root.category(PlaceholderCategory.createBuilder().name(Component.literal("Tree Cutting"))
+                .screen((client, screen) -> treeCutScreen(screen)).build());
         return root.build().generateScreen(parent);
     }
 
@@ -55,6 +57,22 @@ public final class MobCategoryScreen {
         root.category(placeholder("Categories", parent, Kind.CATEGORIES));
         root.category(placeholder("Villager trades", parent, Kind.VILLAGERS));
         return root.build().generateScreen(parent);
+    }
+
+    private static Screen treeCutScreen(Screen parent) {
+        ConfigCategory.Builder category = ConfigCategory.createBuilder().name(Component.literal("Tree Cutting"));
+        String[] modes = {"off", "fell", "chop"};
+        category.option(Option.<String>createBuilder()
+                .name(Component.literal("Treecut Mode"))
+                .description(OptionDescription.of(Component.literal("Choose tree felling behavior when sneaking with an axe (stone tier or higher).\noff: disabled\nfell: tree falls log by log\nchop: breaks whole tree\nIf Eldrich Surge is installed, automatically managed: fell without enchantment, chop with Lumberjack.")))
+                .binding("fell",
+                        () -> goldenrose01.enchlib.tree.TreeCutConfig.INSTANCE.getMode().getId(),
+                        v -> goldenrose01.enchlib.tree.TreeCutConfig.INSTANCE.setMode(goldenrose01.enchlib.tree.TreeCutMode.Companion.fromString(v)))
+                .controller(opt -> DropdownStringControllerBuilder.create(opt).values(Arrays.asList(modes)))
+                .build());
+        return YetAnotherConfigLib.createBuilder().title(Component.literal("Tree Cutting"))
+                .category(category.build())
+                .build().generateScreen(parent);
     }
 
     private enum Kind { INCOMPATIBILITY, RARITY, MAX_LEVEL, CATEGORIES, VILLAGERS }
