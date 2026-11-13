@@ -4,7 +4,7 @@ import goldenrose01.enchlib.compat.MCCompat
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
+import net.minecraft.core.component.DataComponents
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
 
 object TreeCutHandler {
 
@@ -25,24 +26,28 @@ object TreeCutHandler {
 
     fun register() {
         PlayerBlockBreakEvents.BEFORE.register { level, player, pos, state, _ ->
-            // Tool and block quick check
-            val tool = player.mainHandItem
-            if (!player.isShiftKeyDown || !state.`is`(BlockTags.LOGS) || !isProperAxe(tool)) {
+            // On client-side, always return true so the player's client finishes breaking
+            // the block and transmits the stop-destroy packet to the server.
+            if (level.isClientSide) {
                 return@register true
             }
 
-            if (level.isClientSide) {
-                // Cancel client prediction break if sneaking with valid axe on a log
-                return@register false
+            // Quick check: must be sneaking, holding a proper axe, and breaking a tree log
+            val tool = player.mainHandItem
+            if (!player.isShiftKeyDown || !isTreeLog(state) || !isProperAxe(tool)) {
+                return@register true
             }
 
             val serverLevel = level as? ServerLevel ?: return@register true
             val serverPlayer = player as? ServerPlayer ?: return@register true
 
-            // Resolve tree cut mode
+            val isEldritchLoaded = FabricLoader.getInstance().isModLoaded("eldrich-surge") ||
+                    FabricLoader.getInstance().isModLoaded("eldritch-surge")
+
+            // Resolve active tree cut mode
             val mode: TreeCutMode = if (player.isCreative) {
                 TreeCutMode.CHOP
-            } else if (FabricLoader.getInstance().isModLoaded("eldrich-surge")) {
+            } else if (isEldritchLoaded) {
                 if (hasLumberjackEnchantment(tool)) TreeCutMode.CHOP else TreeCutMode.FELL
             } else {
                 val configured = TreeCutConfig.getMode()
@@ -67,6 +72,28 @@ object TreeCutHandler {
         }
     }
 
+    fun isTreeLog(state: BlockState): Boolean {
+        return state.`is`(BlockTags.LOGS) ||
+                state.`is`(Blocks.MANGROVE_ROOTS)
+    }
+
+    fun isTreeCanopy(state: BlockState): Boolean {
+        return state.`is`(BlockTags.LEAVES) ||
+                state.`is`(BlockTags.WART_BLOCKS) ||
+                state.`is`(Blocks.NETHER_WART_BLOCK) ||
+                state.`is`(Blocks.WARPED_WART_BLOCK) ||
+                state.`is`(Blocks.SHROOMLIGHT) ||
+                state.`is`(Blocks.MANGROVE_LEAVES) ||
+                state.`is`(Blocks.AZALEA_LEAVES) ||
+                state.`is`(Blocks.FLOWERING_AZALEA_LEAVES) ||
+                state.`is`(Blocks.BROWN_MUSHROOM_BLOCK) ||
+                state.`is`(Blocks.RED_MUSHROOM_BLOCK) ||
+                state.`is`(Blocks.WEEPING_VINES) ||
+                state.`is`(Blocks.WEEPING_VINES_PLANT) ||
+                state.`is`(Blocks.TWISTING_VINES) ||
+                state.`is`(Blocks.TWISTING_VINES_PLANT)
+    }
+
     fun isProperAxe(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val isAxe = stack.`is`(ItemTags.AXES)
@@ -78,15 +105,25 @@ object TreeCutHandler {
     }
 
     fun hasLumberjackEnchantment(stack: ItemStack): Boolean {
-        return MCCompat.readEnchantments(stack).any { (id, lvl) ->
-            (id == "eldrich-surge:lumberjack" || id == "eldritch-surge:lumberjack") && lvl > 0
+        if (MCCompat.readEnchantments(stack).any { (id, lvl) ->
+                id.endsWith(":lumberjack") && lvl > 0
+            }) return true
+
+        val enchantments = stack.get(DataComponents.ENCHANTMENTS) ?: return false
+        for (holder in enchantments.keySet()) {
+            val key = holder.unwrapKey().orElse(null) ?: continue
+            val id = key.identifier()
+            if (id.path.equals("lumberjack", ignoreCase = true) && enchantments.getLevel(holder) > 0) {
+                return true
+            }
         }
+        return false
     }
 
     fun scanTree(level: ServerLevel, origin: BlockPos): TreeStructure? {
         val visited = mutableSetOf<BlockPos>()
         val logs = mutableSetOf<BlockPos>()
-        val leaves = mutableSetOf<BlockPos>()
+        val canopy = mutableSetOf<BlockPos>()
         val queue = ArrayDeque<BlockPos>()
 
         queue.add(origin)
@@ -94,7 +131,7 @@ object TreeCutHandler {
         logs.add(origin)
 
         val maxLogs = 512
-        val maxLeaves = 1024
+        val maxCanopy = 1024
 
         while (queue.isNotEmpty() && logs.size < maxLogs) {
             val current = queue.removeFirst()
@@ -106,12 +143,12 @@ object TreeCutHandler {
                         if (neighbor.y < origin.y - 1) continue
                         if (visited.add(neighbor)) {
                             val nState = level.getBlockState(neighbor)
-                            if (nState.`is`(BlockTags.LOGS)) {
+                            if (isTreeLog(nState)) {
                                 logs.add(neighbor)
                                 queue.add(neighbor)
-                            } else if (nState.`is`(BlockTags.LEAVES) && leaves.size < maxLeaves) {
-                                leaves.add(neighbor)
-                                queueLeaves(level, neighbor, visited, leaves, maxLeaves)
+                            } else if (isTreeCanopy(nState) && canopy.size < maxCanopy) {
+                                canopy.add(neighbor)
+                                queueCanopy(level, neighbor, visited, canopy, maxCanopy)
                             }
                         }
                     }
@@ -119,34 +156,40 @@ object TreeCutHandler {
             }
         }
 
-        // Tree safety check: must have attached leaves to protect player-built structures
-        if (leaves.isEmpty()) {
+        // Tree safety check: must have attached leaves/canopy (Overworld leaves or Nether warts)
+        // to protect player-built structures
+        if (canopy.isEmpty()) {
             return null
         }
 
-        return TreeStructure(origin, logs, leaves)
+        return TreeStructure(origin, logs, canopy)
     }
 
-    private fun queueLeaves(
+    private fun queueCanopy(
         level: ServerLevel,
         start: BlockPos,
         visited: MutableSet<BlockPos>,
-        leaves: MutableSet<BlockPos>,
-        maxLeaves: Int
+        canopy: MutableSet<BlockPos>,
+        maxCanopy: Int
     ) {
-        val leafQueue = ArrayDeque<BlockPos>()
-        leafQueue.add(start)
+        val queue = ArrayDeque<BlockPos>()
+        queue.add(start)
         var count = 0
-        while (leafQueue.isNotEmpty() && leaves.size < maxLeaves && count < 128) {
+        while (queue.isNotEmpty() && canopy.size < maxCanopy && count < 512) {
             count++
-            val curr = leafQueue.removeFirst()
-            for (dir in Direction.values()) {
-                val next = curr.relative(dir)
-                if (visited.add(next)) {
-                    val state = level.getBlockState(next)
-                    if (state.`is`(BlockTags.LEAVES)) {
-                        leaves.add(next)
-                        leafQueue.add(next)
+            val curr = queue.removeFirst()
+            for (dx in -1..1) {
+                for (dy in -1..1) {
+                    for (dz in -1..1) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue
+                        val next = curr.offset(dx, dy, dz)
+                        if (visited.add(next)) {
+                            val state = level.getBlockState(next)
+                            if (isTreeCanopy(state)) {
+                                canopy.add(next)
+                                queue.add(next)
+                            }
+                        }
                     }
                 }
             }
@@ -179,12 +222,12 @@ object TreeCutHandler {
                 val canShift = target == origin ||
                         target in stateMap ||
                         targetState.isAir ||
-                        targetState.`is`(BlockTags.LEAVES)
+                        isTreeCanopy(targetState)
 
                 if (canShift) {
                     level.setBlock(target, originalState, 3)
                     shiftedPositions.add(posToShift)
-                } else {
+                } else if (!isTreeLog(targetState)) {
                     level.destroyBlock(posToShift, true, player)
                 }
             }
@@ -230,7 +273,7 @@ object TreeCutHandler {
             logsBroken++
         }
 
-        // Break leaves
+        // Break leaves / canopy
         for (leafPos in tree.leaves) {
             level.destroyBlock(leafPos, true, player)
         }
