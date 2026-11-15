@@ -121,6 +121,7 @@ object TreeCutHandler {
     }
 
     fun scanTree(level: ServerLevel, origin: BlockPos): TreeStructure? {
+        val originBlock = level.getBlockState(origin).block
         val visited = mutableSetOf<BlockPos>()
         val logs = mutableSetOf<BlockPos>()
         val canopy = mutableSetOf<BlockPos>()
@@ -135,18 +136,22 @@ object TreeCutHandler {
 
         while (queue.isNotEmpty() && logs.size < maxLogs) {
             val current = queue.removeFirst()
-            for (dx in -1..1) {
-                for (dy in -1..1) {
-                    for (dz in -1..1) {
+            for (dx in -2..2) {
+                for (dy in -1..2) {
+                    for (dz in -2..2) {
                         if (dx == 0 && dy == 0 && dz == 0) continue
                         val neighbor = current.offset(dx, dy, dz)
                         if (neighbor.y < origin.y - 1) continue
+                        val isImmediate = kotlin.math.abs(dx) <= 1 && kotlin.math.abs(dy) <= 1 && kotlin.math.abs(dz) <= 1
+                        if (!isImmediate && (neighbor.y <= origin.y + 2 || kotlin.math.abs(neighbor.x - origin.x) > 8 || kotlin.math.abs(neighbor.z - origin.z) > 8)) {
+                            continue
+                        }
                         if (visited.add(neighbor)) {
                             val nState = level.getBlockState(neighbor)
-                            if (isTreeLog(nState)) {
+                            if (isTreeLog(nState) && (nState.block == originBlock || nState.`is`(Blocks.MANGROVE_ROOTS) || originBlock == Blocks.MANGROVE_ROOTS)) {
                                 logs.add(neighbor)
                                 queue.add(neighbor)
-                            } else if (isTreeCanopy(nState) && canopy.size < maxCanopy) {
+                            } else if (isImmediate && isTreeCanopy(nState) && canopy.size < maxCanopy) {
                                 canopy.add(neighbor)
                                 queueCanopy(level, neighbor, visited, canopy, maxCanopy)
                             }
@@ -175,7 +180,7 @@ object TreeCutHandler {
         val queue = ArrayDeque<BlockPos>()
         queue.add(start)
         var count = 0
-        while (queue.isNotEmpty() && canopy.size < maxCanopy && count < 512) {
+        while (queue.isNotEmpty() && canopy.size < maxCanopy && count < 256) {
             count++
             val curr = queue.removeFirst()
             for (dx in -1..1) {
@@ -183,6 +188,9 @@ object TreeCutHandler {
                     for (dz in -1..1) {
                         if (dx == 0 && dy == 0 && dz == 0) continue
                         val next = curr.offset(dx, dy, dz)
+                        if (kotlin.math.abs(next.x - start.x) > 5 || kotlin.math.abs(next.y - start.y) > 5 || kotlin.math.abs(next.z - start.z) > 5) {
+                            continue
+                        }
                         if (visited.add(next)) {
                             val state = level.getBlockState(next)
                             if (isTreeCanopy(state)) {
