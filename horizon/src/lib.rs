@@ -1,3 +1,6 @@
+mod debug;
+mod gameset;
+
 use mod_api::{
     Command, CommandArgumentValue, CommandInvocation, CommandSource, ComponentId, Compound, Flow,
     Hooks, ItemResource, RegisterCommandsEvent, RunModCommandEvent, ServerHost, Tag, Text,
@@ -7,7 +10,10 @@ const ACTIVE: &str = "minecraft:enchantments";
 const STORED: &str = "minecraft:stored_enchantments";
 
 #[derive(Default)]
-struct EnchLib;
+struct EnchLib {
+    debug: debug::DebugState,
+    gameset: gameset::GameSetState,
+}
 
 #[mod_api::horizon_mod]
 impl Hooks for EnchLib {
@@ -25,6 +31,8 @@ impl Hooks for EnchLib {
         ] {
             event.commands.push(Command::op(usage, 2));
         }
+        debug::register(event);
+        gameset::register(event);
     }
 
     fn run_mod_command(
@@ -32,6 +40,16 @@ impl Hooks for EnchLib {
         host: &mut dyn ServerHost,
         event: &mut RunModCommandEvent<'_>,
     ) -> Flow {
+        if let Some(res) = debug::handle(event, &self.debug) {
+            let _ = host
+                .commands()
+                .feedback(Text::literal(res.unwrap_or_else(|e| e)));
+            return Flow::Cancel;
+        }
+        if let Some(msg) = gameset::handle(event, &self.gameset) {
+            let _ = host.commands().feedback(Text::literal(msg));
+            return Flow::Cancel;
+        }
         let [root, action] = event.command.literals.as_slice() else {
             return Flow::Continue;
         };
