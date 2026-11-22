@@ -1,0 +1,14 @@
+id = "enchlib"
+name = "EnchLib — Horizon"
+version = "1.8.1-alpha.1"
+description = "Operator commands for inspecting and editing enchantments on Horizon."
+homepage = "https://github.com/GoldenRose01/enchlib"
+issues = "https://github.com/GoldenRose01/enchlib/issues"
+license = "CC0-1.0"
+api = "0.2"
+side = "server"
+capabilities = ["registries"]
+
+[wasm]
+sha512 = "87dd3f3304a0c25088d75b1b7dc17364c6cc9f2a061eb96b1af64596756da616f8892c0624f613e1cfd41fa3e38a3d77ced45105763a5e7a689c3fb3e4034972"
+toolchain = "1.99.1 58cf8f9c35b355199727627d07ae34a4e2846d67"

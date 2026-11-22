@@ -1,0 +1,13 @@
+[package]
+name = "enchlib-horizon"
+version = "1.8.1-alpha.1"
+edition = "2024"
+publish = false
+
+[package.metadata.horizon]
+sdk = "2b77287de099c9316278ba7ac4d83590fdb7ef30"
+
+[dependencies]
+horizon-mod-api = { path = ".horizon/sdk/api/crates/horizon-mod-api" }
+
+[workspace]
