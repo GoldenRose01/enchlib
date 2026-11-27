@@ -1,30 +1,34 @@
 ![EnchLib — Regole del mondo](https://raw.githubusercontent.com/wiki/GoldenRose01/enchlib/assets/banner.svg)
 
-**Minecraft 26.3 e 26.4 Snapshot 7 · Fabric · EnchLib 1.7.0**
+**Minecraft 26.3 · Fabric · EnchLib 2.0.0**
 
-Un centro di controllo per incantamenti, tavoli e categorie dei mob. Le impostazioni appartengono al mondo; il server le salva e le sincronizza ai client.
+**EnchLib** è il centro di controllo per incantamenti, tavoli da incantamento, commerci dei villager, categorie mob e meccaniche di gameplay. Ogni impostazione appartiene al singolo mondo; il server la salva, la valida e la sincronizza automaticamente ai client.
 
-La **1.7.0** aggiunge controlli separati per gli incantesimi nei libri e negli oggetti venduti dai villager. Le maledizioni con tag `minecraft:curse`, vanilla e aggiunte dalle mod, sono escluse di base dalle nuove offerte. Consulta [Commerci dei villager](Commerci-dei-villager) e [Novità della 1.7.0](Novita-1.7.0).
+## Guida rapida per i giocatori
+
+1. **Installa** EnchLib insieme a Fabric Loader, Fabric API e Fabric Language Kotlin (opzionali: Mod Menu + Cloth Config o YACL per l'editor grafico).
+2. **Apri un mondo**: EnchLib genera automaticamente `<mondo>/config/enchlib/` con tutti i preset predefiniti.
+3. **Personalizza**: apri l'editor da Mod Menu oppure usa i comandi `/plusec` e `/plusec-debug`.
+
+### Categorie nell'editor grafico (2.0.0)
+L'interfaccia Cloth Config è organizzata in 9 tab chiare, con incantesimi e mob raggruppati per mod/namespace:
+- **Available**: abilita o disabilita singoli incantesimi nel mondo.
+- **Max Levels**: imposta il livello massimo (1–255) per ogni incantesimo.
+- **Rarity**: regola la rarità (`common`, `uncommon`, `rare`, `very_rare`).
+- **Tables**: gestisce l'abilitazione e la probabilità (%) per ogni tavolo (Vanilla e moddati come *Advanced Enchanting Table*).
+- **Villagers**: controlla separatamente i libri incantati e gli oggetti incantati venduti dai villager.
+- **Items**: definisce le categorie di oggetti compatibili.
+- **Incompatibilities**: gestisce gli incantesimi mutualmente esclusivi.
+- **Mobs**: assegna i mob alle categorie (`undead`, `arthropods`, `hell`, `void`, `water`, ecc.).
+- **Gameplay**: configura **Tree Cutting** (`off`, `fell`, `chop`) e **Axes as Weapons**.
 
 | 🎮 Giocatori e amministratori | 🧩 Sviluppatori |
 |---|---|
 | [Installazione](Installazione) | [API e integrazione](API) |
 | [Configurazione JSON5](Configurazione) | [Regole dei tavoli e rarità](Tavoli-e-rarita) |
-| [Catalogo dei preset degli incantamenti](Incantamenti) | [Integrazione Eldrich Surge](Eldrich-Surge) |
-| [Categorie dei mob](Categorie-mob) | [Fonti e manutenzione](Fonti) |
-| [Comandi](Comandi) · [Problemi frequenti](FAQ) | [Guida API estesa](https://github.com/GoldenRose01/enchlib/blob/main/docs/API_INTEGRATION.md) |
-
-## Il flusso in tre passi
-
-1. Apri un mondo: EnchLib prepara `<mondo>/config/enchlib/`.
-2. Modifica disponibilità, livelli, categorie o regole con l’editor e i comandi.
-3. Il server valida e distribuisce i valori; le meccaniche integrate li consultano quando servono.
-
-## Configurazione e gameplay
-
-EnchLib può rilevare e memorizzare gli incantamenti registrati da altre mod. Una proprietà produce un effetto nel gioco dove l’operazione appartiene a EnchLib o dove la mod interessata legge la sua API. Visualizzare un valore nell’editor non garantisce che qualsiasi tavolo esterno lo applichi automaticamente.
-
-EnchLib non aggiunge il catalogo di incantamenti di Eldrich Surge: lo gestisce come integrazione opzionale. Le descrizioni dei 104 incantamenti si trovano nella [wiki Eldrich Surge](https://github.com/GoldenRose01/Eldrich-Surge/wiki/Enchantments).
+| [Commerci dei villager](Commerci-dei-villager) | [Integrazione Eldrich Surge 2.0.0](Eldrich-Surge) |
+| [Catalogo dei preset degli incantamenti](Incantamenti) | [Fonti e manutenzione](Fonti) |
+| [Categorie dei mob](Categorie-mob) · [Comandi](Comandi) · [Problemi frequenti](FAQ) | [Release 2.0.0](https://github.com/GoldenRose01/enchlib/blob/main/docs/releases/v2.0.0.md) |
 
 ---
 

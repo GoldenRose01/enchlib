@@ -53,6 +53,8 @@ object GlobalConfigIO {
     data class EnchantingTableRule(var enabled: Boolean = true, var chance: Int = 100)
 
     @Volatile private var activeWorldDir: Path? = null
+    @Volatile private var cachedAvailable: MutableList<AvailableEnch>? = null
+    @Volatile private var cachedDetails: EnchantmentsDetailsRoot? = null
     @Volatile private var clientAvailable: MutableList<AvailableEnch>? = null
     @Volatile private var clientDetails: EnchantmentsDetailsRoot? = null
     @Volatile private var clientPresets: Map<String, String>? = null
@@ -65,6 +67,8 @@ object GlobalConfigIO {
     fun openWorld(server: MinecraftServer) {
         val dir = server.getWorldPath(LevelResource.ROOT).resolve("config").resolve("enchlib")
         activeWorldDir = dir
+        cachedAvailable = null
+        cachedDetails = null
         GlobalConfigBootstrap.ensureDefaultsInstalled(server)
         clientPresets = null
         val available = readAvailableFromDisk().associateBy { it.id }.toMutableMap()
@@ -82,8 +86,11 @@ object GlobalConfigIO {
             stagedDetails.clear()
         }
         migrateDefaultLevelOneValuesOnce(dir, details)
-        writeAvailableToDisk(available.values.sortedBy { it.id })
+        val sortedAvailable = available.values.sortedBy { it.id }
+        writeAvailableToDisk(sortedAvailable)
         writeDetailsToDisk(details)
+        cachedAvailable = sortedAvailable.toMutableList()
+        cachedDetails = copyDetails(details)
         clientAvailable = null
         clientDetails = null
     }
@@ -91,6 +98,8 @@ object GlobalConfigIO {
     fun closeWorld(server: MinecraftServer) {
         val dir = server.getWorldPath(LevelResource.ROOT).resolve("config").resolve("enchlib")
         if (activeWorldDir == dir) activeWorldDir = null
+        cachedAvailable = null
+        cachedDetails = null
         clientAvailable = null
         clientDetails = null
     }
@@ -99,14 +108,17 @@ object GlobalConfigIO {
         clientAvailable?.let { return it.toMutableList() }
         if (activeWorldDir == null) synchronized(stagedAvailable) {
             if (stagedAvailable.isNotEmpty()) return stagedAvailable.values.toMutableList()
+        } else {
+            cachedAvailable?.let { return it.toMutableList() }
         }
-        return readAvailableFromDisk()
+        return readAvailableFromDisk().also { if (activeWorldDir != null) cachedAvailable = it.toMutableList() }
     }
 
     fun writeAvailable(list: List<AvailableEnch>) {
         val normalized = list.distinctBy { it.id }.sortedBy { it.id }
         when {
             activeWorldDir != null -> {
+                cachedAvailable = normalized.toMutableList()
                 writeAvailableToDisk(normalized)
                 ConfigSyncNetworking.broadcastCurrent()
             }
@@ -122,8 +134,10 @@ object GlobalConfigIO {
         clientDetails?.let { return copyDetails(it) }
         if (activeWorldDir == null) synchronized(stagedDetails) {
             if (stagedDetails.isNotEmpty()) return EnchantmentsDetailsRoot(stagedDetails.values.map(::copyDetail).toMutableList())
+        } else {
+            cachedDetails?.let { return copyDetails(it) }
         }
-        return readDetailsFromDisk()
+        return readDetailsFromDisk().also { if (activeWorldDir != null) cachedDetails = copyDetails(it) }
     }
 
     /** Reads one allowlisted preset file from the active world's config or the server-sent client snapshot. */
@@ -140,6 +154,7 @@ object GlobalConfigIO {
         val normalized = copyDetails(root)
         when {
             activeWorldDir != null -> {
+                cachedDetails = copyDetails(normalized)
                 writeDetailsToDisk(normalized)
                 ConfigSyncNetworking.broadcastCurrent()
             }

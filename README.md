@@ -3,22 +3,22 @@
 📚 **[Wiki completa](https://github.com/GoldenRose01/enchlib/wiki)** — incantamenti e preset, configurazione, comandi, categorie mob e API.
 
 ![Minecraft Version](https://img.shields.io/badge/Minecraft-26.3-brightgreen)
-![EnchLib Version](https://img.shields.io/badge/EnchLib-1.5.0-blue)
+![EnchLib Version](https://img.shields.io/badge/EnchLib-2.0.0-blue)
 ![Fabric Loader](https://img.shields.io/badge/Fabric%20Loader-0.19.5+-blue)
 ![Java Version](https://img.shields.io/badge/Java-25-orange)
 ![License](https://img.shields.io/badge/License-CC0--1.0-lightgrey)
 
-EnchLib è una libreria Fabric scritta in Kotlin che sostituisce gli incantesimi hardcoded con un sistema **file-based e runtime**. Gli enchantments possono essere abilitati, configurati e controllati interamente da file `.json5` generati nel mondo e tramite comandi dedicati.
+**EnchLib 2.0.0** è la libreria Fabric per il controllo completo, per-mondo e runtime degli incantesimi (vanilla e modded), dei tavoli da incantamento, dei commerci dei villager, delle categorie mob e delle meccaniche di gameplay.
 
 ## 🌟 Caratteristiche Principali
 
-- **Config per mondo** – Impostazioni e preset vengono creati in `<cartella-mondo>/config/enchlib/`; ogni mondo mantiene i propri valori.
-- **Client/server sincronizzati** – Il server possiede e invia la configurazione del mondo ai client con EnchLib; solo gli operatori di livello 2 o superiore possono inviare modifiche.
-- **JSON5 support** – I file di configurazione accettano commenti e trailing comma grazie a un parser dedicato.
-- **Comandi potenti** – `/plusec` e `/plusec-debug` consentono di gestire incantesimi sugli item, diagnosticare problemi e aggiornare i file.
-- **Categorie mob estendibili** – Le categorie sono associate agli ID del registry e possono includere mob aggiunti da altre mod.
-- **Sync dinamico** – Gli incantesimi vengono aggiunti ai file di configurazione solo quando utilizzati, evitando conflitti con mod che registrano enchant a runtime.
-- **Compatibile con Fabric Kotlin** – Il progetto utilizza Kotlin, `kotlinx.serialization` e riflessione per lavorare con le API 26.3.
+- **Configurazione per mondo** – Tutte le impostazioni vengono create in `<cartella-mondo>/config/enchlib/`; ogni mondo mantiene le proprie regole indipendenti.
+- **Client/server sincronizzati** – Il server è autorevole e sincronizza la configurazione ai client connessi; solo gli operatori di livello 2+ possono salvare modifiche in multiplayer.
+- **Interfaccia grafica organizzata (Cloth Config / YACL)** – Tab dedicate e divise per funzione (`Available`, `Max Levels`, `Rarity`, `Tables`, `Villagers`, `Items`, `Incompatibilities`, `Mobs`, `Gameplay`) con raggruppamento automatico per namespace/mod.
+- **Integrazione nativa con Eldrich Surge 2.0.0** – Supporta la registrazione automatica dell'Advanced Enchanting Table, rarità, incompatibilità, categorie mob e la modalità Tree Cutting con *Lumberjack*.
+- **Gameplay integrato** – **Tree Cutting** (abbattimento alberi `off` / `fell` / `chop` accovacciandosi con un'ascia) e **Axes as Weapons** (asce con 1 solo punto di usura in combattimento e compatibili con incantesimi da spada).
+- **Cache in memoria ad alte prestazioni** – Letture istantanee senza accessi ripetuti al disco durante il gameplay.
+- **Comandi `/plusec` e `/plusec-debug`** – Gestione rapida da chat e diagnostica.
 
 ## 📋 Requisiti
 
