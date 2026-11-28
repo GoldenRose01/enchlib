@@ -50,6 +50,7 @@
 		"fabric-language-kotlin": "*"
 	},
 	"suggests": {
+		"eldrich-surge": "*",
 		"eldritch-surge": "*",
 		"modmenu": "*",
 		"cloth-config": "*",
